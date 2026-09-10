@@ -31,7 +31,12 @@ test('Turbopack serves the styled page and local fonts without a build error', a
 
   await expect(page.locator('.scene canvas')).toBeVisible();
 
-  // The project filter tabs live on /projects; confirm styles and fonts load there too.
+  // The project filter tabs live on /projects, which now requires an account. Register a
+  // throwaway one so styles and fonts can still be confirmed there.
+  const email=`dev-style-check-${Date.now()}@example.test`,password='a long enough passphrase for the style check';
+  const origin=await page.evaluate(()=>location.origin);
+  await page.request.post('/api/auth/register',{headers:{origin},data:{name:'Style Check',email,password}});
+  await page.request.post('/api/auth/login',{headers:{origin},data:{email,password}});
   await page.goto('/projects');
   await expect(page.getByRole('button', { name: 'Software', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Software', exact: true }).click();

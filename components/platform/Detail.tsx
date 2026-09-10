@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpRight, Bookmark, Download, Star, Heart, GitFork, CalendarDays, Clock3, Code2 } from 'lucide-react';
-import { Shell, Notice, Card, PageTitle, Loading, useData, useSession, send, api } from './shared';
+import { Shell, Gate, Notice, Card, PageTitle, Loading, useData, useSession, send, api } from './shared';
 import { projectCost, type Project } from '@/lib/schema';
 import { projectDuration } from '@/lib/project-display';
 import ProjectMedia from './ProjectMedia';
@@ -67,4 +67,4 @@ function Content({id}:{id:string}){
   {data.related.length>0&&<section className="saved-section"><h2>Keep the curiosity going.</h2><div className="project-grid">{data.related.map(r=><Card project={r} key={r.id}/>)}</div></section>}
  </div>;
 }
-export default function Detail({id}:{id:string}){return <Shell><Content id={id}/></Shell>;}
+export default function Detail({id}:{id:string}){return <Shell><Gate><Content id={id}/></Gate></Shell>;}

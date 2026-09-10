@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import type { NextRequest } from 'next/server';
 import { db, transaction } from '@/lib/db';
-import { currentUser, requireUser, canReview, audit, rateLimit } from '@/lib/auth';
+import { requireUser, canReview, audit, rateLimit } from '@/lib/auth';
 import { authRoute } from '@/lib/api-auth';
 import { upload, fileRoute } from '@/lib/api-files';
 import { bodyJson, originCheck, json, failure } from '@/lib/http';
@@ -61,6 +61,8 @@ async function handler(request:NextRequest,context:Context) {
   if(resource==='upload'&&method==='POST')return await upload(request);
   if(resource==='files'&&method==='GET')return await fileRoute(request,uuid(id),sub==='sign');
   if(resource==='projects'&&!id&&method==='GET'){
+    // Browsing the collective requires an account; email verification is not required to look around.
+    await requireUser(request,false);
     const projects=await publicProjects();const q=(request.nextUrl.searchParams.get('q')||'').toLowerCase();
     return json({projects:projects.filter(p=>!q||`${p.version.data.title} ${p.version.data.teamName} ${p.version.data.tags.join(' ')}`.toLowerCase().includes(q))});
   }
@@ -70,10 +72,12 @@ async function handler(request:NextRequest,context:Context) {
     return json(await createProject(user,input.data,input.submit,input.changelog),201);
   }
   if(resource==='projects'&&id&&method==='GET'){
-    uuid(id);const [user,rows]=await Promise.all([currentUser(request),db.query(`${projectSelect} WHERE p.id=$1 ORDER BY v.number DESC`,[id])]);
+    uuid(id);
+    // Viewing a project requires an account; email verification is not required to look around.
+    const [user,rows]=await Promise.all([requireUser(request,false),db.query(`${projectSelect} WHERE p.id=$1 ORDER BY v.number DESC`,[id])]);
     requireCondition(rows.length,404,'Project not found.');
-    const editable=!!user&&!rows[0].example&&(rows[0].owner_id===user.id||await canEdit(db,user,id));
-    const visible=rows.filter(row=>editable||user&&canReview(user,row.data)||row.status==='approved'&&!row.archived);
+    const editable=!rows[0].example&&(rows[0].owner_id===user.id||await canEdit(db,user,id));
+    const visible=rows.filter(row=>editable||canReview(user,row.data)||row.status==='approved'&&!row.archived);
     requireCondition(visible.length,404,'Project not found.');
     const versionId=request.nextUrl.searchParams.get('version');
     const active=(versionId?visible.find(v=>v.id===versionId):visible.find(v=>v.status==='approved')||visible[0]);
@@ -81,15 +85,15 @@ async function handler(request:NextRequest,context:Context) {
     const result=projectView(active);
     const [comments,reviews,bookmarks,publicList,reactions,lineage]=await Promise.all([
       db.query('WITH roots AS (SELECT id FROM r.comments WHERE project_id=$1 AND parent_id IS NULL ORDER BY created_at DESC LIMIT 100) SELECT c.id,c.body,c.parent_id,c.created_at,u.name FROM r.comments c JOIN r.users u ON u.id=c.user_id WHERE c.project_id=$1 AND (c.id IN (SELECT id FROM roots) OR c.parent_id IN (SELECT id FROM roots)) ORDER BY c.created_at ASC LIMIT 5000',[id]),
-      editable||user&&canReview(user,active.data)?db.query('SELECT rv.action,rv.reason,rv.created_at,u.name FROM r.reviews rv JOIN r.users u ON u.id=rv.admin_id WHERE version_id=$1 ORDER BY rv.created_at',[active.id]):Promise.resolve([]),
-      user?db.query('SELECT user_id FROM r.bookmarks WHERE user_id=$1 AND project_id=$2',[user.id,id]):Promise.resolve([]),
+      editable||canReview(user,active.data)?db.query('SELECT rv.action,rv.reason,rv.created_at,u.name FROM r.reviews rv JOIN r.users u ON u.id=rv.admin_id WHERE version_id=$1 ORDER BY rv.created_at',[active.id]):Promise.resolve([]),
+      db.query('SELECT user_id FROM r.bookmarks WHERE user_id=$1 AND project_id=$2',[user.id,id]),
       publicProjects(),
-      user?db.query('SELECT kind FROM r.reactions WHERE project_id=$1 AND user_id=$2',[id,user.id]):Promise.resolve([]),
+      db.query('SELECT kind FROM r.reactions WHERE project_id=$1 AND user_id=$2',[id,user.id]),
       projectLineage(result.parentProjectId,result.parentVersionId,id),
     ]);
     const saved=bookmarks.length>0;
     // Team email addresses are for collaborator authorization, never public display.
-    if(!editable&&!(user&&canReview(user,active.data)))result.version.data={...result.version.data,team:result.version.data.team.map(member=>({...member,email:''}))};
+    if(!editable&&!canReview(user,active.data))result.version.data={...result.version.data,team:result.version.data.team.map(member=>({...member,email:''}))};
     const related=publicList.filter(p=>p.id!==id&&(p.version.data.department===active.data.department||p.version.data.tags.some(tag=>active.data.tags.includes(tag)))).slice(0,3);
     return json({project:result,...lineage,starred:reactions.some(r=>r.kind==='star'),liked:reactions.some(r=>r.kind==='like'),versions:visible.map(row=>({id:row.id,number:row.number,status:row.status,changelog:row.changelog,createdAt:row.created_at})),comments,reviews,editable,saved,related});
   }

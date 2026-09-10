@@ -83,6 +83,7 @@ test('sample contains real media and a protected complete source archive',async(
 
 test('sample video plays and live demo persists a new task',async({page})=>{
   await seedSample();
+  await page.context().addCookies((await student.storageState()).cookies);
   await page.goto(`/projects/${SAMPLE_PROJECT_ID}?play=1`);
   await expect(page.getByRole('heading',{level:1})).toContainText('CampusFlow');
   await expect(page.getByText('Sample project with a fictional team',{exact:false})).toBeVisible();
@@ -136,7 +137,7 @@ test('drafts are private, validated and immutable once submitted',async({request
   expect((await student.post('/api/projects',{data:{data:{...data,sourceId:foreignSourceId},submit:false}})).status()).toBe(403);
   const created=await student.post('/api/projects',{data:{data,submit:false,changelog:'Initial accessible campus prototype'}});expect(created.status()).toBe(201);
   ({id:projectId,versionId}=await created.json());
-  expect((await request.get(`/api/projects/${projectId}`)).status()).toBe(404);
+  expect((await request.get(`/api/projects/${projectId}`)).status()).toBe(401);
   expect((await outsider.get(`/api/projects/${projectId}`)).status()).toBe(404);
   expect((await outsider.patch(`/api/versions/${versionId}`,{data:{data,submit:true,changelog:'Attempted unauthorized update'}})).status()).toBe(404);
   expect((await student.patch(`/api/versions/${versionId}`,{data:{data:{...data,summary:'Too short'},submit:true,changelog:'Initial prototype'}})).status()).toBe(400);
@@ -144,7 +145,7 @@ test('drafts are private, validated and immutable once submitted',async({request
   expect((await student.patch(`/api/versions/${versionId}`,{data:{data,submit:false,changelog:'Bypass moderation'}})).status()).toBe(409);
   // Pending (not yet approved) submissions must never leak into public discovery. The sample
   // project seeded earlier in this file is legitimately public, so assert absence, not emptiness.
-  const {projects:publicList}=await (await request.get('/api/projects')).json();
+  const {projects:publicList}=await (await outsider.get('/api/projects')).json();
   expect((publicList as {id:string}[]).some(p=>p.id===projectId)).toBe(false);
 });
 
@@ -175,13 +176,16 @@ test('only assigned educators can review and rejection requires a reason',async(
 });
 
 test('published versions hide team emails, bookmarks and comments persist',async({request})=>{
-  const publicDetail=await (await request.get(`/api/projects/${projectId}`)).json();
+  // Viewing projects requires an account; a signed-out visitor is turned away before any data is returned.
+  expect((await request.get(`/api/projects/${projectId}`)).status()).toBe(401);
+  expect((await request.get('/api/projects')).status()).toBe(401);
+  const publicDetail=await (await outsider.get(`/api/projects/${projectId}`)).json();
   expect(publicDetail.project.version.data.team[0].email).toBe('');
-  const publicList=await (await request.get('/api/projects')).json();expect(publicList.projects[0].version.data.team[0].email).toBe('');
+  const publicList=await (await outsider.get('/api/projects')).json();expect(publicList.projects[0].version.data.team[0].email).toBe('');
   expect((await outsider.post(`/api/projects/${projectId}/bookmark`,{data:{saved:true}})).status()).toBe(200);
   expect((await (await outsider.get('/api/workspace')).json()).saved).toHaveLength(1);
   expect((await outsider.post(`/api/projects/${projectId}/comments`,{data:{body:'Does this support step-free indoor routes?'}})).status()).toBe(201);
-  expect((await (await request.get(`/api/projects/${projectId}`)).json()).comments[0].body).toContain('step-free');
+  expect((await (await outsider.get(`/api/projects/${projectId}`)).json()).comments[0].body).toContain('step-free');
 });
 
 test('source downloads require a signed-in session and a valid user-bound expiring signature',async({request})=>{
@@ -273,19 +277,19 @@ test('draft recovery isolates accounts and reports unavailable storage',async({p
   await expect(page.getByLabel('Project title',{exact:true})).toHaveValue('Still editable');
 });
 
-test('new versions need two distinct approvals while old versions remain published',async({request})=>{
+test('new versions need two distinct approvals while old versions remain published',async()=>{
   expect((await admin.patch('/api/admin/settings',{data:{requiredApprovals:2,departments:['Computer Science','Electrical Engineering'],subjects:['Final Year Project'],tags:['TypeScript']}})).status()).toBe(200);
   const next=await (await student.post(`/api/projects/${projectId}/versions`,{data:{}})).json();
   const newData={...data,title:'Accessible campus navigator v2'};
   expect((await student.patch(`/api/versions/${next.versionId}`,{data:{data:newData,submit:true,changelog:'Added indoor step-free routing support'}})).status()).toBe(200);
-  expect((await (await request.get(`/api/projects/${projectId}`)).json()).project.version.id).toBe(versionId);
+  expect((await (await outsider.get(`/api/projects/${projectId}`)).json()).project.version.id).toBe(versionId);
   const review={ids:[next.versionId],action:'approve',reason:''};
   expect((await teacher.post('/api/admin/reviews',{data:review})).status()).toBe(200);
   expect((await teacher.post('/api/admin/reviews',{data:review})).status()).toBe(409);
-  expect((await (await request.get(`/api/projects/${projectId}`)).json()).project.version.id).toBe(versionId);
+  expect((await (await outsider.get(`/api/projects/${projectId}`)).json()).project.version.id).toBe(versionId);
   expect((await teacherTwo.post('/api/admin/reviews',{data:review})).status()).toBe(200);
-  const published=await (await request.get(`/api/projects/${projectId}`)).json();expect(published.project.version.id).toBe(next.versionId);expect(published.versions).toHaveLength(2);
-  expect((await (await request.get(`/api/projects/${projectId}?version=${versionId}`)).json()).project.version.data.title).toBe(data.title);
+  const published=await (await outsider.get(`/api/projects/${projectId}`)).json();expect(published.project.version.id).toBe(next.versionId);expect(published.versions).toHaveLength(2);
+  expect((await (await outsider.get(`/api/projects/${projectId}?version=${versionId}`)).json()).project.version.data.title).toBe(data.title);
 });
 
 test('project stories preserve team portraits, colleges, services and private media permissions',async({request})=>{
@@ -299,7 +303,7 @@ test('project stories preserve team portraits, colleges, services and private me
   ({id:showcaseId,versionId:showcaseVersionId}=await created.json());
   expect((await request.get('/api/files/'+ids[2])).status()).toBe(404);
   for(const reviewer of [teacher,teacherTwo])expect((await reviewer.post('/api/admin/reviews',{data:{ids:[showcaseVersionId],action:'approve',reason:''}})).status()).toBe(200);
-  const result=await (await request.get('/api/projects/'+showcaseId)).json();
+  const result=await (await outsider.get('/api/projects/'+showcaseId)).json();
   expect(result.project.version.data.team[0]).toMatchObject({email:'',college:'GGITS',semester:'6',branch:'Computer Science',photoId:ids[2]});
   expect(result.project.version.data.services[0].name).toBe('Neon');
   expect(result.project.version.data.github).toBe('');
@@ -317,7 +321,7 @@ test('stars and likes are independent, idempotent, persistent and rank projects 
   expect((await outsider.post(route,{data:{kind:'star',active:false}})).status()).toBe(200);
   detail=await (await outsider.get('/api/projects/'+showcaseId)).json();expect(detail).toMatchObject({starred:false,liked:true,project:{stars:1,likes:1}});
   expect((await admin.patch('/api/admin/projects',{data:{id:projectId,featured:true}})).status()).toBe(200);
-  const listing=await (await request.get('/api/projects')).json();expect(listing.projects[0].id).toBe(showcaseId);
+  const listing=await (await outsider.get('/api/projects')).json();expect(listing.projects[0].id).toBe(showcaseId);
 });
 
 test('discussion replies stay attached to their original project thread',async()=>{
@@ -331,13 +335,13 @@ test('discussion replies stay attached to their original project thread',async()
   expect(result.comments.filter((c:{parent_id:string})=>c.parent_id===rootId)).toHaveLength(2);
 });
 
-test('modified builds credit a pinned original and require separate ownership and approval',async({request})=>{
+test('modified builds credit a pinned original and require separate ownership and approval',async()=>{
   const created=await outsider.post('/api/projects/'+showcaseId+'/modify',{data:{versionId:showcaseVersionId}});expect(created.status()).toBe(201);
   ({id:modifiedId,versionId:modifiedVersionId}=await created.json());
   const privateDetail=await (await outsider.get('/api/projects/'+modifiedId)).json();
   expect(privateDetail).toMatchObject({original:{id:showcaseId,version_id:showcaseVersionId},project:{ownerId:outsiderId,parentProjectId:showcaseId,parentVersionId:showcaseVersionId,version:{status:'draft',data:{sourceId:'',coverId:'',galleryIds:[],github:''}}}});
   expect(privateDetail.project.version.data.team[0].email).toBe('outsider@example.test');
-  expect((await request.get('/api/projects/'+modifiedId)).status()).toBe(404);
+  expect((await student.get('/api/projects/'+modifiedId)).status()).toBe(404);
   expect((await student.post('/api/projects/'+modifiedId+'/reactions',{data:{kind:'star',active:true}})).status()).toBe(404);
   expect((await student.post('/api/projects/'+modifiedId+'/modify',{data:{}})).status()).toBe(404);
   const revised={...privateDetail.project.version.data,title:'Battery health extension'};
@@ -345,9 +349,9 @@ test('modified builds credit a pinned original and require separate ownership an
   expect((await outsider.patch('/api/versions/'+modifiedVersionId,{data:{data:revised,submit:true,changelog:''}})).status()).toBe(400);
   expect((await outsider.patch('/api/versions/'+modifiedVersionId,{data:{data:revised,submit:true,changelog:'Added battery health monitoring'}})).status()).toBe(200);
   expect((await teacher.post('/api/admin/reviews',{data:{ids:[modifiedVersionId],action:'approve',reason:''}})).status()).toBe(200);
-  expect((await (await request.get('/api/projects/'+showcaseId)).json()).modifications).toHaveLength(0);
+  expect((await (await student.get('/api/projects/'+showcaseId)).json()).modifications).toHaveLength(0);
   expect((await teacherTwo.post('/api/admin/reviews',{data:{ids:[modifiedVersionId],action:'approve',reason:''}})).status()).toBe(200);
-  const original=await (await request.get('/api/projects/'+showcaseId)).json();expect(original.modifications[0].id).toBe(modifiedId);
+  const original=await (await student.get('/api/projects/'+showcaseId)).json();expect(original.modifications[0].id).toBe(modifiedId);
   expect(original.project.version.id).toBe(showcaseVersionId);
 });
 
@@ -380,6 +384,7 @@ test('project thumbnail opens video and galleries, team details and discussion w
 });
 
 test('direct demo video really plays muted and stops when a photo is selected',async({page})=>{
+  await page.context().addCookies((await student.storageState()).cookies);
   await page.goto('/auth');
   const bytes=readFileSync('tests/helpers/demo.webm');
   await page.route('https://demo.example.test/working.webm',route=>route.fulfill({contentType:'video/webm',body:Buffer.from(bytes)}));
@@ -415,7 +420,12 @@ test('the front page is an overview only, and Explore projects opens the noteboo
   const navExplore=page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Explore projects',exact:true});
   await expect(navExplore).toHaveAttribute('href','/projects');
   await expect(navExplore).toHaveAttribute('target','_blank');
-  // /projects itself still renders the full browsing experience.
+  // /projects requires an account: a signed-out visitor sees the sign-in gate, not the notebook.
+  await page.goto('/projects');
+  await expect(page.getByRole('heading',{name:'Make yourself at home.'})).toBeVisible();
+  await expect(page.getByLabel('Sort by')).toHaveCount(0);
+  // Once signed in, /projects renders the full browsing experience.
+  await page.context().addCookies((await student.storageState()).cookies);
   await page.goto('/projects');
   await expect(page.getByLabel('Sort by')).toBeVisible();
   await expect(page.getByRole('button',{name:'All projects'})).toBeVisible();
