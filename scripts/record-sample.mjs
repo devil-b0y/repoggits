@@ -1,0 +1,57 @@
+import { createServer } from 'node:http';
+import { readFile, mkdir, copyFile, stat } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import { chromium, expect } from '@playwright/test';
+
+const folder=resolve('examples/campusflow'),assets=resolve(folder,'assets');
+await mkdir(assets,{recursive:true});
+await mkdir('.local/sample-recording',{recursive:true});
+await mkdir('public/samples/campusflow',{recursive:true});
+for(const file of ['index.html','styles.css','app.js'])await copyFile(resolve(folder,file),resolve('public/samples/campusflow',file));
+const files={'/':['index.html','text/html'],'/styles.css':['styles.css','text/css'],'/app.js':['app.js','text/javascript']};
+const server=createServer(async(req,res)=>{const file=files[new URL(req.url,'http://localhost').pathname];if(!file){res.writeHead(404);res.end();return;}try{res.writeHead(200,{'Content-Type':file[1]});res.end(await readFile(resolve(folder,file[0])));}catch{res.writeHead(500);res.end();}});
+await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
+const browser=await chromium.launch({channel:'chrome',headless:true});
+try {
+  const context=await browser.newContext({viewport:{width:1440,height:1000},recordVideo:{dir:'.local/sample-recording',size:{width:1440,height:1000}}});
+  const page=await context.newPage();
+  await page.goto(`http://127.0.0.1:${server.address().port}/`);
+  await expect(page.locator('.task')).toHaveCount(6);
+  await page.waitForTimeout(250);
+  await page.screenshot({path:resolve(assets,'cover.png')});
+  await page.screenshot({path:resolve(assets,'dashboard.png'),fullPage:true});
+  // Deliberate pauses let viewers follow the recorded demonstration.
+  await page.waitForTimeout(1800);
+  await page.getByRole('button',{name:'+ New task',exact:true}).click();
+  await page.getByLabel('Task title').pressSequentially('Record our working project demo',{delay:65});
+  await page.getByRole('combobox',{name:'Subject',exact:true}).selectOption('Presentation');
+  await page.getByRole('combobox',{name:'Teammate',exact:true}).selectOption('Ananya');
+  await page.getByRole('combobox',{name:'Priority',exact:true}).selectOption('High');
+  await page.screenshot({path:resolve(assets,'new-task.png')});
+  await page.waitForTimeout(1800);
+  await page.getByRole('button',{name:'Add to our notebook',exact:false}).click();
+  await expect(page.locator('#total-count')).toHaveText('7');
+  await page.waitForTimeout(1700);
+  await page.getByRole('button',{name:'Start Record our working project demo',exact:true}).click();
+  await page.waitForTimeout(1600);
+  await page.getByRole('button',{name:'Complete Record our working project demo',exact:true}).click();
+  await expect(page.locator('#done-count')).toHaveText('3');
+  await page.waitForTimeout(1800);
+  await page.locator('#search').fill('Record our');
+  await expect(page.locator('.task')).toHaveCount(1);
+  await page.waitForTimeout(1600);
+  await page.screenshot({path:resolve(assets,'completed-task.png')});
+  await page.locator('#search').fill('');
+  await page.reload();
+  await expect(page.locator('#total-count')).toHaveText('7');
+  await page.waitForTimeout(1200);
+  const recording=page.video();
+  await context.close();
+  await recording.saveAs(resolve('public/samples/campusflow/demo.webm'));
+  const mobile=await browser.newPage({viewport:{width:390,height:844}});
+  await mobile.goto(`http://127.0.0.1:${server.address().port}/`);
+  expect(await mobile.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await mobile.waitForTimeout(250);
+  await mobile.screenshot({path:resolve(assets,'mobile.png'),fullPage:true});
+  console.log('Sample screenshots saved; working video:',(await stat('public/samples/campusflow/demo.webm')).size,'bytes.');
+} finally {await browser.close();server.close();}
