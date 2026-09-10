@@ -18,13 +18,13 @@ function Content({id}:{id:string}){
  const {data,error,loading,reload,setData}=useData<DetailData>(`projects/${id}${version?`?version=${version}`:''}`);
  async function action(task:()=>Promise<void>){setBusy(true);setActionError('');try{await task();}catch(e){setActionError((e as Error).message);}finally{setBusy(false);}}
  if(loading&&!data)return <Loading/>;
- if(error||!data)return <div className="page-wrap"><Notice error>{error||'Project not found.'}</Notice><Link href="/">Back to projects</Link></div>;
+ if(error||!data)return <div className="page-wrap"><Notice error>{error||'Project not found.'}</Notice><Link href="/projects">Back to projects</Link></div>;
  const p=data.project,d=p.version.data,duration=projectDuration(d.startDate,d.endDate),published=p.version.status==='approved';
  const hardware=d.hardwareCosts.reduce((sum,row)=>sum+Math.round(row.unitCost*100)*row.quantity,0)/100;
  const software=d.softwareCosts.reduce((sum,row)=>sum+Math.round(row.amount*100),0)/100;
  const react=(kind:'star'|'like')=>action(async()=>{const result=await send<{active:boolean;stars:number;likes:number}>(`projects/${id}/reactions`,{kind,active:kind==='star'?!data.starred:!data.liked});setData(current=>current?{...current,[kind==='star'?'starred':'liked']:result.active,project:{...current.project,stars:result.stars,likes:result.likes}}:current);});
  return <div className="page-wrap detail-page">
-  <Link className="text-button" href="/#projects"><ArrowLeft size={16}/> Back to the collective</Link>
+  <Link className="text-button" href="/projects"><ArrowLeft size={16}/> Back to the collective</Link>
   <PageTitle eyebrow={`${d.type.toUpperCase()} / ${d.department.toUpperCase()}`} title={d.title} description={d.summary}/>
   <div className="detail-meta"><span>By {d.teamName}</span><span>{d.year}</span><span>Version {p.version.number}</span><span>{p.views} views</span><span>{p.downloads} downloads</span><span className={`status-tag ${p.version.status}`}>{p.version.status.replaceAll('_',' ')}</span></div>
   {p.example&&<Notice>Sample project with a fictional team, AI-generated portraits, and illustrative costs. The live demo, screenshots, video, and source ZIP are working examples.</Notice>}

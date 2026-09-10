@@ -321,7 +321,7 @@ test('modified builds credit a pinned original and require separate ownership an
 test('project thumbnail opens video and galleries, team details and discussion work on mobile',async({page})=>{
   await page.context().addCookies((await outsider.storageState()).cookies);
   await page.route('https://www.youtube-nocookie.com/**',route=>route.fulfill({contentType:'text/html',body:'<html><body>Embedded player test stand-in</body></html>'}));
-  await page.goto('/#projects');await expect(page.getByLabel('Sort by')).toHaveValue('Most starred');
+  await page.goto('/projects');await expect(page.getByLabel('Sort by')).toHaveValue('Most starred');
   await expect(page.locator('.project-card').first()).toContainText('Solar lab monitor');
   await page.getByRole('link',{name:'View Solar lab monitor',exact:true}).click();
   const video=page.getByTitle('Solar lab monitor working demo');await expect(video).toBeVisible();await expect(video).toHaveAttribute('src',/autoplay=1&mute=1/);
@@ -379,7 +379,7 @@ async function ensurePublishedProject(){
 test('student UI can save and reopen a real Neon-backed draft',async({page})=>{
   await ensurePublishedProject();
   await page.goto('/');
-  await expect(page.locator('.project-card').first()).toBeVisible();
+  await expect(page.getByRole('heading',{level:1})).toContainText('Good ideas');
   await expect(page.locator('body')).not.toContainText(/codex|openai/i);
   await page.screenshot({path:'test-results/platform-home.png',fullPage:true});
   await page.goto('/auth');

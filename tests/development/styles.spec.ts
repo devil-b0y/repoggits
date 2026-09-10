@@ -30,6 +30,10 @@ test('Turbopack serves the styled page and local fonts without a build error', a
   })).toBe(true);
 
   await expect(page.locator('.scene canvas')).toBeVisible();
+
+  // The project filter tabs live on /projects; confirm styles and fonts load there too.
+  await page.goto('/projects');
+  await expect(page.getByRole('button', { name: 'Software', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Software', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Software', exact: true })).toHaveAttribute('aria-pressed','true');
   expect(errors).toEqual([]);
