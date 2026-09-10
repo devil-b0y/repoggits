@@ -96,3 +96,5 @@ Each team member can have a photo, contribution, branch, semester (1-8), and GGI
 Stars and likes are separate, reversible account actions with one vote of each kind per account/project. The default public ranking orders by stars, then likes, then newest publication; suspended accounts do not contribute votes. Project discussion supports replies grouped under the original thread.
 
 "Create a modified version" creates a separate private project with a permanent link to the original approved version. The new team supplies its own media/source, describes the changes, and submits through moderation. Approved modified builds appear on the original project. The original team's existing version-history flow is unchanged.
+
+Project editor recovery: unfinished form data and completed upload references are saved automatically in this browser, separately per account and version. Save draft also stores progress in Neon for access from another device. Successful saves clear the previous recovery copy. Changed server versions are not overwritten by stale recovery. In-progress uploads prompt before refresh; browser storage failures are shown in the form.

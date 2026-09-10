@@ -183,12 +183,12 @@ test('built-in upload picker attaches a cover and source archive',async({page})=
   await page.getByLabel('Source code ZIP',{exact:true}).setInputFiles({name:'source.zip',mimeType:'application/zip',buffer:zipFixture('README.md',Buffer.from('Working source example'))});
   await expect(page.getByText('Source archive attached',{exact:true})).toBeVisible();
   await page.getByLabel('Project title',{exact:true}).fill('Refresh-safe project');
-  await page.getByLabel('Full story',{exact:true}).fill('My unfinished project description');
+  await page.getByRole('textbox',{name:'Full story',exact:true}).fill('My unfinished project description');
   await page.getByLabel('Demo video URL',{exact:false}).fill('https://unfinished');
   await page.getByRole('combobox',{name:'College',exact:true}).selectOption('GGCT');
   await page.reload();
   await expect(page.getByLabel('Project title',{exact:true})).toHaveValue('Refresh-safe project');
-  await expect(page.getByLabel('Full story',{exact:true})).toHaveValue('My unfinished project description');
+  await expect(page.getByRole('textbox',{name:'Full story',exact:true})).toHaveValue('My unfinished project description');
   await expect(page.getByRole('combobox',{name:'College',exact:true})).toHaveValue('GGCT');
   await expect(page.getByAltText('Uploaded preview',{exact:true})).toBeVisible();
   await expect(page.getByText('Source archive attached',{exact:true})).toBeVisible();
