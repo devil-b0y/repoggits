@@ -142,7 +142,25 @@ test('drafts are private, validated and immutable once submitted',async({request
   expect((await student.patch(`/api/versions/${versionId}`,{data:{data:{...data,summary:'Too short'},submit:true,changelog:'Initial prototype'}})).status()).toBe(400);
   expect((await student.patch(`/api/versions/${versionId}`,{data:{data,submit:true,changelog:'Initial accessible campus prototype'}})).status()).toBe(200);
   expect((await student.patch(`/api/versions/${versionId}`,{data:{data,submit:false,changelog:'Bypass moderation'}})).status()).toBe(409);
-  await expect((await request.get('/api/projects')).json()).resolves.toMatchObject({projects:[]});
+  // Pending (not yet approved) submissions must never leak into public discovery. The sample
+  // project seeded earlier in this file is legitimately public, so assert absence, not emptiness.
+  const {projects:publicList}=await (await request.get('/api/projects')).json();
+  expect((publicList as {id:string}[]).some(p=>p.id===projectId)).toBe(false);
+});
+
+test('changelog whitespace is trimmed on save so browser draft recovery does not see a false mismatch',async()=>{
+  const created=await student.post('/api/projects',{data:{data,submit:false,changelog:'  Padded changelog text  '}});
+  expect(created.status()).toBe(201);
+  const {id,versionId:vId}=await created.json();
+  const stored=await (await student.get(`/api/projects/${id}`)).json();
+  // The client (Submit.tsx) recomputes its recovery baseline with changelog.trim() right after
+  // saving — if the server kept the padding, the next load would see a different value and
+  // wrongly report "This draft changed in your account", discarding a valid local recovery copy.
+  expect(stored.project.version.changelog).toBe('Padded changelog text');
+  const updated=await student.patch(`/api/versions/${vId}`,{data:{data,submit:false,changelog:'\tTabbed and newline\n'}});
+  expect(updated.status()).toBe(200);
+  const restored=await (await student.get(`/api/projects/${id}`)).json();
+  expect(restored.project.version.changelog).toBe('Tabbed and newline');
 });
 
 test('only assigned educators can review and rejection requires a reason',async()=>{
@@ -190,6 +208,21 @@ test('built-in validator accepts images and ZIPs and rejects unsafe files',async
   const rejected=await student.post('/api/upload',{headers:{'Content-Type':'application/octet-stream','X-Filename':'bad.zip'},data:zipFixture('fake.txt',Buffer.from('MZ executable'))});
   expect(rejected.status()).toBe(400);
   expect(await db.query('SELECT id FROM r.files WHERE owner_id=$1',[studentId])).toHaveLength(before.length+2);
+});
+
+test('gallery thumbnail is not shown as active when there is no cover photo',async({page})=>{
+  const galleryImage=await sharp({create:{width:4,height:4,channels:3,background:'#f27e51'}}).png().toBuffer();
+  const uploaded=await(await student.post('/api/upload',{headers:{'Content-Type':'application/octet-stream','X-Filename':'gallery.png'},data:galleryImage})).json();
+  const created=await student.post('/api/projects',{data:{data:{...data,coverId:'',galleryIds:[uploaded.id]},submit:true,changelog:'A project with a gallery photo but no cover image'}});
+  expect(created.status()).toBe(201);
+  const {id,versionId:noCoverVersionId}=await created.json();
+  expect((await teacher.post('/api/admin/reviews',{data:{ids:[noCoverVersionId],action:'approve',reason:''}})).status()).toBe(200);
+  await page.context().addCookies((await student.storageState()).cookies);
+  await page.goto(`/projects/${id}`);
+  // With no cover image, the media stage shows the generated placeholder art (not the gallery
+  // photo), so the "Photo 1" thumbnail must not report itself as the active selection.
+  await expect(page.locator('.media-stage .project-art')).toBeVisible();
+  await expect(page.getByRole('button',{name:'Show project photo 1',exact:true})).toHaveAttribute('aria-pressed','false');
 });
 
 test('built-in upload picker attaches a cover and source archive',async({page})=>{
@@ -367,6 +400,25 @@ test('staff cannot approve their own team and suspension revokes existing sessio
   expect((await teacher.post('/api/admin/reviews',{data:{ids:[owned.versionId],action:'approve',reason:''}})).status()).toBe(403);
   expect((await admin.patch('/api/admin/users',{data:{id:outsiderId,role:'student',scopes:[],suspended:true}})).status()).toBe(200);
   expect((await (await outsider.get('/api/auth/me')).json()).user).toBeNull();
+});
+
+test('the front page is an overview only, and Explore projects opens the notebook in a new tab',async({page})=>{
+  await page.goto('/');
+  await expect(page.getByRole('heading',{level:1})).toContainText('Good ideas');
+  // No project data, filters, or grid on the front page — the live notebook lives at /projects.
+  await expect(page.locator('.project-card')).toHaveCount(0);
+  await expect(page.locator('.projects-section')).toHaveCount(0);
+  await expect(page.locator('.gallery-toolbar')).toHaveCount(0);
+  const heroExplore=page.locator('.hero-actions').getByRole('link',{name:'Explore projects',exact:true});
+  await expect(heroExplore).toHaveAttribute('href','/projects');
+  await expect(heroExplore).toHaveAttribute('target','_blank');
+  const navExplore=page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Explore projects',exact:true});
+  await expect(navExplore).toHaveAttribute('href','/projects');
+  await expect(navExplore).toHaveAttribute('target','_blank');
+  // /projects itself still renders the full browsing experience.
+  await page.goto('/projects');
+  await expect(page.getByLabel('Sort by')).toBeVisible();
+  await expect(page.getByRole('button',{name:'All projects'})).toBeVisible();
 });
 
 async function ensurePublishedProject(){

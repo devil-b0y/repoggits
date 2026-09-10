@@ -23,7 +23,7 @@ export default function ProjectMedia({project}:{project:Project}) {
     {playing&&<div className="media-caption"><span>{source?'Video starts muted. Use the player controls for sound.':'Open the demo video to watch this project in action.'}</span><a className="inline-link" href={d.videoUrl} target="_blank" rel="noopener noreferrer">{failed?'Player unavailable. Open video':'Open video'} <ExternalLink size={13}/></a></div>}
     <div className="media-thumbnails" aria-label="Choose project media">
       {d.videoUrl&&<button aria-pressed={playing} onClick={()=>setSelected('video')}><Play size={20}/><span>Working demo</span></button>}
-      {photos.map((photo,i)=><button key={photo} aria-label={`Show project photo ${i+1}`} aria-pressed={selected===photo||selected==='cover'&&i===0} onClick={()=>setSelected(photo)}><img src={`/api/files/${photo}`} alt="" loading="lazy"/><span>{i===0&&d.coverId?'Cover':`Photo ${i+1}`}</span></button>)}
+      {photos.map((photo,i)=><button key={photo} aria-label={`Show project photo ${i+1}`} aria-pressed={selected===photo||selected==='cover'&&photo===d.coverId} onClick={()=>setSelected(photo)}><img src={`/api/files/${photo}`} alt="" loading="lazy"/><span>{i===0&&d.coverId?'Cover':`Photo ${i+1}`}</span></button>)}
       {!photos.length&&<button aria-pressed={!playing} onClick={()=>setSelected('cover')}><ImageIcon size={20}/><span>Project cover</span></button>}
     </div>
   </section>;
