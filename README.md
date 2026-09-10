@@ -108,7 +108,7 @@ flowchart LR
 
 ## Run it locally
 
-**Requirements:** Node.js **24+**, npm, and a Neon PostgreSQL database. Google Chrome is needed for the browser tests.
+**Requirements:** Node.js **24+**, npm, and a PostgreSQL database — Neon, another managed provider, or a local server. Google Chrome is needed for the browser tests.
 
 ```bash
 npm ci
@@ -148,32 +148,36 @@ See [the operations guide](docs/OPERATIONS.md#email-delivery) for outbox inspect
 
 ## Host on a VPS
 
-1. Copy the project source and lockfile to the VPS. Install Node.js 24+.
-2. Create a private `.env.local` with your Neon connection and deployment settings. Use the same Neon database if you want existing accounts and projects.
-3. Set **`APP_ORIGIN` to the exact public browser origin**—scheme, hostname, and port, with no path or trailing slash.
-4. Install, initialize, and build:
+One Node process and one PostgreSQL database — no object storage, no queue, no second service. A 1 vCPU / 2 GB server is enough for a department. The database may be managed (Neon and similar) or PostgreSQL on the same machine.
+
+**With Docker Compose**, including a PostgreSQL container and automatic HTTPS:
 
 ```bash
-npm ci
-npm run db:setup
-npm run build
-npm run start
+cp deploy/docker.env.example .env     # set POSTGRES_PASSWORD, APP_ORIGIN, APP_DOMAIN
+docker compose --profile tls up -d --build
+docker compose exec app npm run db:setup -- you@your-domain.edu
 ```
 
-For an HTTPS domain:
+**Without Docker**, on Debian or Ubuntu:
 
-```dotenv
-APP_ORIGIN=https://projects.your-domain.edu
+```bash
+sudo APP_ORIGIN=https://projects.your-domain.edu bash deploy/install-vps.sh
 ```
 
-For a temporary direct-IP setup, use `http://YOUR_VPS_IP:3000`. Configure an HTTPS reverse proxy for regular use. Keep the Node process running with your chosen service manager and allow uploads up to the app’s 20 MB limit at the proxy.
+That installs Node.js 24, PostgreSQL and nginx, creates a service account and database, builds the application, and enables a systemd service on `127.0.0.1:3000`. It then prints the remaining steps: certificate, firewall, and first administrator. Re-running it replaces nothing that already exists.
 
-**Restart the application after environment changes.** If your service manager also defines environment variables, update those values too.
+Set **`APP_ORIGIN` to the exact public browser origin**—scheme, hostname, and port, with no path or trailing slash—and **restart after any environment change**. `GET /api/health` reports whether the application and its database are answering.
+
+The repository ships the pieces for both paths: [`Dockerfile`](Dockerfile), [`docker-compose.yml`](docker-compose.yml), [`deploy/nginx.conf`](deploy/nginx.conf), [`deploy/Caddyfile`](deploy/Caddyfile), [`deploy/repoggits.service`](deploy/repoggits.service), and a nightly [database dump timer](deploy/repoggits-backup.timer).
+
+📘 **[Full deployment guide](docs/DEPLOYMENT.md)** — configuration reference, TLS for the database, backups and restores, upgrades, and troubleshooting.
 
 | Symptom | What to check |
 | --- | --- |
 | “This request did not come from the application.” | `APP_ORIGIN` must exactly match the browser’s public origin. Restart after changing it. |
-| Admin login works locally but not on the VPS | Check the email, password, and that `DATABASE_URL` points to the same Neon database. |
+| Signed out right after signing in | Session cookies are `Secure` for an `https` origin and will not travel over plain HTTP. |
+| `db:setup` fails on TLS | A local PostgreSQL server offers no TLS. Set `DATABASE_SSL=disable`. |
+| Admin login works locally but not on the VPS | Check the email, password, and that `DATABASE_URL` points to the same database. |
 | Password-reset email never arrives | `outbox` mode stores messages without sending them; configure SMTP for delivery. |
 | ZIP rejected | Remove binaries/nested archives; use UTF-8 source files and stay within upload/decompression limits. |
 | Source backup unavailable | The full source tree must be present; a minimal runtime-only deployment may not contain it. |
@@ -220,10 +224,11 @@ public/                 Fonts, visual assets, and the sample demo
 examples/campusflow/    Runnable sample project and source archive
 scripts/                Database setup, sample seeding, mail tools
 tests/                  Browser, API, and validation regression tests
-docs/                   Screenshots and operations reference
+deploy/                 VPS installer, systemd units, nginx and Caddy configs
+docs/                   Screenshots, operations, and deployment guides
 ```
 
-[Operations guide](docs/OPERATIONS.md) · [Environment template](.env.example) · [Sample media provenance](examples/campusflow/assets/README.md)
+[Deployment guide](docs/DEPLOYMENT.md) · [Operations guide](docs/OPERATIONS.md) · [Environment template](.env.example) · [Sample media provenance](examples/campusflow/assets/README.md)
 
 ### Current scope
 

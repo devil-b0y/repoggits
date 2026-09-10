@@ -80,7 +80,15 @@ Coverage includes signup without email verification, password reset, role escala
 
 ## Deployment
 
-Configure an HTTPS origin, Neon and SMTP. Restart after environment changes. Back up Neon and restrict database credentials to the deployment. Apply a proxy request-size limit consistent with the app limit. Current list responses cap discovery at 500 projects and administration at 1,000 versions; add cursor pagination before a larger rollout. Automated certificates, department leaderboards, OAuth, and email digests remain optional future work; RSS, dark mode, and duplicate-title/repository hints are included.
+[docs/DEPLOYMENT.md](DEPLOYMENT.md) covers a VPS end to end: Docker Compose with a PostgreSQL container and automatic HTTPS, or a native systemd install behind nginx. `deploy/` holds the installer, unit files, proxy configurations, and a nightly database dump timer.
+
+The essentials: configure an HTTPS `APP_ORIGIN`, a database, and SMTP; restart after environment changes; keep the Node process and PostgreSQL on loopback behind a reverse proxy; apply a proxy request-size limit consistent with the app limit; and restrict database credentials to the deployment.
+
+`GET /api/health` returns 200 when the database answers and 503 otherwise, reporting reachability only. `DATABASE_SSL` selects the connection mode (`disable`, `no-verify`, `require`, `verify-ca`, `verify-full`); certificates are verified by default for a remote host, and TLS is skipped for a database on localhost. `DATABASE_CA_CERT_FILE` supplies a private certificate authority.
+
+Back up the database on a schedule — it holds accounts, submissions, and every uploaded file — and copy the dumps off the server. The in-app source export does not include them.
+
+Current list responses cap discovery at 500 projects and administration at 1,000 versions; add cursor pagination before a larger rollout. Running several application instances would additionally need a shared Next.js cache handler and a fixed `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`. Department leaderboards, OAuth, and email digests remain optional future work; RSS, dark mode, and duplicate-title/repository hints are included.
 
 Fonts are bundled in `public/fonts` with their SIL licenses. Coding-tool branding is not displayed. Repository links are ordinary user-provided URLs; the app performs no GitHub repository operations.
 

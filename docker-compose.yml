@@ -1,0 +1,75 @@
+# Repoggits on a single VPS: application, PostgreSQL, and an optional HTTPS proxy.
+#
+#   cp deploy/docker.env.example .env      # then edit it
+#   docker compose up -d --build           # app on 127.0.0.1:3000, proxy it yourself
+#   docker compose --profile tls up -d     # add Caddy and let it obtain certificates
+#
+# Full instructions, including the first administrator account: docs/DEPLOYMENT.md
+
+name: repoggits
+
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-repoggits}
+      POSTGRES_USER: ${POSTGRES_USER:-repoggits}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    # Not published to the host. Only services on this network can reach it.
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-repoggits} -d ${POSTGRES_DB:-repoggits}']
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      target: runtime
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    # APP_ORIGIN, MAIL_*, DOWNLOAD_SECRET, and EMAIL_VERIFICATION_REQUIRED come from .env.
+    env_file:
+      - .env
+    environment:
+      # Set here so the container always reaches the database service, whatever .env says.
+      # Traffic stays on the private compose network, so no TLS is negotiated.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-repoggits}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-repoggits}
+      DATABASE_SSL: disable
+      PORT: '3000'
+    ports:
+      # Bound to loopback: the reverse proxy is the only thing that should reach it.
+      # Remove this mapping entirely when using the bundled Caddy profile.
+      - '127.0.0.1:3000:3000'
+    volumes:
+      # Administrator invitation files and development outbox dumps.
+      - app-local:/app/.local
+
+  caddy:
+    image: caddy:2-alpine
+    profiles: [tls]
+    restart: unless-stopped
+    depends_on:
+      - app
+    environment:
+      # Required by this profile only, so it is not enforced for the plain stack.
+      APP_DOMAIN: ${APP_DOMAIN:-}
+    ports:
+      - '80:80'
+      - '443:443'
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  db-data:
+  app-local:
+  caddy-data:
+  caddy-config:

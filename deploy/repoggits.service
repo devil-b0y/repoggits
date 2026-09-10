@@ -1,0 +1,56 @@
+# Repoggits application service, for an installation at /opt/repoggits that was
+# built with `npm ci && npm run build`.
+#
+#   sudo cp deploy/repoggits.service /etc/systemd/system/repoggits.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now repoggits
+#
+# Settings come from /opt/repoggits/.env.local, which Next.js reads at startup.
+# Anything defined in this unit or in /etc/repoggits/environment takes precedence
+# over that file, so keep a value in one place only.
+
+[Unit]
+Description=Repoggits student project repository
+Documentation=file:///opt/repoggits/docs/DEPLOYMENT.md
+After=network-online.target postgresql.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=repoggits
+Group=repoggits
+WorkingDirectory=/opt/repoggits
+
+Environment=NODE_ENV=production
+Environment=NEXT_TELEMETRY_DISABLED=1
+EnvironmentFile=-/etc/repoggits/environment
+
+# Bound to loopback on purpose: the reverse proxy is the only reachable entry point.
+ExecStart=/usr/bin/node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3000
+
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+
+# --- Sandboxing -------------------------------------------------------------
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictNamespaces=true
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictSUIDSGID=true
+LockPersonality=true
+SystemCallArchitectures=native
+# The V8 engine compiles at runtime and cannot run without writable executable memory.
+MemoryDenyWriteExecute=false
+# Next.js writes its runtime cache here; db:setup and mail:outbox write to .local.
+ReadWritePaths=/opt/repoggits/.next /opt/repoggits/.local
+
+[Install]
+WantedBy=multi-user.target

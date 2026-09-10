@@ -1,0 +1,24 @@
+# One database dump. Started by repoggits-backup.timer, not enabled on its own.
+#
+#   sudo cp deploy/repoggits-backup.{service,timer} /etc/systemd/system/
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now repoggits-backup.timer
+
+[Unit]
+Description=Repoggits database dump
+After=postgresql.service
+
+[Service]
+Type=oneshot
+User=repoggits
+Group=repoggits
+WorkingDirectory=/opt/repoggits
+Environment=BACKUP_DIR=/var/backups/repoggits
+Environment=KEEP_DAYS=14
+ExecStart=/usr/bin/env bash /opt/repoggits/deploy/backup-database.sh
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/backups/repoggits

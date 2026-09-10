@@ -1,0 +1,16 @@
+# Runs the database dump nightly, catching up after the server was switched off.
+#
+#   sudo install -d -o repoggits -g repoggits -m 0700 /var/backups/repoggits
+#   sudo systemctl enable --now repoggits-backup.timer
+#   systemctl list-timers repoggits-backup.timer
+
+[Unit]
+Description=Nightly Repoggits database dump
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+RandomizedDelaySec=15m
+Persistent=true
+
+[Install]
+WantedBy=timers.target

@@ -5,7 +5,7 @@ import { newToken, hashToken, audit } from '../lib/auth';
 
 async function setup() {
   await migrate();
-  console.log('Neon connection verified. Application schema is ready.');
+  console.log('Database connection verified. Application schema is ready.');
   const email=process.argv[2]?.toLowerCase();
   if(email){
     if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))throw new Error('Supply a valid administrator email.');
@@ -25,4 +25,6 @@ async function setup() {
   }
   await pool().end();
 }
-setup().catch(()=>{console.error('Setup failed. Check the private environment configuration and database connectivity.');process.exitCode=1;});
+// This is an operator-run command, so the underlying reason is printed: a first deployment usually
+// fails on an unreachable host, a wrong password, or a TLS mode the server does not offer.
+setup().catch(async error=>{console.error('Setup failed. Check DATABASE_URL, DATABASE_SSL, and database connectivity.');console.error(error instanceof Error?`${error.message}`:String(error));process.exitCode=1;await pool().end().catch(()=>{});});

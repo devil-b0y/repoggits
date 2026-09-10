@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { Pool, type PoolClient, type QueryResultRow } from 'pg';
 
 const globalDb = globalThis as unknown as { repoPool?:Pool; repoMigration?:Promise<void> };
@@ -6,13 +7,28 @@ export function schemaName() {
   if (!/^repoggits(?:_[a-z0-9_]+)?$/.test(schema)) throw new Error('Invalid application database schema.');
   return schema;
 }
+const sslModes = ['disable','no-verify','require','verify-ca','verify-full'];
+// A database reached over a network is verified by default; a PostgreSQL server on the same host
+// (the usual VPS layout) speaks plain TCP or a local socket and opts out unless told otherwise.
+export function databaseSsl(url:URL) {
+  const localServer = /^(?:localhost|127(?:\.\d+){1,3}|\[?::1\]?|)$/.test(url.hostname);
+  const mode = (process.env.DATABASE_SSL || url.searchParams.get('sslmode') || (localServer?'disable':'require')).toLowerCase();
+  if (!sslModes.includes(mode)) throw new Error(`DATABASE_SSL must be one of: ${sslModes.join(', ')}.`);
+  if (mode === 'disable') return false as const;
+  const caFile = process.env.DATABASE_CA_CERT_FILE;
+  const ca = process.env.DATABASE_CA_CERT?.trim() || (caFile ? readFileSync(caFile,'utf8') : '');
+  // 'require' keeps certificate verification on, which is stricter than libpq. 'no-verify' encrypts
+  // without proving the server's identity; use it only for a private link with a self-signed certificate.
+  return { rejectUnauthorized: mode !== 'no-verify', ...(ca?{ca}:{}) };
+}
 export function pool() {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not configured.');
   if (!globalDb.repoPool) {
     const url = new URL(process.env.DATABASE_URL);
-    // Keep TLS certificate verification enabled for the managed database.
+    const ssl = databaseSsl(url);
     url.searchParams.delete('sslmode');url.searchParams.delete('channel_binding');
-    globalDb.repoPool = new Pool({ connectionString:url.toString(), ssl:{rejectUnauthorized:true}, max:5, idleTimeoutMillis:10000, connectionTimeoutMillis:15000, statement_timeout:15000 });
+    const max = Number(process.env.DATABASE_POOL_MAX) || 5;
+    globalDb.repoPool = new Pool({ connectionString:url.toString(), ssl, max, idleTimeoutMillis:10000, connectionTimeoutMillis:15000, statement_timeout:15000 });
     globalDb.repoPool.on('error', () => console.error('Database connection interrupted.'));
   }
   return globalDb.repoPool;

@@ -31,6 +31,12 @@ async function adminData(user:User,exportAll=false) {
 async function handler(request:NextRequest,context:Context) {
  try {
   const {path}=await context.params;const [resource,id,sub]=path;const method=request.method;
+  if(resource==='health'&&method==='GET'){
+    // Reverse proxies, service managers, and container health checks poll this. It reports
+    // reachability only: no version, environment, or error text is disclosed.
+    try{await db.query('SELECT 1');}catch{return json({status:'unavailable',database:false},503);}
+    return json({status:'ok',database:true});
+  }
   if(!['GET','HEAD'].includes(method))originCheck(request);
   if(resource==='admin'&&id==='backup'){
     const user=await requireUser(request);

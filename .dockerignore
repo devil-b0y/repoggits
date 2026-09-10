@@ -1,0 +1,25 @@
+# Build context exclusions. Private settings must never reach an image layer.
+.env
+.env.*
+!.env.example
+.local/
+
+node_modules/
+.next/
+.next-test-dev/
+out/
+dist/
+build/
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+# .gitignore itself is kept: Admin > Backups reads it to decide what the source ZIP contains.
+.git/
+.github/
+*.log
+*.pem
+*.key
+*.pfx
+*.p12

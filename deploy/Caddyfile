@@ -1,0 +1,26 @@
+# Used by the optional `tls` profile in docker-compose.yml.
+# Caddy obtains and renews a certificate for APP_DOMAIN automatically, which
+# requires ports 80 and 443 to be open and the name to resolve to this server.
+
+{$APP_DOMAIN} {
+	encode zstd gzip
+
+	# The application rejects uploads above 20 MB itself; this leaves headroom for
+	# multipart overhead while still refusing oversized bodies before Node sees them.
+	request_body {
+		max_size 24MB
+	}
+
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "SAMEORIGIN"
+	}
+
+	# Caddy streams responses by default, which App Router streaming depends on.
+	reverse_proxy app:3000 {
+		health_uri /api/health
+		health_interval 30s
+	}
+}
