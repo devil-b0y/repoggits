@@ -25,14 +25,15 @@ When no Super Admin exists, this creates one and writes a single-use, 24-hour se
 
 ## Main flows
 
-- `/`: approved projects with title/team/technology search, type/department/subject/technology/year filters, and featured/newest/download/view sorting.
+- `/`: a signed-out overview of the site — no project data is shown here.
+- `/projects`: approved projects with title/team/technology search, type/department/subject/technology/year filters, and featured/newest/download/view sorting. **Requires a signed-in account** (any role; email verification not required).
 - `/auth`: signup, login, optional email verification, forgotten-password and single-use reset flows.
 - `/account`: name, department, batch, student ID, bio, avatar, and external profile links.
 - `/submit`: account-backed drafts, team contributions, stack fields, media, dates, conditional itemized costs, and changelogs.
 - `/workspace`: owned/team projects, resumable drafts, review feedback, saved projects, and in-app notifications.
-- `/projects/:id`: images, video, costs, source downloads, team, comments, related projects, and version history. Unpublished versions require ownership or review authorization.
+- `/projects/:id`: images, video, costs, source downloads, team, comments, related projects, and version history. **Requires a signed-in account.** Unpublished versions additionally require ownership or review authorization.
 - `/admin`: scoped queues, one/two-reviewer approval, bulk decisions, charts, audit history, CSV export, featuring/archive, user management, and categories.
-- `/api/feed`: RSS for recently approved projects.
+- `/api/feed`: RSS for recently approved projects. Deliberately left open to signed-out readers/feed clients — RSS consumers cannot hold a session — so this remains the one place project titles/summaries are visible without an account.
 - `/demo`: the original browser-local prototype, preserved separately for design reference and regression tests. It does not publish into the live repository.
 
 Roles are enforced server-side. Contributors cannot review their own work. Each submitted version snapshots its required approval count; two approvals require two different assigned reviewers. Approved versions are immutable. A new version starts as a private draft, while the previous approved version stays published until its successor is approved.

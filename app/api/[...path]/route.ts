@@ -163,8 +163,10 @@ async function handler(request:NextRequest,context:Context) {
     }
     if(id==='settings'&&method==='PATCH'){
       requireCondition(user.role==='superadmin',403,'Super Admin access required.');
-      const input=z.object({requiredApprovals:z.union([z.literal(1),z.literal(2)]),departments:z.array(z.string().trim().min(2).max(100)).min(1).max(50),subjects:z.array(z.string().trim().min(2).max(100)).max(100),tags:z.array(z.string().trim().min(1).max(40)).max(100)}).parse(await bodyJson(request));
-      await transaction(async client=>{await client.query("UPDATE r.settings SET value=$1 WHERE key='moderation'",[JSON.stringify({requiredApprovals:input.requiredApprovals})]);await client.query("UPDATE r.settings SET value=$1 WHERE key='categories'",[JSON.stringify({departments:input.departments,subjects:input.subjects,tags:input.tags})]);await audit(client,user.id,'settings.updated','settings',input);});return json({ok:true});
+      // An empty list means any email domain may register; otherwise only exact domain matches may.
+      const domain=z.string().trim().max(100).regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/i,'Enter a valid domain, e.g. college.edu').transform(value=>value.toLowerCase());
+      const input=z.object({requiredApprovals:z.union([z.literal(1),z.literal(2)]),departments:z.array(z.string().trim().min(2).max(100)).min(1).max(50),subjects:z.array(z.string().trim().min(2).max(100)).max(100),tags:z.array(z.string().trim().min(1).max(40)).max(100),allowedEmailDomains:z.array(domain).max(50).default([])}).parse(await bodyJson(request));
+      await transaction(async client=>{await client.query("UPDATE r.settings SET value=$1 WHERE key='moderation'",[JSON.stringify({requiredApprovals:input.requiredApprovals,allowedEmailDomains:[...new Set(input.allowedEmailDomains)]})]);await client.query("UPDATE r.settings SET value=$1 WHERE key='categories'",[JSON.stringify({departments:input.departments,subjects:input.subjects,tags:input.tags})]);await audit(client,user.id,'settings.updated','settings',input);});return json({ok:true});
     }
     if(id==='export'&&method==='GET'){
       const data=await adminData(user,true);

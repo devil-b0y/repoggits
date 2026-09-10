@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID, scrypt as scryptCallback, timingSafeEqual, createHash } from 'node:crypto';
+import { randomBytes, randomInt, randomUUID, scrypt as scryptCallback, timingSafeEqual, createHash } from 'node:crypto';
 import type { NextRequest } from 'next/server';
 import { db, type Db } from './db';
 import { emailVerificationRequired } from './policy';
@@ -8,6 +8,8 @@ const deriveKey = (password:string,salt:string) => new Promise<Buffer>((resolve,
 export const SESSION_COOKIE = 'repoggits_session';
 export const hashToken=(token:string)=>createHash('sha256').update(token).digest('hex');
 export const newToken=()=>randomBytes(32).toString('hex');
+// Cryptographically random, not Math.random — this is a guessable-length secret, so the source matters.
+export const newCode=()=>String(randomInt(0,1_000_000)).padStart(6,'0');
 
 export async function hashPassword(password:string) {
   const salt=randomBytes(16).toString('hex');

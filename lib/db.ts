@@ -58,6 +58,10 @@ export async function migrate() {
         );
         CREATE TABLE IF NOT EXISTS r.sessions (hash text PRIMARY KEY,user_id uuid NOT NULL REFERENCES r.users(id) ON DELETE CASCADE,expires_at timestamptz NOT NULL);
         CREATE TABLE IF NOT EXISTS r.tokens (hash text PRIMARY KEY,user_id uuid NOT NULL REFERENCES r.users(id) ON DELETE CASCADE,purpose text NOT NULL,expires_at timestamptz NOT NULL);
+        -- A short OTP code offered alongside the link for 'verify' and 'reset' tokens. Hashed the
+        -- same way as the link itself; code_attempts caps brute-force guesses at the 6-digit code.
+        ALTER TABLE r.tokens ADD COLUMN IF NOT EXISTS code_hash text;
+        ALTER TABLE r.tokens ADD COLUMN IF NOT EXISTS code_attempts integer NOT NULL DEFAULT 0;
         CREATE TABLE IF NOT EXISTS r.projects (
           id uuid PRIMARY KEY,owner_id uuid NOT NULL REFERENCES r.users(id),featured boolean NOT NULL DEFAULT false,
           archived boolean NOT NULL DEFAULT false,example boolean NOT NULL DEFAULT false,views integer NOT NULL DEFAULT 0,
@@ -96,7 +100,7 @@ export async function migrate() {
         CREATE TABLE IF NOT EXISTS r.rate_limits (key text PRIMARY KEY,count integer NOT NULL,expires_at timestamptz NOT NULL);
         CREATE TABLE IF NOT EXISTS r.outbox (id uuid PRIMARY KEY,recipient text NOT NULL,subject text NOT NULL,body text NOT NULL,status text NOT NULL DEFAULT 'pending',created_at timestamptz NOT NULL DEFAULT now());
         CREATE TABLE IF NOT EXISTS r.settings (key text PRIMARY KEY,value jsonb NOT NULL);
-        INSERT INTO r.settings(key,value) VALUES ('moderation','{"requiredApprovals":1}'),('categories','{"departments":["Computer Science","Electronics & Communication","Mechanical Engineering","Electrical Engineering"],"subjects":["Final Year Project","Mini Project","Research"],"tags":["Next.js","Python","Arduino","IoT","Robotics"]}') ON CONFLICT DO NOTHING;
+        INSERT INTO r.settings(key,value) VALUES ('moderation','{"requiredApprovals":1,"allowedEmailDomains":[]}'),('categories','{"departments":["Computer Science","Electronics & Communication","Mechanical Engineering","Electrical Engineering"],"subjects":["Final Year Project","Mini Project","Research"],"tags":["Next.js","Python","Arduino","IoT","Robotics"]}') ON CONFLICT DO NOTHING;
       `));
       await client.query('COMMIT');
     }catch(error){await client.query('ROLLBACK');globalDb.repoMigration=undefined;throw error;}finally{client.release();}

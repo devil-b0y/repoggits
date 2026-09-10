@@ -347,6 +347,7 @@ balancer would additionally need a shared Next.js cache handler and a fixed
 | *"The website source is not available in this deployment."* | Admin → Backups needs the source tree next to the running server. |
 | Password reset emails never arrive | `MAIL_MODE=outbox` stores them without sending. Configure SMTP. |
 | Build killed on a small server | `next build` needs roughly 2 GB. Add swap, or build elsewhere and copy `.next`. |
+| CampusFlow sample's demo video/live link points at `localhost` | It was seeded (`npm run db:sample`) before `APP_ORIGIN` was set to the real address — e.g. seeded locally first, then the same database pointed at this server. Set `APP_ORIGIN` correctly and run `npm run db:sample` again; it repairs those two links in place without touching stars, comments, or anything else on the sample. |
 
 ---
 

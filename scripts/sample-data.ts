@@ -53,8 +53,18 @@ export async function seedSample(){
   });
   return transaction(async client=>{
     await client.query("SELECT pg_advisory_xact_lock(hashtext('repoggits-campusflow-sample'))");
-    const [existing]=await client.query('SELECT id,example FROM r.projects WHERE id=$1',[SAMPLE_PROJECT_ID]);
-    if(existing){if(!existing.example)throw new Error('Sample identifier belongs to a non-sample project.');return {id:SAMPLE_PROJECT_ID,created:false};}
+    const [existing]=await client.query('SELECT p.id,p.example,v.id AS version_id,v.data FROM r.projects p JOIN r.versions v ON v.project_id=p.id WHERE p.id=$1',[SAMPLE_PROJECT_ID]);
+    if(existing){
+      if(!existing.example)throw new Error('Sample identifier belongs to a non-sample project.');
+      // liveUrl/videoUrl point at static files this same deployment serves, but they were baked in
+      // with whatever APP_ORIGIN was active when this row was first seeded (e.g. seeded once while
+      // testing locally, before pointing this database at a live server). Reseeding otherwise
+      // preserves the row untouched, so repair just these two fields rather than skipping silently.
+      const stored=projectSchema.parse(existing.data);
+      if(stored.liveUrl!==data.liveUrl||stored.videoUrl!==data.videoUrl)
+        await client.query("UPDATE r.versions SET data=jsonb_set(jsonb_set(data,'{liveUrl}'::text[],to_jsonb($1::text)),'{videoUrl}'::text[],to_jsonb($2::text)) WHERE id=$3",[data.liveUrl,data.videoUrl,existing.version_id]);
+      return {id:SAMPLE_PROJECT_ID,created:false};
+    }
     // No password or sessions: this sample identity cannot sign in or impersonate a student.
     await client.query("INSERT INTO r.users(id,email,name,role,suspended,profile) VALUES($1,'campusflow.sample@repoggits.invalid','Campus Makers (sample)','student',true,$2)",[ownerId,JSON.stringify({name:'Campus Makers (sample)',bio:'Fictional author for the clearly labeled CampusFlow example.'})]);
     for(const file of files)await client.query("INSERT INTO r.files(id,owner_id,filename,mime,size,content,scan_status) VALUES($1,$2,$3,$4,$5,$6,'trusted_sample')",[file.id,ownerId,file.filename,file.mime,file.content.length,file.content]);

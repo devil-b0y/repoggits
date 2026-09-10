@@ -76,7 +76,7 @@ The admin panel includes **Review queue**, **Project library**, and **Activity**
 npm run db:sample
 ```
 
-After starting Repoggits:
+After starting Repoggits, [create an account](http://localhost:3000/auth?mode=register) and sign in — viewing a project requires one:
 
 - [Open the sample project](http://localhost:3000/projects/e3213918-fb91-4c55-bef3-faf5ca96cec4?play=1)
 - [Try the interactive planner](http://localhost:3000/samples/campusflow/index.html)

@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import { ArrowUpRight, Layers, Menu, X, LogOut, Moon, Sun, Play, Star, Heart } from 'lucide-react';
 import type { User, Project } from '@/lib/schema';
@@ -38,7 +38,18 @@ export function Gate({children,admin=false}:{children:ReactNode;admin?:boolean})
   if(emailVerificationRequired&&!user.verified)return <VerificationGate/>;
   return <>{children}</>;
 }
-function VerificationGate(){const [message,setMessage]=useState(''),[busy,setBusy]=useState(false);return <div className="page-wrap gate"><h1>Check your inbox.</h1><p>Verify your email before submitting or reviewing projects.</p><button className="button blue" disabled={busy} onClick={async()=>{setBusy(true);try{const r=await send<{message:string}>('auth/resend',{});setMessage(r.message);}catch(e){setMessage((e as Error).message);}finally{setBusy(false);}}}>Send verification again</button>{message&&<Notice>{message}</Notice>}</div>;}
+function VerificationGate(){
+  const {user,refresh}=useSession();
+  const [message,setMessage]=useState(''),[busy,setBusy]=useState(false),[requested,setRequested]=useState(false);
+  return <div className="page-wrap gate"><h1>Check your inbox.</h1><p>Verify your email before submitting or reviewing projects.</p><button className="button blue" disabled={busy} onClick={async()=>{setBusy(true);try{const r=await send<{message:string}>('auth/resend',{});setMessage(r.message);setRequested(true);}catch(e){setMessage((e as Error).message);}finally{setBusy(false);}}}>Send verification again</button>{requested&&user&&<CodeFollowUp purpose="verify" email={user.email} onDone={async m=>{setMessage(m);await refresh();}}/>}{message&&<Notice>{message}</Notice>}</div>;
+}
+// The link and the 6-digit code emailed alongside it are two independent ways to finish the same
+// pending verify/reset — this is the code-entry half, used here and from the /auth page itself.
+export function CodeFollowUp({purpose,email,needsPassword=false,label='Use a code instead',onDone}:{purpose:'verify'|'reset';email:string;needsPassword?:boolean;label?:string;onDone:(message:string)=>void}) {
+  const [code,setCode]=useState(''),[password,setPassword]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(false);
+  async function submit(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError('');try{const r=await send<{message?:string}>(`auth/${purpose}`,{email,code,...(needsPassword?{password}:{})});onDone(r.message||'Done.');}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+  return <form onSubmit={submit} className="code-follow-up"><label>6-digit code<input required pattern="\d{6}" maxLength={6} inputMode="numeric" autoComplete="one-time-code" value={code} onChange={e=>setCode(e.target.value.replace(/\D/g,''))}/></label>{needsPassword&&<label>Choose a password<input type="password" required minLength={15} maxLength={128} autoComplete="new-password" value={password} onChange={e=>setPassword(e.target.value)}/><small>Use at least 15 characters. A memorable passphrase works well.</small></label>}<button className="button outline full-width" disabled={busy}>{busy?'Please wait…':label}</button>{error&&<Notice error>{error}</Notice>}</form>;
+}
 export function Card({project}:{project:Project}) {
   const d=project.version.data;
   return <article className="project-card"><Link className="project-preview" href={`/projects/${project.id}${d.videoUrl?'?play=1':''}`} aria-label={`View ${d.title}`}><ProjectCover project={project}/><span className="project-badge">{project.example?'SAMPLE PROJECT':project.featured?'STAFF PICK':d.type.toUpperCase()}</span>{d.videoUrl&&<span className="card-video-label"><Play size={14} fill="currentColor"/> Watch demo</span>}<span className="preview-arrow"><ArrowUpRight size={20}/></span></Link><div className="project-meta"><span>{d.department}</span><span>{d.year}</span></div><h3><Link href={`/projects/${project.id}`}>{d.title}</Link></h3><p className="card-summary">{d.summary}</p><div className="tags">{d.tags.slice(0,4).map(tag=><span key={tag}>{tag}</span>)}</div><div className="card-community"><span><Star size={15}/> {project.stars} stars</span><span><Heart size={15}/> {project.likes} likes</span>{project.parentProjectId&&<span>Modified build</span>}</div><div className="card-bottom"><span>{d.teamName}</span><span>{project.views} views · {project.downloads} downloads</span></div></article>;

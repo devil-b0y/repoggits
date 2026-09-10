@@ -81,6 +81,25 @@ test('sample contains real media and a protected complete source archive',async(
   expect((await db.query('SELECT scan_status FROM r.files WHERE id=$1',[d.sourceId]))[0].scan_status).toBe('trusted_sample');
 });
 
+test('sample video/live links are repaired if APP_ORIGIN changes since it was first seeded',async()=>{
+  // Seeding once under one origin (e.g. locally, before a VPS's APP_ORIGIN was configured) must
+  // not leave a stale localhost link permanently baked into the sample's stored data.
+  await seedSample();
+  const original=process.env.APP_ORIGIN;
+  try{
+    process.env.APP_ORIGIN='https://staging.example.test';
+    expect((await seedSample()).created).toBe(false);
+    const [row]=await db.query('SELECT data FROM r.versions WHERE project_id=$1',[SAMPLE_PROJECT_ID]);
+    expect(row.data.liveUrl).toBe('https://staging.example.test/samples/campusflow/index.html');
+    expect(row.data.videoUrl).toBe('https://staging.example.test/samples/campusflow/demo.webm');
+  } finally {
+    process.env.APP_ORIGIN=original;
+    await seedSample();
+    const [restored]=await db.query('SELECT data FROM r.versions WHERE project_id=$1',[SAMPLE_PROJECT_ID]);
+    expect(restored.data.videoUrl).toBe(`${original}/samples/campusflow/demo.webm`);
+  }
+});
+
 test('sample video plays and live demo persists a new task',async({page})=>{
   await seedSample();
   await page.context().addCookies((await student.storageState()).cookies);
