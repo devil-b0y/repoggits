@@ -7,6 +7,7 @@ import { zipFixture } from './helpers/zip';
 import sharp from 'sharp';
 import { seedSample, SAMPLE_PROJECT_ID } from '../scripts/sample-data';
 import { validateZip } from '../lib/file-validation';
+import { readArchive } from './helpers/read-archive';
 import { readFileSync } from 'node:fs';
 
 const password='a long test passphrase for makers';
@@ -39,6 +40,25 @@ test.beforeAll(async({playwright})=>{
   data.sourceId=sourceId;
 });
 test.afterAll(async()=>{await Promise.all([student,outsider,teacher,teacherTwo,otherTeacher,admin].filter(Boolean).map(client=>client.dispose()));await pool().end();});
+
+test('website backup is restricted to Super Admin and downloads from the panel',async({page,request})=>{
+  expect((await request.post('/api/admin/backup',{headers})).status()).toBe(401);
+  expect((await student.post('/api/admin/backup')).status()).toBe(403);
+  expect((await teacher.post('/api/admin/backup')).status()).toBe(403);
+  expect((await admin.post('/api/admin/backup',{headers:{origin:'https://other.example'}})).status()).toBe(403);
+  await page.context().addCookies((await admin.storageState()).cookies);
+  await page.goto('/admin');
+  await page.getByRole('tab',{name:'Backups',exact:true}).click();
+  const downloadPromise=page.waitForEvent('download');
+  await page.getByRole('button',{name:'Download website backup',exact:true}).click();
+  const download=await downloadPromise;expect(download.suggestedFilename()).toMatch(/^repoggits-website-.*\.zip$/);
+  const contents=await readArchive(readFileSync((await download.path())!));
+  expect(contents.has('repoggits/package-lock.json')).toBe(true);
+  expect(contents.has('repoggits/app/page.tsx')).toBe(true);
+  expect(contents.has('repoggits/.env.example')).toBe(true);
+  expect([...contents.keys()].some(name=>/\/(node_modules|\.git|\.next|\.local|test-results)\//.test(name)||name.endsWith('.env.local'))).toBe(false);
+  expect((await db.query("SELECT id FROM r.audit WHERE action='website.backup'"))).toHaveLength(1);
+});
 
 test('sample contains real media and a protected complete source archive',async({request})=>{
   expect((await seedSample()).created).toBe(true);

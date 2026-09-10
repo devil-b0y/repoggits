@@ -11,6 +11,8 @@ import { createProject, updateVersion, newVersion, reviewVersions, publicProject
 import { roles, type ProjectData, type User } from '@/lib/schema';
 import { queueMail } from '@/lib/mail';
 import { reactToProject, modifyProject, projectLineage } from '@/lib/project-community';
+import { websiteBackup } from '@/lib/site-backup';
+let backupRunning=false;
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -30,6 +32,19 @@ async function handler(request:NextRequest,context:Context) {
  try {
   const {path}=await context.params;const [resource,id,sub]=path;const method=request.method;
   if(!['GET','HEAD'].includes(method))originCheck(request);
+  if(resource==='admin'&&id==='backup'){
+    const user=await requireUser(request);
+    requireCondition(user.role==='superadmin',403,'Super Admin access required.');
+    requireCondition(method==='POST',405,'Method not allowed.');
+    await rateLimit(`backup:${user.id}`,3,3600);
+    requireCondition(!backupRunning,409,'A website backup is already being prepared.');
+    backupRunning=true;
+    try{
+      const {buffer,fileCount}=await websiteBackup();
+      await audit(db,user.id,'website.backup',user.id,{fileCount,bytes:buffer.length,scope:'website source; excludes database and private environment'});
+      return new Response(new Uint8Array(buffer),{headers:{'Content-Type':'application/zip','Content-Disposition':`attachment; filename="repoggits-website-${new Date().toISOString().slice(0,10)}.zip"`,'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+    }finally{backupRunning=false;}
+  }
   if(resource==='auth'){
     const allowed:Record<string,string>={me:'GET',register:'POST',login:'POST',logout:'POST',forgot:'POST',reset:'POST',verify:'POST',invite:'POST',resend:'POST',profile:'PATCH'};
     requireCondition(allowed[id]===method,405,'Method not allowed.');return await authRoute(request,id);
