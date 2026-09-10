@@ -1,102 +1,238 @@
-# Repoggits
+<div align="center">
 
-A student project repository built with Next.js 16, TypeScript, Neon PostgreSQL, and an original Three.js workbench. The interface keeps the cream graph paper, cobalt blue, orange details, and dimensional illustrations of the initial design.
+# repoggits®
 
-## Run locally
+### Good ideas deserve to go further.
 
-Requires Node.js 24+ and a Neon PostgreSQL connection.
+A home for student projects. Show the build, share the process, and help the next team start stronger.
 
-```sh
-npm install
-# Put service credentials in .env.local, using .env.example as a guide.
+**Next.js 16 · TypeScript · Neon PostgreSQL · Three.js**
+
+[Visual tour](#a-look-inside) · [How it works](#from-first-idea-to-published-project) · [Quick start](#run-it-locally) · [VPS setup](#host-on-a-vps) · [Testing](#tested-workflows)
+
+</div>
+
+![Repoggits homepage with its cream-and-blue theme and dimensional project workbench](docs/screenshots/home.png)
+
+## Built for the work behind the grade
+
+Repoggits brings software, hardware, and hybrid academic projects into one searchable collection. Students publish complete project stories; educators review submissions; other teams can learn from the source and create credited modifications.
+
+The interface combines warm graph paper, cobalt blue, orange accents, bundled fonts, and a Three.js workbench. It adapts to mobile and supports dark mode.
+
+| For students | For educators | For the institution |
+| --- | --- | --- |
+| Rich project pages with demos and source | Department/subject review assignments | Super Admin user and role management |
+| Team photos, college, branch, and semester | Approve, reject, or request changes | Categories, activity logs, and CSV reports |
+| Automatic browser recovery and saved drafts | One or two distinct reviewer approvals | Staff picks and project archiving |
+| Stars, likes, discussion threads, and remixes | Updated versions return to review | Website source ZIP backups |
+
+## A look inside
+
+### One project. The whole story.
+
+Start with a thumbnail, then explore the working video, gallery, feature highlights, team, technology choices, timeline, and cost breakdown. Source downloads use expiring links. GitHub links are optional.
+
+<details>
+<summary><strong>View the complete CampusFlow project page</strong></summary>
+
+![CampusFlow project page showing its gallery, team profiles, features, costs, and discussion](docs/screenshots/project.png)
+
+</details>
+
+### A submission form that remembers
+
+Work in progress is saved automatically in the same browser, separately for each account and version. Refresh recovery includes completed uploads. **Save draft** also stores a copy in Neon, so you can continue from another device. Leaving during an active upload triggers a browser warning.
+
+<details>
+<summary><strong>Explore the project submission form</strong></summary>
+
+![Project submission form with team details, service fields, media uploads, and costs](docs/screenshots/submission.png)
+
+*This screenshot uses regression-test fixture data; the current editor also includes automatic recovery status.*
+
+</details>
+
+### An educator’s review desk
+
+![Super Admin dashboard with review statistics and administration tabs](docs/screenshots/admin.png)
+
+The admin panel includes **Review queue**, **Project library**, and **Activity**. Super Admins also get **People**, **Settings**, and **Backups**. Teachers see only work within their assigned review scope.
+
+<details>
+<summary><strong>Website backups and mobile preview</strong></summary>
+
+![Super Admin website backup panel explaining ZIP contents and exclusions](docs/screenshots/backups.png)
+
+<img src="docs/screenshots/mobile.png" alt="Repoggits homepage on a mobile screen" width="340">
+
+</details>
+
+## Try a complete working example
+
+**CampusFlow** is a browser-based student planner included with the project. Add tasks, assign teammates, move work across the board, search, and reload to see local persistence in action.
+
+```bash
+npm run db:sample
+```
+
+After starting Repoggits:
+
+- [Open the sample project](http://localhost:3000/projects/e3213918-fb91-4c55-bef3-faf5ca96cec4?play=1)
+- [Try the interactive planner](http://localhost:3000/samples/campusflow/index.html)
+- [Watch the recorded working demo](public/samples/campusflow/demo.webm)
+- [Browse its complete source](examples/campusflow) or download the ZIP from the project page after signing in
+
+The sample includes actual demo screenshots and a recorded walkthrough, full source, fictional team profiles with AI-generated portraits, and illustrative costs. It is labeled as a sample and starts without manufactured votes or reviews. Seeding it again preserves the existing sample.
+
+## From first idea to published project
+
+```mermaid
+flowchart LR
+    A[Create an account] --> B[Build a project draft]
+    B --> C[Submit for review]
+    C --> D{Assigned reviewers}
+    D -->|Request changes| B
+    D -->|Reject with reason| E[Feedback in workspace]
+    D -->|Approve| F[Published project]
+    F --> G[Discover · Watch · Download]
+    F --> H[New version or credited modification]
+    H --> B
+```
+
+1. **Build the story.** Add descriptions, feature bullets, images, video URL, source ZIP, team profiles, languages, services, dates, and hardware/software costs.
+2. **Save and submit.** Drafts stay private. Submitted versions enter the assigned educators’ queue.
+3. **Review with a record.** Decisions are logged. Rejections and change requests require a reason; the approval threshold can be one or two reviewers.
+4. **Share the result.** Approved projects enter discovery. The default ranking prioritizes stars, then likes, then recent publication.
+5. **Keep improving.** Updates return to moderation while the previous approved version remains available. Modified builds credit their original project and version.
+
+## Run it locally
+
+**Requirements:** Node.js **24+**, npm, and a Neon PostgreSQL database. Google Chrome is needed for the browser tests.
+
+```bash
+npm ci
+```
+
+Copy `.env.example` to `.env.local` using your editor, then configure:
+
+```dotenv
+DATABASE_URL=your_neon_postgresql_connection_string
+APP_ORIGIN=http://localhost:3000
+EMAIL_VERIFICATION_REQUIRED=false
+MAIL_MODE=outbox
+```
+
+```bash
 npm run db:setup
 npm run dev
 ```
 
-Open http://localhost:3000. `APP_ORIGIN` must match the browser address including its port; state-changing requests enforce that origin. Use HTTPS in a hosted environment so session cookies are marked Secure. The connection is stored only in the ignored `.env.local` file. Application tables live inside the `repoggits` PostgreSQL schema; unrelated schemas are untouched. TLS certificate verification stays enabled. Transactions pin one pooled connection through commit or rollback.
+Open **http://localhost:3000**. On Windows PowerShell, use `npm.cmd` if execution policy blocks `npm.ps1`.
 
-## First administrator
+### Create the first Super Admin
 
-```sh
+```bash
 npm run db:setup -- administrator@example.edu
 ```
 
-When no Super Admin exists, this creates one and writes a single-use, 24-hour setup link to `.local/admin-invitation.txt`. Open that private link, choose a password, and sign in. Running the command again does not replace an existing administrator. Assign roles and exact `department:Computer Science` or `subject:Final Year Project` review scopes from `/admin`. There are no default passwords, public setup endpoints, or automatic first-signup admin privileges.
+If no Super Admin exists, this writes a private, single-use invitation to `.local/admin-invitation.txt`. Open the link within 24 hours and choose a password. Existing admins are not replaced by rerunning this command.
 
-## Main flows
+Sign in at `/auth`, then open **`/admin`** or click **Review desk**. There are no shipped default credentials. Teacher assignments use values such as `department:Computer Science` or `subject:Mini Project`.
 
-- `/`: approved projects with title/team/technology search, type/department/subject/technology/year filters, and featured/newest/download/view sorting.
-- `/auth`: signup, login, optional email verification, forgotten-password and single-use reset flows.
-- `/account`: name, department, batch, student ID, bio, avatar, and external profile links.
-- `/submit`: account-backed drafts, team contributions, stack fields, media, dates, conditional itemized costs, and changelogs.
-- `/workspace`: owned/team projects, resumable drafts, review feedback, saved projects, and in-app notifications.
-- `/projects/:id`: images, video, costs, source downloads, team, comments, related projects, and version history. Unpublished versions require ownership or review authorization.
-- `/admin`: scoped queues, one/two-reviewer approval, bulk decisions, charts, audit history, CSV export, featuring/archive, user management, and categories.
-- `/api/feed`: RSS for recently approved projects.
-- `/demo`: the original browser-local prototype, preserved separately for design reference and regression tests. It does not publish into the live repository.
+### Email behavior
 
-Roles are enforced server-side. Contributors cannot review their own work. Each submitted version snapshots its required approval count; two approvals require two different assigned reviewers. Approved versions are immutable. A new version starts as a private draft, while the previous approved version stays published until its successor is approved.
+Email verification is currently optional. In `outbox` mode, messages are stored privately in Neon but **not sent**. To send password-reset and notification emails, configure SMTP using `.env.example` and set `MAIL_MODE=smtp`.
 
-## Email delivery
+See [the operations guide](docs/OPERATIONS.md#email-delivery) for outbox inspection and delivery commands.
 
-Email verification is temporarily optional (`EMAIL_VERIFICATION_REQUIRED=false`, the default). New users can sign in immediately; existing unverified accounts can submit, comment, review according to their role, and download. Signup does not queue verification emails. Set this option to `true` to restore verification gates. Actual email-verification records, password resets, and single-use administrator invitations remain intact.
+## Host on a VPS
 
-The local setup currently uses `MAIL_MODE=outbox`. Password-reset and review messages (plus verification messages when enabled) are stored privately in Neon and **are not sent** in this mode.
+1. Copy the project source and lockfile to the VPS. Install Node.js 24+.
+2. Create a private `.env.local` with your Neon connection and deployment settings. Use the same Neon database if you want existing accounts and projects.
+3. Set **`APP_ORIGIN` to the exact public browser origin**—scheme, hostname, and port, with no path or trailing slash.
+4. Install, initialize, and build:
 
-```sh
-npm run mail:outbox
-```
-
-This writes pending messages to `.local/outbox.txt` for development. Never serve that directory publicly. To deliver real messages, set `MAIL_MODE=smtp`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `MAIL_FROM` in `.env.local`, then restart. `npm run mail:send` retries queued mail; run only one delivery worker at a time. Failed deliveries stay queued.
-
-Email/password authentication uses salted scrypt hashes, opaque server-side sessions, expiry, revocation, and single-use tokens. Optional Google OAuth is not implemented.
-
-## Uploads and downloads
-
-Uploads use built-in structural and content validation, without an external scanning service. This is a source-file safety policy, not a general antivirus engine: malicious source code can still pass and must never be executed by the server.
-
-- At most 20 MB per upload, enforced on actual request bytes.
-- PNG/JPEG/WebP must decode within 25 megapixels, then are re-encoded as WebP with metadata removed.
-- ZIP inspection never writes archive entries to disk. Limits: 2,000 entries, 100 MB actual decompressed content, compression-ratio checks, CRC verification, and a processing timeout.
-- Traversal paths, symlinks, duplicates, encrypted/nested archives, unsupported types, and detected executable signatures are rejected.
-- All accepted uploads pass validation before storage, recorded as `validated_internal`. Source entries must be UTF-8 text; embedded raster images must decode successfully. Each entry is limited to 20 MB.
-- Validated bytes are stored privately in Neon, outside the public web root. Source files are never executed. For a larger collection, migrate file storage to private object storage before increasing limits.
-- Source downloads require a signed-in account (and email verification when enabled) and a five-minute HMAC URL bound to that account. Authorization is rechecked on every download. Images use an authorization-aware handler with explicit MIME and nosniff headers.
-- Server-side rate limits cover authentication, uploads, submissions, downloads, and comments.
-
-## Verification
-
-```sh
-npm test                # Production suite, then Turbopack checks
-npm run test:e2e        # Production build + browser/API tests
-npm run test:dev        # Development styles, fonts, compilation, hydration
-npm run typecheck
+```bash
+npm ci
+npm run db:setup
 npm run build
+npm run start
 ```
 
-Tests require installed Google Chrome. They create isolated `repoggits_test_<process>` schemas in the configured Neon database and remove only those test schemas afterward. Fixtures never touch application accounts or projects. Production tests use port 3107; development checks use port 3108 and a separate cache. Do not point `PLAYWRIGHT_BASE_URL` at a live installation for backend integration tests.
+For an HTTPS domain:
 
-Coverage includes signup without email verification, password reset, role escalation, origin checks, ownership, teacher scopes, immutable publication, review reasons, distinct approvals, version visibility, team-email privacy, signed downloads, suspension, UI draft persistence, ZIP/image validation, built-in upload acceptance and rejection, and the original design. Failed checks retain local screenshots/traces. Screenshot captures are review artifacts, not pixel-diff assertions.
+```dotenv
+APP_ORIGIN=https://projects.your-domain.edu
+```
 
-## Deployment
+For a temporary direct-IP setup, use `http://YOUR_VPS_IP:3000`. Configure an HTTPS reverse proxy for regular use. Keep the Node process running with your chosen service manager and allow uploads up to the app’s 20 MB limit at the proxy.
 
-Configure an HTTPS origin, Neon and SMTP. Restart after environment changes. Back up Neon and restrict database credentials to the deployment. Apply a proxy request-size limit consistent with the app limit. Current list responses cap discovery at 500 projects and administration at 1,000 versions; add cursor pagination before a larger rollout. Automated certificates, department leaderboards, OAuth, and email digests remain optional future work; RSS, dark mode, and duplicate-title/repository hints are included.
+**Restart the application after environment changes.** If your service manager also defines environment variables, update those values too.
 
-Fonts are bundled in `public/fonts` with their SIL licenses. Coding-tool branding is not displayed. Repository links are ordinary user-provided URLs; the app performs no GitHub repository operations.
+| Symptom | What to check |
+| --- | --- |
+| “This request did not come from the application.” | `APP_ORIGIN` must exactly match the browser’s public origin. Restart after changing it. |
+| Admin login works locally but not on the VPS | Check the email, password, and that `DATABASE_URL` points to the same Neon database. |
+| Password-reset email never arrives | `outbox` mode stores messages without sending them; configure SMTP for delivery. |
+| ZIP rejected | Remove binaries/nested archives; use UTF-8 source files and stay within upload/decompression limits. |
+| Source backup unavailable | The full source tree must be present; a minimal runtime-only deployment may not contain it. |
 
-References: [OWASP uploads](https://cheatsheetseries.owasp.org/cheatsheets/File_Upload_Cheat_Sheet.html), [password storage](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html), [password reset](https://cheatsheetseries.owasp.org/cheatsheets/Forgot_Password_Cheat_Sheet.html), and [PostgreSQL transactions](https://node-postgres.com/features/transactions).
+## Files, privacy, and backups
 
+**Uploads use built-in validation, without an external scanner service.** Images are decoded and re-encoded; ZIPs are inspected without extracting or executing their contents.
 
-## Project stories and community
+| Check | Limit or behavior |
+| --- | --- |
+| Upload size | 20 MB per file |
+| Images | PNG, JPEG, WebP; at most 25 megapixels; stored as WebP |
+| ZIP entries | At most 2,000; at most 20 MB per expanded entry |
+| Total expanded ZIP content | At most 100 MB, with compression-ratio, checksum, and timeout checks |
+| Rejected content | Unsafe paths, symlinks, duplicates, encrypted/nested archives, unsupported binaries, and detected executable signatures |
+| Source downloads | Sign-in required; signed URL expires after five minutes and is bound to the account |
 
-Project cards show the cover thumbnail, working-demo indicator, star count, and like count. Thumbnail clicks open the demo with muted playback and controls; visitors can switch to the cover or gallery photos. YouTube watch/share/shorts links and direct MP4/WebM URLs work in the player. Other video URLs have an external watch link. Reduced-motion preferences prevent automatic playback on arrival.
+These are structural/content checks, **not a full antivirus engine**. Source code is never executed by the server. Files are stored privately in Neon and served through authorization checks.
 
-Each team member can have a photo, contribution, branch, semester (1-8), and GGITS/GGCT college. Member emails remain private. The editor also records highlighted features, development dates, calculated elapsed calendar days (same-day projects display one day), languages, services with purposes/links, and itemized hardware/software costs. GitHub links remain optional. Team photos use the same built-in image validation and authorization checks as gallery images.
+**Admin → Backups** downloads website source, public assets, tests, and setup files. It honors `.gitignore` and excludes dependencies, build output, Git metadata, private environment files, and private keys. Restore instructions are included.
 
-Stars and likes are separate, reversible account actions with one vote of each kind per account/project. The default public ranking orders by stars, then likes, then newest publication; suspended accounts do not contribute votes. Project discussion supports replies grouped under the original thread.
+**The source ZIP does not include Neon records or files stored in Neon. Back up the database separately to preserve accounts, submissions, and uploaded media.**
 
-"Create a modified version" creates a separate private project with a permanent link to the original approved version. The new team supplies its own media/source, describes the changes, and submits through moderation. Approved modified builds appear on the original project. The original team's existing version-history flow is unchanged.
+## Tested workflows
 
-Project editor recovery: unfinished form data and completed upload references are saved automatically in this browser, separately per account and version. Save draft also stores progress in Neon for access from another device. Successful saves clear the previous recovery copy. Changed server versions are not overwritten by stale recovery. In-progress uploads prompt before refresh; browser storage failures are shown in the form.
+```bash
+npm run typecheck     # TypeScript checks
+npm run test:e2e      # Production build + browser/API regression suite
+npm run test:dev      # Turbopack styles, fonts, compilation, and hydration
+npm test             # Both test suites
+```
 
-Super Admin website backups: open Admin > Backups to download a source ZIP. The export follows root and nested .gitignore files, skips symlinks, dependencies, builds, private environment files, Git metadata and private key files, and includes restore instructions. It requires a Super Admin session and same-origin POST, is rate-limited, and writes an audit entry. Limits: 128 MB of source and 10,000 files. The full source tree must be present on the server. Neon records and uploaded files in Neon require a separate database backup; this source export does not include them.
+Regression coverage includes authentication, access control, review scopes, version moderation, signed downloads, uploads, sample playback, browser draft recovery, account separation, and backup exclusions/downloads.
+
+Tests create isolated `repoggits_test_*` schemas in Neon and remove those schemas afterward. They use ports **3107** and **3108**. **Do not point backend integration tests at a live installation through `PLAYWRIGHT_BASE_URL`.**
+
+## Find your way around
+
+```text
+app/                    Next.js pages and API routes
+components/platform/    Project, editor, workspace, and admin interfaces
+lib/                    Authentication, database, moderation, uploads, backups
+public/                 Fonts, visual assets, and the sample demo
+examples/campusflow/    Runnable sample project and source archive
+scripts/                Database setup, sample seeding, mail tools
+tests/                  Browser, API, and validation regression tests
+docs/                   Screenshots and operations reference
+```
+
+[Operations guide](docs/OPERATIONS.md) · [Environment template](.env.example) · [Sample media provenance](examples/campusflow/assets/README.md)
+
+### Current scope
+
+Google OAuth, automated certificates, department leaderboards, and email digests are not implemented. Discovery currently caps at 500 projects and the administration view at 1,000 versions; larger deployments need pagination. Fonts include their own licenses; the CampusFlow sample has its own MIT license.
+
+---
+
+<div align="center">
+
+**Built with curiosity. Shared with everyone.**
+
+</div>
