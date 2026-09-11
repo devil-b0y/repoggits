@@ -15,7 +15,7 @@ test.beforeAll(async () => {
   await db.query("INSERT INTO r.users(id,email,password_hash,name,role,verified,profile) VALUES($1,$2,$3,'Layout Checker','superadmin',true,'{\"name\":\"Layout Checker\"}')", [randomUUID(), email, await hashPassword(password)]);
 });
 
-for (const width of [360, 768]) {
+for (const width of [320, 390, 768, 1024]) {
   test(`every page fits a ${width}px-wide screen without sideways scrolling`, async ({ page }) => {
     test.setTimeout(120_000);
     await page.setViewportSize({ width, height: 800 });
@@ -42,3 +42,23 @@ for (const width of [360, 768]) {
     for (const tab of await page.getByRole('tab').all()) expect((await tab.boundingBox())!.x + (await tab.boundingBox())!.width, await tab.innerText()).toBeLessThanOrEqual(width);
   });
 }
+
+
+test('narrow-phone navigation supports touch, themes, Escape, and page links',async({page})=>{
+ await page.setViewportSize({width:320,height:720});await page.goto('/');
+ const menu=page.getByRole('button',{name:'Toggle navigation'});await expect(menu).toBeVisible();
+ const bounds=await menu.boundingBox();expect(bounds!.width).toBeGreaterThanOrEqual(44);expect(bounds!.height).toBeGreaterThanOrEqual(44);
+ await menu.click();const nav=page.getByRole('navigation',{name:'Main navigation'});await expect(nav).toBeVisible();
+ await nav.getByRole('button',{name:'Use dark theme'}).click();await expect(page.locator('.platform')).toHaveClass(/dark/);
+ await page.keyboard.press('Escape');await expect(menu).toHaveAttribute('aria-expanded','false');await expect(menu).toBeFocused();
+ await menu.click();await nav.getByRole('link',{name:'My workspace'}).click();await expect(page).toHaveURL(/\/workspace/);
+ await expect(page.getByRole('button',{name:'Toggle navigation'})).toHaveAttribute('aria-expanded','false');
+});
+
+test('landscape homepage avoids pinning a scene taller than the viewport',async({page})=>{
+ await page.setViewportSize({width:844,height:390});await page.goto('/');
+ expect(await page.locator('.maker-stage').evaluate(el=>getComputedStyle(el).position)).toBe('relative');
+ await page.getByRole('button',{name:'Show the build',exact:true}).click();
+ await expect(page.getByRole('heading',{level:1})).toContainText('Small board.');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+});
