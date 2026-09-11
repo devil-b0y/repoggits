@@ -7,8 +7,16 @@ import { projectSchema, type ProjectData, type User, type Version, type Project 
 export function versionView(row:Record<string,unknown>):Version {
   return {id:String(row.id),projectId:String(row.project_id),number:Number(row.number),status:row.status as Version['status'],data:projectSchema.parse(row.data),changelog:String(row.changelog),createdAt:new Date(row.created_at as string).toISOString(),requiredApprovals:Number(row.required_approvals),approvals:Number(row.approvals||0),feedback:row.feedback?String(row.feedback):undefined};
 }
+// The sample's demo and video are files this deployment serves under /samples/, so they follow whatever address
+// the site is hosted at now rather than the one it had when the sample was first seeded.
+function servedHere(url:string) {
+  const origin=process.env.APP_ORIGIN?.replace(/\/+$/,'');
+  return origin&&/^https?:\/\/[^/]+\/samples\//i.test(url)?url.replace(/^https?:\/\/[^/]+/i,origin):url;
+}
 export function projectView(row:Record<string,unknown>):Project {
-  return {id:String(row.project_id),ownerId:String(row.owner_id),featured:!!row.featured,archived:!!row.archived,example:!!row.example,views:Number(row.views),downloads:Number(row.downloads),stars:Number(row.stars||0),likes:Number(row.likes||0),parentProjectId:row.parent_project_id?String(row.parent_project_id):null,parentVersionId:row.parent_version_id?String(row.parent_version_id):null,version:versionView(row)};
+  const version=versionView(row);
+  if(row.example)version.data={...version.data,liveUrl:servedHere(version.data.liveUrl),videoUrl:servedHere(version.data.videoUrl)};
+  return {id:String(row.project_id),ownerId:String(row.owner_id),featured:!!row.featured,archived:!!row.archived,example:!!row.example,views:Number(row.views),downloads:Number(row.downloads),stars:Number(row.stars||0),likes:Number(row.likes||0),parentProjectId:row.parent_project_id?String(row.parent_project_id):null,parentVersionId:row.parent_version_id?String(row.parent_version_id):null,version};
 }
 export const projectSelect=`SELECT v.*,p.owner_id,p.featured,p.archived,p.example,p.views,p.downloads,p.parent_project_id,p.parent_version_id,
   (SELECT count(*) FROM r.reactions rx JOIN r.users ru ON ru.id=rx.user_id AND NOT ru.suspended WHERE rx.project_id=p.id AND rx.kind='star') AS stars,

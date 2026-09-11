@@ -101,6 +101,16 @@ test('sample video/live links are repaired if APP_ORIGIN changes since it was fi
   }
 });
 
+test('sample demo and video links follow the address the site is served from, even without reseeding',async()=>{
+  // As if the database was seeded on a laptop and then moved to a server at a different address.
+  await db.query("UPDATE r.versions SET data=jsonb_set(jsonb_set(data,'{liveUrl}','\"http://localhost:3000/samples/campusflow/index.html\"'),'{videoUrl}','\"http://localhost:3000/samples/campusflow/demo.webm\"') WHERE project_id=$1",[SAMPLE_PROJECT_ID]);
+  try{
+    const d=(await (await student.get(`/api/projects/${SAMPLE_PROJECT_ID}`)).json()).project.version.data;
+    expect(d.liveUrl).toBe(`${origin}/samples/campusflow/index.html`);
+    expect(d.videoUrl).toBe(`${origin}/samples/campusflow/demo.webm`);
+  } finally {await seedSample();}
+});
+
 test('sample video plays and live demo persists a new task',async({page})=>{
   await seedSample();
   await page.context().addCookies((await student.storageState()).cookies);
