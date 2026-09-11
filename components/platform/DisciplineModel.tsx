@@ -11,7 +11,8 @@ export default function DisciplineModel({kind,paused}:{kind:DisciplineKind;pause
   useEffect(()=>{
     const el=host.current;if(!el)return;
     const preference=matchMedia('(prefers-reduced-motion: reduce)');
-    let renderer:THREE.WebGLRenderer|undefined,disposeScene=()=>{},draw=()=>{},frame=0,visible=false,failed=false,settling=false;
+    let renderer:THREE.WebGLRenderer|undefined,disposeScene=()=>{},draw=()=>{},frame=0,visible=false,settling=false;
+    let failed=false;const fail=()=>{failed=true;el!.dataset.failed='true';};
     let pointerX=0,pointerY=0,scrollTarget=.5,scrollCurrent=.5,angle=0,tilt=0;
     const motion=()=>pausedRef.current?'paused':preference.matches?'reduced':'running';
     function stop(){cancelAnimationFrame(frame);frame=0;}
@@ -25,7 +26,7 @@ export default function DisciplineModel({kind,paused}:{kind:DisciplineKind;pause
     refresh.current=update;
     function initialize(){
       if(renderer||failed)return;
-      try{renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});}catch{failed=true;return;}
+      try{renderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});}catch{fail();return;}
       renderer.setPixelRatio(Math.min(devicePixelRatio,1.6));renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
       renderer.setClearColor(0x000000,0);renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.22;
       const scene=new THREE.Scene(),camera=new THREE.PerspectiveCamera(32,1,.1,60);
@@ -38,7 +39,7 @@ export default function DisciplineModel({kind,paused}:{kind:DisciplineKind;pause
       const ground=new THREE.Mesh(new THREE.PlaneGeometry(20,20),new THREE.ShadowMaterial({opacity:.17}));ground.rotation.x=-Math.PI/2;ground.position.y=-.14;ground.receiveShadow=true;scene.add(ground);
       const resize=()=>{const {width,height}=el!.getBoundingClientRect();if(width&&height){renderer!.setSize(width,height);camera.aspect=width/height;camera.updateProjectionMatrix();schedule();}};
       const resizeObserver=new ResizeObserver(resize);resizeObserver.observe(el!);resize();
-      const lost=(event:Event)=>{event.preventDefault();failed=true;stop();setReady(false);};renderer.domElement.addEventListener('webglcontextlost',lost);
+      const lost=(event:Event)=>{event.preventDefault();fail();stop();setReady(false);};renderer.domElement.addEventListener('webglcontextlost',lost);
       el!.appendChild(renderer.domElement);
       draw=()=>{
         if(failed||!renderer)return;
