@@ -215,6 +215,22 @@ test('email verification accepts a code, and invites stay link-only',async({requ
   expect((await request.post('/api/auth/invite',{headers,data:{email,code:'111222',password}})).status()).toBe(400);
 });
 
+test('the register screen offers a sign-in link next to the code box, for whoever already has an account',async({page})=>{
+  // This suite runs with EMAIL_VERIFICATION_REQUIRED=false, so the code box never has a working code to
+  // enter regardless of whether the email is new or already registered — the hint must cover both.
+  await page.goto('/auth?mode=register');
+  await page.getByLabel('Your name').fill('Second Try');
+  await page.getByLabel('Email address').fill('student@example.test');
+  await page.getByLabel('Choose a password').fill('a different long passphrase for this attempt');
+  await page.getByRole('button',{name:'Create account'}).click();
+  await expect(page.getByText('Registration received')).toBeVisible();
+  await expect(page.getByLabel('6-digit code')).toBeVisible();
+  const hint=page.getByRole('button',{name:'sign in instead'});
+  await expect(hint).toBeVisible();
+  await hint.click();
+  await expect(page.getByRole('button',{name:'Sign in',exact:true})).toBeVisible();
+});
+
 test('teammates listed by email only gain access once their account email is verified',async({playwright})=>{
   // Anyone can register an address they do not own; until it is verified, being named on a team grants nothing.
   const mate=`mate-${randomUUID()}@example.test`,projectId=randomUUID();
