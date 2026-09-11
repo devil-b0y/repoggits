@@ -4,7 +4,14 @@ import { db, type Db } from './db';
 import { emailVerificationRequired } from './policy';
 import { HttpError, requireCondition } from './errors';
 import { profileSchema, type User, type ProjectData } from './schema';
-const deriveKey = (password:string,salt:string) => new Promise<Buffer>((resolve,reject) => scryptCallback(password,salt,64,{N:131072,r:8,p:1,maxmem:256*1024*1024},(error,key)=>error?reject(error):resolve(key)));
+// Each derivation holds 128 MiB, and a burst of logins all pass the rate limiter together, so cap concurrency to keep memory bounded.
+const MAX_CONCURRENT_HASHES=4;
+let activeHashes=0;const waitingHashes:(()=>void)[]=[];
+async function withHashSlot<T>(work:()=>Promise<T>) {
+  if(activeHashes>=MAX_CONCURRENT_HASHES)await new Promise<void>(resolve=>waitingHashes.push(resolve));else activeHashes++;
+  try{return await work();}finally{const next=waitingHashes.shift();if(next)next();else activeHashes--;}
+}
+const deriveKey = (password:string,salt:string) => withHashSlot(()=>new Promise<Buffer>((resolve,reject) => scryptCallback(password,salt,64,{N:131072,r:8,p:1,maxmem:256*1024*1024},(error,key)=>error?reject(error):resolve(key))));
 export const SESSION_COOKIE = 'repoggits_session';
 export const hashToken=(token:string)=>createHash('sha256').update(token).digest('hex');
 export const newToken=()=>randomBytes(32).toString('hex');
@@ -42,9 +49,9 @@ export function canReview(user:User,data:ProjectData) {
 export async function audit(client:Db,actorId:string|null,action:string,targetId:string,details:object={}) {
   await client.query('INSERT INTO r.audit(id,actor_id,action,target_id,details) VALUES($1,$2,$3,$4,$5)',[randomUUID(),actorId,action,targetId,JSON.stringify(details)]);
 }
-export async function rateLimit(key:string,limit:number,seconds:number) {
+export async function rateLimit(key:string,limit:number,seconds:number,message='Too many attempts. Please wait before trying again.') {
   const [row]=await db.query(`INSERT INTO r.rate_limits(key,count,expires_at) VALUES($1,1,now()+$2*interval '1 second')
     ON CONFLICT(key) DO UPDATE SET count=CASE WHEN r.rate_limits.expires_at<now() THEN 1 ELSE r.rate_limits.count+1 END,
     expires_at=CASE WHEN r.rate_limits.expires_at<now() THEN EXCLUDED.expires_at ELSE r.rate_limits.expires_at END RETURNING count`,[key,seconds]);
-  if(row.count>limit)throw new HttpError(429,'Too many attempts. Please wait before trying again.');
+  if(row.count>limit)throw new HttpError(429,message);
 }

@@ -132,7 +132,7 @@ async function handler(request:NextRequest,context:Context) {
   }
   if(resource==='workspace'&&method==='GET'){
     const user=await requireUser(request,false);
-    const own=await db.query(`${projectSelect} WHERE (p.owner_id=$1 OR NOT p.example AND EXISTS(SELECT 1 FROM r.versions av WHERE av.project_id=p.id AND av.status='approved' AND av.data->'team' @> $2::jsonb)) AND v.number=(SELECT max(v2.number) FROM r.versions v2 WHERE v2.project_id=p.id) ORDER BY v.updated_at DESC`,[user.id,JSON.stringify([{email:user.email}])]);
+    const own=await db.query(`${projectSelect} WHERE (p.owner_id=$1 OR $3 AND NOT p.example AND EXISTS(SELECT 1 FROM r.versions av WHERE av.project_id=p.id AND av.status='approved' AND av.data->'team' @> $2::jsonb)) AND v.number=(SELECT max(v2.number) FROM r.versions v2 WHERE v2.project_id=p.id) ORDER BY v.updated_at DESC`,[user.id,JSON.stringify([{email:user.email}]),user.verified]);
     const bookmarks=await db.query('SELECT project_id FROM r.bookmarks WHERE user_id=$1',[user.id]);const ids=new Set(bookmarks.map(b=>b.project_id));
     const notifications=await db.query('SELECT id,message,project_id,read,created_at FROM r.notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100',[user.id]);
     return json({user,projects:own.map(projectView),saved:(await publicProjects()).filter(p=>ids.has(p.id)),notifications});

@@ -142,7 +142,7 @@ Sign in at `/auth`, then open **`/admin`** or click **Review desk**. There are n
 
 ### Email behavior
 
-Email verification is currently optional. In `outbox` mode, messages are stored privately in Neon but **not sent**. To send password-reset and notification emails, configure SMTP using `.env.example` and set `MAIL_MODE=smtp`.
+Email verification is currently optional. In `outbox` mode, messages are stored privately in Neon but **not sent**. To send password-reset and notification emails, configure SMTP or Azure Communication Services using `.env.example` and set `MAIL_MODE=smtp` or `MAIL_MODE=azure`.
 
 See [the operations guide](docs/OPERATIONS.md#email-delivery) for outbox inspection and delivery commands.
 

@@ -1,0 +1,20 @@
+'use client';
+import { useState, type FormEvent } from 'react';
+import Link from 'next/link';
+import { ArrowUpRight } from 'lucide-react';
+import { Shell, Gate, PageTitle, Notice, Loading, useData, useSession, send } from './shared';
+type Settings={moderation:{requiredApprovals:1|2;allowedEmailDomains?:string[]};categories:{departments:string[];subjects:string[];tags:string[]}};
+function Content(){
+ const {user}=useSession();const {data,loading,reload}=useData<Settings>('settings');
+ const [busy,setBusy]=useState(false),[error,setError]=useState(''),[notice,setNotice]=useState('');
+ async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError('');setNotice('');const f=new FormData(event.currentTarget);try{await send('admin/settings',{requiredApprovals:Number(f.get('requiredApprovals')),departments:String(f.get('departments')).split('\n').map(s=>s.trim()).filter(Boolean),subjects:String(f.get('subjects')).split('\n').map(s=>s.trim()).filter(Boolean),tags:String(f.get('tags')).split(',').map(s=>s.trim()).filter(Boolean),allowedEmailDomains:String(f.get('allowedEmailDomains')||'').split(/[\n,]/).map(s=>s.trim().replace(/^@/,'').toLowerCase()).filter(Boolean)},'PATCH');setNotice('Settings saved. The approval count applies to future submissions; the domain list applies to new sign-ups.');await reload();}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
+ if(loading&&!data)return <Loading/>;
+ if(user?.role!=='superadmin')return <div className="page-wrap"><Notice error>Settings are reserved for Super Admins.</Notice></div>;
+ return <div className="page-wrap editor"><PageTitle eyebrow="THE CONTROL ROOM" title="Shape how the collective works." description="Review policy, sign-up access, and the categories every submission chooses from." action={<Link className="text-button" href="/admin">Back to admin</Link>}/>{error&&<Notice error>{error}</Notice>}{notice&&<Notice>{notice}</Notice>}{data&&<form onSubmit={save}><fieldset disabled={busy}>
+  <section className="form-section"><div className="form-section-title"><span>01</span><div><h2>Review policy</h2><p>How many assigned educators must approve a submission before it goes live.</p></div></div><label>Approvals required<select name="requiredApprovals" defaultValue={data.moderation.requiredApprovals}><option value={1}>One assigned reviewer</option><option value={2}>Two different assigned reviewers</option></select><small>Each submission keeps the approval threshold in effect when it was submitted.</small></label></section>
+  <section className="form-section"><div className="form-section-title"><span>02</span><div><h2>Who can sign up</h2><p>Limit self-service registration to specific email domains.</p></div></div><label>Allowed email domains<textarea name="allowedEmailDomains" defaultValue={(data.moderation.allowedEmailDomains||[]).join('\n')} rows={3} placeholder={'college.edu\nstudents.college.edu'}/><small>One domain per line, such as college.edu or gmail.com. Only new registrations are checked; existing accounts keep working. Leave empty to allow any email address.</small></label></section>
+  <section className="form-section"><div className="form-section-title"><span>03</span><div><h2>Organize the collective</h2><p>The departments, subjects, and technology tags every submission chooses from.</p></div></div><label>Departments<textarea name="departments" defaultValue={data.categories.departments.join('\n')} rows={5}/><small>One department per line.</small></label><label>Subjects<textarea name="subjects" defaultValue={data.categories.subjects.join('\n')} rows={4}/><small>One subject per line.</small></label><label>Suggested technology tags<input name="tags" defaultValue={data.categories.tags.join(', ')}/><small>Separate tags with commas.</small></label></section>
+  <div className="editor-actions"><span/><button className="button blue" disabled={busy}>{busy?'Saving…':'Save settings'} <ArrowUpRight size={17}/></button></div>
+ </fieldset></form>}</div>;
+}
+export default function AdminSettings(){return <Shell><Gate admin><Content/></Gate></Shell>;}

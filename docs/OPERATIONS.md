@@ -48,7 +48,7 @@ The local setup currently uses `MAIL_MODE=outbox`. Password-reset and review mes
 npm run mail:outbox
 ```
 
-This writes pending messages to `.local/outbox.txt` for development. Never serve that directory publicly. To deliver real messages, set `MAIL_MODE=smtp`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `MAIL_FROM` in `.env.local`, then restart. `npm run mail:send` retries queued mail; run only one delivery worker at a time. Failed deliveries stay queued.
+This writes pending messages to `.local/outbox.txt` for development. Never serve that directory publicly. To deliver real messages, set `MAIL_MODE=smtp`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, and `MAIL_FROM` in `.env.local`, then restart. To use Azure Communication Services instead, set `MAIL_MODE=azure`, `AZURE_COMMUNICATION_CONNECTION_STRING`, and a `MAIL_FROM` sender on a domain connected to that resource. `npm run mail:send` retries queued mail; run only one delivery worker at a time. Failed deliveries stay queued.
 
 Email/password authentication uses salted scrypt hashes, opaque server-side sessions, expiry, revocation, and single-use tokens. Optional Google OAuth is not implemented.
 

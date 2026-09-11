@@ -9,16 +9,28 @@ import { requireCondition, HttpError } from './errors';
 import { queueMail } from './mail';
 import { emailVerificationRequired } from './policy';
 
+// Matches the countdown on the "Send a new code" button.
+const CODE_COOLDOWN='Please wait a minute before requesting another code.';
+
 async function issueToken(userId:string,email:string,purpose:string) {
   // The link and the code are two independent ways to complete the same pending action: whichever
   // is used first consumes the row, so the other becomes invalid immediately afterward.
-  // DEV_FIXED_OTP (local .env.local only) pins the registration code for manual testing without real email delivery.
-  const token=newToken(),code=(purpose==='verify'&&process.env.DEV_FIXED_OTP)||newCode();
+  // DEV_FIXED_OTP pins the registration code for manual testing without real email delivery. It lets anyone
+  // verify any account, so it is ignored in production builds even if the variable is set.
+  const fixedCode=process.env.NODE_ENV!=='production'&&purpose==='verify'?process.env.DEV_FIXED_OTP:undefined;
+  const token=newToken(),code=fixedCode||newCode();
   await transaction(async client=>{
     await client.query('DELETE FROM r.tokens WHERE user_id=$1 AND purpose=$2',[userId,purpose]);
     await client.query("INSERT INTO r.tokens(hash,user_id,purpose,expires_at,code_hash) VALUES($1,$2,$3,now()+interval '1 hour',$4)",[hashToken(token),userId,purpose,hashToken(code)]);
   });
   await queueMail(email,purpose==='verify'?'Verify your Repoggits account':'Reset your Repoggits password',`${process.env.APP_ORIGIN || 'http://localhost:3000'}/auth?mode=${purpose}&token=${token}\n\nThis single-use link expires in one hour.\n\nOr enter this code on the sign-in page instead: ${code}`);
+}
+// At most one code per address and purpose each minute. Inside that window the request still succeeds but sends
+// nothing, so "Create account" and "Send reset link" never fail on a repeat click; only the resend button reports the wait.
+async function sendCode(userId:string,email:string,purpose:'verify'|'reset') {
+  try{await rateLimit(`code-sent:${purpose}:${email}`,1,60);}
+  catch(error){if(error instanceof HttpError&&error.status===429)return;throw error;}
+  await issueToken(userId,email,purpose);
 }
 export async function authRoute(request:NextRequest,action:string) {
   if(action==='me')return json({user:await currentUser(request),uploadsAvailable:true,emailVerificationRequired:emailVerificationRequired()});
@@ -27,18 +39,30 @@ export async function authRoute(request:NextRequest,action:string) {
     if(token)await db.query('DELETE FROM r.sessions WHERE hash=$1',[hashToken(token)]);
     const response=json({ok:true});response.cookies.set(SESSION_COOKIE,'',{path:'/',maxAge:0,httpOnly:true,sameSite:'lax'});return response;
   }
-  if(action==='resend') {const user=await requireUser(request,false);if(!emailVerificationRequired())return json({message:'Email verification is not required. You can use your account now.'});await rateLimit(`verify:${user.id}`,3,3600);if(!user.verified)await issueToken(user.id,user.email,'verify');return json({message:'A verification message has been queued.'});}
+  if(action==='resend') {
+    if(!emailVerificationRequired())return json({message:'Email verification is not required. You can use your account now.'});
+    // Signed-in users resend for their own account; right after sign-up (not signed in yet) the page sends the address.
+    const user=await currentUser(request);
+    const email=user?.email??z.object({email:emailSchema}).parse(await bodyJson(request)).email;
+    await rateLimit(`resend:${email}`,1,60,CODE_COOLDOWN);
+    const [row]=await db.query('SELECT id,verified FROM r.users WHERE email=$1 AND NOT suspended',[email]);
+    if(row&&!row.verified)await sendCode(row.id,email,'verify');
+    return json({message:user?'A new code is on its way. Check your inbox.':'If this account still needs verifying, a new code is on its way.'});
+  }
   const body=await bodyJson(request);
   if(action==='register') {
     const input=z.object({name:z.string().trim().min(2).max(100),email:emailSchema,password:passwordSchema}).parse(body);
-    await rateLimit(`signup:${input.email}`,3,3600);await rateLimit('signup:global',100,3600);
+    await rateLimit('signup:global',100,3600);
     // Super Admins can limit self-service sign-up to specific email domains (Admin → Settings).
     // Only new registrations are gated; existing accounts, resets, and operator invites are not.
     const [moderation]=await db.query("SELECT value FROM r.settings WHERE key='moderation'");
     const allowedDomains:string[]=Array.isArray(moderation?.value?.allowedEmailDomains)?moderation.value.allowedEmailDomains:[];
     if(allowedDomains.length)requireCondition(allowedDomains.includes(input.email.split('@').pop()||''),403,`Sign-up is limited to these email domains: ${allowedDomains.join(', ')}.`);
-    const existing=await db.query('SELECT id FROM r.users WHERE email=$1',[input.email]);
-    if(!existing.length){const id=randomUUID();const password=await hashPassword(input.password);await db.query('INSERT INTO r.users(id,email,password_hash,name,profile) VALUES($1,$2,$3,$4,$5)',[id,input.email,password,input.name,JSON.stringify({name:input.name})]);if(emailVerificationRequired())await issueToken(id,input.email,'verify');}
+    const [existing]=await db.query('SELECT id,verified FROM r.users WHERE email=$1',[input.email]);
+    if(!existing){const id=randomUUID();const password=await hashPassword(input.password);await db.query('INSERT INTO r.users(id,email,password_hash,name,profile) VALUES($1,$2,$3,$4,$5)',[id,input.email,password,input.name,JSON.stringify({name:input.name})]);if(emailVerificationRequired())await sendCode(id,input.email,'verify');}
+    // Registering again before verifying resends the code. The stored password and name are never replaced here,
+    // or anyone could take over an unverified account; the response is identical either way, so it reveals nothing.
+    else if(emailVerificationRequired()&&!existing.verified)await sendCode(existing.id,input.email,'verify');
     return json({message:emailVerificationRequired()?'If this address is eligible, a verification message has been queued. Check your inbox before signing in.':'Registration received. You can sign in now. If you already have an account, use your existing password.'},202);
   }
   if(action==='login') {
@@ -51,9 +75,9 @@ export async function authRoute(request:NextRequest,action:string) {
     const response=json({user:userView(row)});response.cookies.set(SESSION_COOKIE,token,{httpOnly:true,sameSite:'lax',secure:process.env.APP_ORIGIN?.startsWith('https:')||false,path:'/',maxAge:7*86400});return response;
   }
   if(action==='forgot') {
-    const {email}=z.object({email:emailSchema}).parse(body);await rateLimit(`reset:${email}`,3,3600);
+    const {email}=z.object({email:emailSchema}).parse(body);
     const [row]=await db.query('SELECT id FROM r.users WHERE email=$1 AND NOT suspended',[email]);
-    if(row)await issueToken(row.id,email,'reset');
+    if(row)await sendCode(row.id,email,'reset');
     return json({message:'If an account exists, a password-reset message has been queued.'});
   }
   if(['verify','reset','invite'].includes(action)) {

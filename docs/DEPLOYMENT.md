@@ -222,8 +222,10 @@ re-read while the server runs.
 | `DATABASE_POOL_MAX` | Connections held by this process. Default 5. |
 | `APP_ORIGIN` | Exact public browser origin. Required in production. |
 | `PORT` | Port the Node process listens on. Default 3000. |
-| `MAIL_MODE` | `outbox` stores messages unsent; `smtp` delivers them. |
-| `SMTP_*`, `MAIL_FROM` | Delivery credentials when `MAIL_MODE=smtp`. |
+| `MAIL_MODE` | `outbox` stores messages unsent; `smtp` or `azure` delivers them. |
+| `MAIL_FROM` | Sender address. With `azure`, it must be on a domain connected to the Communication Services resource. |
+| `SMTP_*` | Delivery credentials when `MAIL_MODE=smtp`. |
+| `AZURE_COMMUNICATION_CONNECTION_STRING` | Azure Communication Services connection string (resource → Settings → Keys) when `MAIL_MODE=azure`. |
 | `DOWNLOAD_SECRET` | Signing key for expiring download links. Generated and stored in the database when blank. |
 | `EMAIL_VERIFICATION_REQUIRED` | `true` restores the email verification gate. |
 
@@ -254,7 +256,7 @@ cannot.
 
 `outbox` mode stores password resets and review notifications in the database
 without sending them, which leaves people unable to reset their own passwords.
-For anything beyond a trial, set `MAIL_MODE=smtp` with working credentials.
+For anything beyond a trial, set `MAIL_MODE=smtp` or `MAIL_MODE=azure` with working credentials.
 `npm run mail:send` retries anything already queued; run one delivery worker at
 a time.
 

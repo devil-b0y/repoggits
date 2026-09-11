@@ -20,6 +20,7 @@
     "node": ">=24"
   },
   "dependencies": {
+    "@azure/communication-email": "^1.1.0",
     "ignore": "^7.0.9",
     "lucide-react": "^0.468.0",
     "next": "^16.3.4",

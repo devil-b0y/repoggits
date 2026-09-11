@@ -5,7 +5,7 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
 // and that the code and link inside it really work.
 const namespace = process.env.TESTMAIL_NAMESPACE;
 const apikey = process.env.TESTMAIL_APIKEY;
-test.skip(!namespace || !apikey || !process.env.SMTP_HOST, 'Set TESTMAIL_NAMESPACE, TESTMAIL_APIKEY and SMTP_* in .env.local to run real delivery tests.');
+test.skip(!namespace || !apikey || !(process.env.AZURE_COMMUNICATION_CONNECTION_STRING || process.env.SMTP_HOST), 'Set TESTMAIL_NAMESPACE, TESTMAIL_APIKEY and Azure or SMTP_* settings in .env.local to run real delivery tests.');
 
 const headers = { origin: process.env.APP_ORIGIN! };
 const inbox = (tag: string) => `${namespace}.${tag}@inbox.testmail.app`;
@@ -49,6 +49,42 @@ test('the delivered verification link works on its own', async ({ request }) => 
   const tag = `link${Date.now()}`;
   const token = tokenIn(await register(request, tag, 'a long enough passphrase for link checks'));
   expect((await request.post('/api/auth/verify', { headers, data: { token } })).status()).toBe(200);
+});
+
+const oneMinuteAfter = (start: number) => new Promise(resolve => setTimeout(resolve, Math.max(0, start + 61_000 - Date.now())));
+
+test('"Send a new code" right after sign-up delivers a fresh code, at most once a minute', async ({ request }) => {
+  test.setTimeout(180_000);
+  const tag = `resend${Date.now()}`, password = 'a long enough passphrase for resend checks', start = Date.now();
+  const first = await register(request, tag, password);
+  // The page counts down a minute after sign-up before the button can be pressed.
+  await oneMinuteAfter(start);
+  const since = Date.now();
+  expect((await request.post('/api/auth/resend', { headers, data: { email: inbox(tag) } })).status()).toBe(200);
+  const second = await waitForEmail(tag, since, /Verify your Repoggits account/);
+  const tooSoon = await request.post('/api/auth/resend', { headers, data: { email: inbox(tag) } });
+  expect(tooSoon.status()).toBe(429);
+  expect((await tooSoon.json()).error).toContain('wait a minute');
+  expect((await request.post('/api/auth/verify', { headers, data: { token: tokenIn(first) } })).status()).toBe(400);
+  expect((await request.post('/api/auth/verify', { headers, data: { email: inbox(tag), code: codeIn(second) } })).status()).toBe(200);
+});
+
+test('registering again before verifying delivers a fresh code and keeps the original password', async ({ request }) => {
+  test.setTimeout(180_000);
+  const tag = `again${Date.now()}`, password = 'a long enough passphrase for repeat sign-ups', start = Date.now();
+  const first = await register(request, tag, password);
+  const repeat = () => request.post('/api/auth/register', { headers, data: { name: 'Someone Else', email: inbox(tag), password: 'a different passphrase that must be ignored' } });
+  // "Create account" never fails on a repeat click; inside the one-minute window it just doesn't send another code.
+  expect((await repeat()).status()).toBe(202);
+  await oneMinuteAfter(start);
+  const since = Date.now();
+  expect((await repeat()).status()).toBe(202);
+  const second = await waitForEmail(tag, since, /Verify your Repoggits account/);
+  // The fresh message replaces the earlier one, so the first link no longer works.
+  expect((await request.post('/api/auth/verify', { headers, data: { token: tokenIn(first) } })).status()).toBe(400);
+  expect((await request.post('/api/auth/verify', { headers, data: { email: inbox(tag), code: codeIn(second) } })).status()).toBe(200);
+  expect((await request.post('/api/auth/login', { headers, data: { email: inbox(tag), password: 'a different passphrase that must be ignored' } })).status()).toBe(401);
+  expect((await request.post('/api/auth/login', { headers, data: { email: inbox(tag), password } })).status()).toBe(200);
 });
 
 test('the delivered password-reset code sets a new password', async ({ request }) => {

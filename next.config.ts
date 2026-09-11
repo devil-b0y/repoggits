@@ -5,13 +5,14 @@ const config: NextConfig = {
   distDir: process.env.REPOGGITS_TEST_DIST || '.next',
   // Baseline security headers on every response, so they apply regardless of how this is
   // deployed (the VPS nginx/Caddy configs in deploy/ set a similar set for defense in depth,
-  // but a deployment that skips those still gets these). No Content-Security-Policy here yet —
-  // Next.js's own hydration payload needs care (inline script allowances or a nonce) to add one
-  // without breaking the app; that's tracked separately rather than shipped half-verified.
+  // but a deployment that skips those still gets these). The CSP below only sets directives that
+  // don't affect scripts or styles; a script-src policy needs a per-request nonce for Next.js's
+  // inline hydration payload and is not in place yet.
   async headers() {
     return [{
       source: '/:path*',
       headers: [
+        { key: 'Content-Security-Policy', value: "frame-ancestors 'self'; base-uri 'self'; object-src 'none'; form-action 'self'" },
         { key: 'X-Content-Type-Options', value: 'nosniff' },
         { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
         { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },

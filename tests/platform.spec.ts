@@ -1,6 +1,6 @@
 import { test, expect, type APIRequestContext } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
-import { db, pool, migrate } from '../lib/db';
+import { db, migrate } from '../lib/db';
 import { hashPassword } from '../lib/auth';
 import { emptyProject, projectSchema, type ProjectData } from '../lib/schema';
 import { zipFixture } from './helpers/zip';
@@ -39,7 +39,8 @@ test.beforeAll(async({playwright})=>{
   for(const [id,owner] of [[sourceId,studentId],[foreignSourceId,outsiderId]])await db.query("INSERT INTO r.files(id,owner_id,filename,mime,size,content,scan_status) VALUES($1,$2,'source.zip','application/zip',$3,$4,'clean')",[id,owner,archive.length,archive]);
   data.sourceId=sourceId;
 });
-test.afterAll(async()=>{await Promise.all([student,outsider,teacher,teacherTwo,otherTeacher,admin].filter(Boolean).map(client=>client.dispose()));await pool().end();});
+// The database pool is shared with spec files that run later in this worker, so it is left open here.
+test.afterAll(async()=>{await Promise.all([student,outsider,teacher,teacherTwo,otherTeacher,admin].filter(Boolean).map(client=>client.dispose()));});
 
 test('website backup is restricted to Super Admin and downloads from the panel',async({page,request})=>{
   expect((await request.post('/api/admin/backup',{headers})).status()).toBe(401);
@@ -178,6 +179,11 @@ test('password reset accepts the emailed 6-digit code instead of the link, and l
   // One pending reset, two ways to finish it: using the code consumed the link from the same email.
   expect((await request.post('/api/auth/reset',{headers,data:{token,password:first}})).status()).toBe(400);
   expect((await request.post('/api/auth/login',{headers,data:{email,password:second}})).status()).toBe(200);
+  // Asking again within a minute succeeds but sends nothing new; skip the wait rather than sleeping through it.
+  const sentSoFar=(await db.query('SELECT id FROM r.outbox WHERE recipient=$1',[email])).length;
+  expect((await request.post('/api/auth/forgot',{headers,data:{email}})).status()).toBe(200);
+  expect(await db.query('SELECT id FROM r.outbox WHERE recipient=$1',[email])).toHaveLength(sentSoFar);
+  await db.query('DELETE FROM r.rate_limits WHERE key=$1',[`code-sent:reset:${email}`]);
   expect((await request.post('/api/auth/forgot',{headers,data:{email}})).status()).toBe(200);
   const next=await latestMail();
   for(let i=0;i<5;i++)expect((await request.post('/api/auth/reset',{headers,data:{email,code:wrong(next.code),password:first}})).status()).toBe(400);
@@ -197,6 +203,26 @@ test('email verification accepts a code, and invites stay link-only',async({requ
   // Codes are refused for invites even if one were somehow present: those stay operator-issued links.
   await db.query(`INSERT INTO r.tokens(hash,user_id,purpose,expires_at,code_hash) VALUES(${hash},$2,'invite',now()+interval '1 hour',encode(sha256(convert_to($3,'UTF8')),'hex'))`,[randomUUID(),user.id,'111222']);
   expect((await request.post('/api/auth/invite',{headers,data:{email,code:'111222',password}})).status()).toBe(400);
+});
+
+test('teammates listed by email only gain access once their account email is verified',async({playwright})=>{
+  // Anyone can register an address they do not own; until it is verified, being named on a team grants nothing.
+  const mate=`mate-${randomUUID()}@example.test`,projectId=randomUUID();
+  await db.query('INSERT INTO r.projects(id,owner_id) VALUES($1,$2)',[projectId,studentId]);
+  await db.query("INSERT INTO r.versions(id,project_id,number,status,data,changelog) VALUES($1,$2,1,'approved',$3,'Approved for teammate checks')",[randomUUID(),projectId,JSON.stringify({...data,team:[...data.team,{name:'Mate',email:mate,contribution:'Firmware'}]})]);
+  const mateId=randomUUID();
+  await db.query("INSERT INTO r.users(id,email,password_hash,name,profile) VALUES($1,$2,$3,'Mate','{\"name\":\"Mate\"}')",[mateId,mate,await hashPassword(password)]);
+  const client=await playwright.request.newContext({baseURL:origin,extraHTTPHeaders:headers});
+  expect((await client.post('/api/auth/login',{data:{email:mate,password}})).status()).toBe(200);
+  const unverified=await (await client.get('/api/projects/'+projectId)).json();
+  expect(unverified.editable).toBe(false);
+  expect(unverified.project.version.data.team.every((m:{email:string})=>m.email==='')).toBe(true);
+  expect((await (await client.get('/api/workspace')).json()).projects.some((p:{id:string})=>p.id===projectId)).toBe(false);
+  expect((await client.post(`/api/projects/${projectId}/versions`)).status()).toBe(404);
+  await db.query('UPDATE r.users SET verified=true WHERE id=$1',[mateId]);
+  expect((await (await client.get('/api/projects/'+projectId)).json()).editable).toBe(true);
+  expect((await (await client.get('/api/workspace')).json()).projects.some((p:{id:string})=>p.id===projectId)).toBe(true);
+  await client.dispose();
 });
 
 test('authorization and origin checks reject forged requests',async({request})=>{

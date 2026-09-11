@@ -21,6 +21,8 @@ export async function canEdit(client:Db,user:User,projectId:string) {
   const [project]=await client.query('SELECT owner_id,example FROM r.projects WHERE id=$1',[projectId]);
   if(!project||project.example)return false;
   if(project.owner_id===user.id)return true;
+  // Team membership is claimed by email address, so it only counts once the account has proven it owns that address.
+  if(!user.verified)return false;
   const [approved]=await client.query("SELECT data FROM r.versions WHERE project_id=$1 AND status='approved' ORDER BY number DESC LIMIT 1",[projectId]);
   return !!(approved?.data as ProjectData|undefined)?.team.some(member=>member.email===user.email);
 }
