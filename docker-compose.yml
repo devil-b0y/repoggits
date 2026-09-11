@@ -44,9 +44,10 @@ services:
       DATABASE_SSL: disable
       PORT: '3000'
     ports:
-      # Bound to loopback: the reverse proxy is the only thing that should reach it.
-      # Remove this mapping entirely when using the bundled Caddy profile.
-      - '127.0.0.1:3000:3000'
+      # Exposed directly: no reverse proxy in front (bare-IP deployment, no domain/TLS yet).
+      # Switch back to '127.0.0.1:3000:3000' if a proxy (nginx/Caddy) is put in front later,
+      # or remove this mapping entirely when using the bundled Caddy profile.
+      - '3000:3000'
     volumes:
       # Administrator invitation files and development outbox dumps.
       - app-local:/app/.local
