@@ -12,7 +12,8 @@ import { emailVerificationRequired } from './policy';
 async function issueToken(userId:string,email:string,purpose:string) {
   // The link and the code are two independent ways to complete the same pending action: whichever
   // is used first consumes the row, so the other becomes invalid immediately afterward.
-  const token=newToken(),code=newCode();
+  // DEV_FIXED_OTP (local .env.local only) pins the registration code for manual testing without real email delivery.
+  const token=newToken(),code=(purpose==='verify'&&process.env.DEV_FIXED_OTP)||newCode();
   await transaction(async client=>{
     await client.query('DELETE FROM r.tokens WHERE user_id=$1 AND purpose=$2',[userId,purpose]);
     await client.query("INSERT INTO r.tokens(hash,user_id,purpose,expires_at,code_hash) VALUES($1,$2,$3,now()+interval '1 hour',$4)",[hashToken(token),userId,purpose,hashToken(code)]);
@@ -67,7 +68,7 @@ export async function authRoute(request:NextRequest,action:string) {
     requireCondition(!!input.token||!!(codeEligible&&input.email&&input.code),400,'A verification link or code is required.');
     if(input.email&&input.code)await rateLimit(`code:${action}:${input.email}`,10,3600);
     const passwordHash=input.password?await hashPassword(input.password):null;
-    await transaction(async client=>{
+    const outcome=await transaction(async client=>{
       let userId:string;
       if(input.token) {
         const [row]=await client.query('DELETE FROM r.tokens WHERE hash=$1 AND purpose=$2 AND expires_at>now() RETURNING user_id',[hashToken(input.token),action]);
@@ -80,8 +81,10 @@ export async function authRoute(request:NextRequest,action:string) {
         requireCondition(pending.code_attempts<5,429,'Too many incorrect attempts. Request a new code.');
         const expected=Buffer.from(pending.code_hash,'hex'),actual=Buffer.from(hashToken(input.code!),'hex');
         if(expected.length!==actual.length||!timingSafeEqual(expected,actual)) {
+          // Returned rather than thrown: throwing here would roll back the increment, and the
+          // attempt limit would silently never engage.
           await client.query('UPDATE r.tokens SET code_attempts=code_attempts+1 WHERE hash=$1',[pending.hash]);
-          throw new HttpError(400,'Incorrect code. Try again.');
+          return 'wrong-code' as const;
         }
         await client.query('DELETE FROM r.tokens WHERE hash=$1',[pending.hash]);
         userId=user.id;
@@ -89,7 +92,9 @@ export async function authRoute(request:NextRequest,action:string) {
       if(action==='verify')await client.query('UPDATE r.users SET verified=true WHERE id=$1',[userId]);
       else {await client.query('UPDATE r.users SET password_hash=$1,verified=true WHERE id=$2',[passwordHash,userId]);await client.query('DELETE FROM r.sessions WHERE user_id=$1',[userId]);}
       await audit(client,userId,`account.${action}`,userId,{method:input.token?'link':'code'});
+      return 'ok' as const;
     });
+    if(outcome==='wrong-code')throw new HttpError(400,'Incorrect code. Try again.');
     return json({message:action==='verify'?'Email verified. You can now sign in.':'Password saved. Sign in with your new password.'});
   }
   if(action==='profile') {

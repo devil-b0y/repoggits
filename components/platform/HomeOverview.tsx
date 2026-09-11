@@ -1,5 +1,5 @@
 'use client';
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useRef} from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 const ProjectSculpture=dynamic(()=>import('./ProjectSculpture'),{ssr:false});
@@ -7,9 +7,8 @@ const DisciplineModel=dynamic(()=>import('./DisciplineModel'),{ssr:false});
 import {ArrowUpRight,Check,Code2,GitFork,Pause,Play,Star,Users,Video} from 'lucide-react';
 import './overview.css';
 
-export default function HomeOverview(){
+export default function HomeOverview({paused,setPaused}:{paused:boolean;setPaused:(value:boolean)=>void}){
   const root=useRef<HTMLDivElement>(null);
-  const [paused,setPaused]=useState(false);
   useEffect(()=>{
     const el=root.current;if(!el)return;
     const preference=matchMedia('(prefers-reduced-motion: reduce)');
@@ -32,7 +31,7 @@ export default function HomeOverview(){
     return()=>{cleanup();preference.removeEventListener('change',start);};
   },[paused]);
   return <div ref={root} className={`home-overview ${paused?'motion-paused':''}`}>
-    <div className="overview-intro overview-reveal"><div className="eyebrow">MORE THAN A FINAL SUBMISSION</div><h2>Good work deserves<br/>a complete picture<span>.</span></h2><p>Document the outcome and everything that made it possible. One considered space for the demo, the team, and the source.</p><button className="text-button" aria-pressed={paused} onClick={()=>setPaused(!paused)}>{paused?<Play size={15}/>:<Pause size={15}/>} {paused?'Resume overview motion':'Pause overview motion'}</button><nav className="overview-chapters" aria-label="Overview chapters"><a href="#project-story">01 / The project</a><a href="#project-types">02 / The disciplines</a><a href="#the-collective">03 / The collective</a></nav></div>
+    <div className="overview-intro overview-reveal"><div className="eyebrow">MORE THAN A FINAL SUBMISSION</div><h2>The work.<br/>The whole story<span>.</span></h2><p>Document the outcome and everything that made it possible. One considered space for the demo, the team, and the source.</p><button className="text-button" aria-pressed={paused} onClick={()=>setPaused(!paused)}>{paused?<Play size={15}/>:<Pause size={15}/>} {paused?'Resume overview motion':'Pause overview motion'}</button><nav className="overview-chapters" aria-label="Overview chapters"><a href="#project-story">01 / The project</a><a href="#project-types">02 / The disciplines</a><a href="#the-collective">03 / The collective</a></nav></div>
     <section id="project-story" className="overview-story" aria-labelledby="story-title">
       <div className="paper-scene" role="img" aria-label="Three-dimensional layers representing a project: working demo, team, and source code">
         <div className="scene-coordinate">FIG. 02 / PROJECT ANATOMY</div><ProjectSculpture paused={paused}/>

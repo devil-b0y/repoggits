@@ -1,0 +1,10 @@
+'use client';
+import dynamic from 'next/dynamic';
+import Link from 'next/link';
+import {ArrowDown,ArrowUpRight,Pause,Play} from 'lucide-react';
+const EditionWorld=dynamic(()=>import('./EditionWorld'),{ssr:false});
+
+export const editionChapters=[{id:'edition-top',number:'I',label:'Overview'},{id:'project-story',number:'II',label:'The story'},{id:'project-types',number:'III',label:'Disciplines'},{id:'the-collective',number:'IV',label:'The collective'},{id:'how-it-works',number:'V',label:'Your chapter'}];
+export default function EditionOpening({paused,setPaused}:{paused:boolean;setPaused:(value:boolean)=>void}){
+  return <section id="edition-top" className={`edition-opening ${paused?'edition-paused':''}`} aria-label="Welcome to the student project collective"><div className="edition-stage"><div className="edition-world-fallback" aria-hidden="true"><span/><i/><b/></div><EditionWorld paused={paused}/><div className="edition-coordinate">REPOGGITS / THE MAKER’S COLLECTIVE</div><div className="edition-corner">SOFTWARE. HARDWARE.<br/>A WORLD OF POSSIBILITY.</div><div className="edition-title-card"><div className="eyebrow">THE NEXT CHAPTER IS YOURS</div><h1>Good ideas.<br/><em>Built</em> together.</h1><p>A world of student projects.<br/>And the people moving them forward.</p><div className="edition-actions"><Link href="/projects" className="button blue">Explore projects <ArrowUpRight size={17}/></Link><Link href="/submit" className="text-button">Share your work <ArrowUpRight size={16}/></Link></div><nav aria-label="Explore the homepage" className="edition-index">{editionChapters.slice(1).map(chapter=><a key={chapter.id} href={`#${chapter.id}`}><span>{chapter.label}</span><span>{chapter.number}</span></a>)}</nav></div><div className="edition-bottom"><a href="#project-story"><ArrowDown size={15}/><span>SCROLL INTO POSSIBILITY</span></a><button className="edition-motion" aria-pressed={paused} onClick={()=>setPaused(!paused)}>{paused?<Play size={14}/>:<Pause size={14}/>} {paused?'Resume cinematic motion':'Pause cinematic motion'}</button></div></div></section>;
+}

@@ -145,6 +145,60 @@ test('registration works without verification and single-use password reset revo
   await client.dispose();
 });
 
+test('super admin can limit sign-up to specific email domains',async({request})=>{
+  const current=await (await admin.get('/api/settings')).json();
+  const base={requiredApprovals:current.moderation.requiredApprovals,departments:current.categories.departments,subjects:current.categories.subjects,tags:current.categories.tags};
+  expect((await teacher.patch('/api/admin/settings',{data:{...base,allowedEmailDomains:['college.edu']}})).status()).toBe(403);
+  expect((await admin.patch('/api/admin/settings',{data:{...base,allowedEmailDomains:['not a domain']}})).status()).toBe(400);
+  try{
+    expect((await admin.patch('/api/admin/settings',{data:{...base,allowedEmailDomains:['College.EDU']}})).status()).toBe(200);
+    expect((await (await admin.get('/api/settings')).json()).moderation.allowedEmailDomains).toEqual(['college.edu']);
+    const newPassword='a long enough passphrase for domain checks';
+    const blocked=await request.post('/api/auth/register',{headers,data:{name:'Outside Maker',email:`outside-${randomUUID()}@gmail.com`,password:newPassword}});
+    expect(blocked.status()).toBe(403);
+    expect((await blocked.json()).error).toContain('college.edu');
+    expect((await request.post('/api/auth/register',{headers,data:{name:'Campus Maker',email:`inside-${randomUUID()}@college.edu`,password:newPassword}})).status()).toBe(202);
+    // Only new registrations are gated: an existing account on another domain still signs in.
+    expect((await request.post('/api/auth/login',{headers,data:{email:'outsider@example.test',password}})).status()).toBe(200);
+  } finally {
+    expect((await admin.patch('/api/admin/settings',{data:{...base,allowedEmailDomains:[]}})).status()).toBe(200);
+  }
+});
+
+test('password reset accepts the emailed 6-digit code instead of the link, and limits wrong guesses',async({request})=>{
+  const email=`otp-${randomUUID()}@example.test`,first='a long enough passphrase for otp checks',second='a brand new passphrase set with a code';
+  expect((await request.post('/api/auth/register',{headers,data:{name:'Otp Maker',email,password:first}})).status()).toBe(202);
+  // Outbox mode stores the real message body, so the code can be read without sending mail.
+  const latestMail=async()=>{const [mail]=await db.query('SELECT body FROM r.outbox WHERE recipient=$1 ORDER BY created_at DESC LIMIT 1',[email]);return {code:mail.body.match(/instead: (\d{6})/)![1] as string,token:mail.body.match(/token=([a-f0-9]{64})/)![1] as string};};
+  expect((await request.post('/api/auth/forgot',{headers,data:{email}})).status()).toBe(200);
+  const {code,token}=await latestMail();
+  const wrong=(c:string)=>c==='000000'?'111111':'000000';
+  expect((await request.post('/api/auth/reset',{headers,data:{email,code:wrong(code),password:second}})).status()).toBe(400);
+  expect((await request.post('/api/auth/reset',{headers,data:{email,code,password:second}})).status()).toBe(200);
+  // One pending reset, two ways to finish it: using the code consumed the link from the same email.
+  expect((await request.post('/api/auth/reset',{headers,data:{token,password:first}})).status()).toBe(400);
+  expect((await request.post('/api/auth/login',{headers,data:{email,password:second}})).status()).toBe(200);
+  expect((await request.post('/api/auth/forgot',{headers,data:{email}})).status()).toBe(200);
+  const next=await latestMail();
+  for(let i=0;i<5;i++)expect((await request.post('/api/auth/reset',{headers,data:{email,code:wrong(next.code),password:first}})).status()).toBe(400);
+  // After five wrong guesses the right code is refused too, until a new one is requested.
+  expect((await request.post('/api/auth/reset',{headers,data:{email,code:next.code,password:first}})).status()).toBe(429);
+  expect((await request.post('/api/auth/login',{headers,data:{email,password:second}})).status()).toBe(200);
+});
+
+test('email verification accepts a code, and invites stay link-only',async({request})=>{
+  const email=`verify-${randomUUID()}@example.test`,password='a long enough passphrase for verify checks';
+  expect((await request.post('/api/auth/register',{headers,data:{name:'Verify Maker',email,password}})).status()).toBe(202);
+  const [user]=await db.query('SELECT id,verified FROM r.users WHERE email=$1',[email]);expect(user.verified).toBe(false);
+  const hash="encode(sha256(convert_to($1,'UTF8')),'hex')";
+  await db.query(`INSERT INTO r.tokens(hash,user_id,purpose,expires_at,code_hash) VALUES(${hash},$2,'verify',now()+interval '1 hour',encode(sha256(convert_to($3,'UTF8')),'hex'))`,[randomUUID(),user.id,'482913']);
+  expect((await request.post('/api/auth/verify',{headers,data:{email,code:'482913'}})).status()).toBe(200);
+  expect((await db.query('SELECT verified FROM r.users WHERE id=$1',[user.id]))[0].verified).toBe(true);
+  // Codes are refused for invites even if one were somehow present: those stay operator-issued links.
+  await db.query(`INSERT INTO r.tokens(hash,user_id,purpose,expires_at,code_hash) VALUES(${hash},$2,'invite',now()+interval '1 hour',encode(sha256(convert_to($3,'UTF8')),'hex'))`,[randomUUID(),user.id,'111222']);
+  expect((await request.post('/api/auth/invite',{headers,data:{email,code:'111222',password}})).status()).toBe(400);
+});
+
 test('authorization and origin checks reject forged requests',async({request})=>{
   expect((await request.post('/api/projects',{headers,data:{data}})).status()).toBe(401);
   expect((await student.post('/api/projects',{headers:{origin:'https://evil.example'},data:{data}})).status()).toBe(403);

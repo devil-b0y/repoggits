@@ -1,4 +1,5 @@
 import {test,expect,type Page,type Locator} from '@playwright/test';
+import sharp from 'sharp';
 
 const kinds=['software','hardware','hybrid'] as const;
 const model=(page:Page,kind:typeof kinds[number])=>page.locator(`.type-object .discipline-model[data-kind="${kind}"]`);
@@ -71,10 +72,21 @@ test('reduced motion keeps the rendered discipline models still',async({page})=>
   }
   const canvas=model(page,'hybrid').locator('canvas');
   await nextFrames(page);
+  await canvas.scrollIntoViewIfNeeded();
   const firstFrame=await canvas.screenshot({animations:'disabled'});
-  await canvas.hover({position:{x:20,y:20}});
+  const rotation=await model(page,'hybrid').getAttribute('data-rotation');
+  // Move directly: locator.hover() may scroll the canvas and alter screenshot clipping.
+  const bounds=await canvas.boundingBox();
+  await page.mouse.move(bounds!.x+20,bounds!.y+20);
   await nextFrames(page);
-  expect(firstFrame.equals(await canvas.screenshot({animations:'disabled'}))).toBe(true);
+  await expect(model(page,'hybrid')).toHaveAttribute('data-rotation',rotation!);
+  // GPU/compositor rounding can change a channel by one level without movement.
+  const firstPixels=await sharp(firstFrame).raw().toBuffer({resolveWithObject:true});
+  const nextPixels=await sharp(await canvas.screenshot({animations:'disabled'})).raw().toBuffer({resolveWithObject:true});
+  expect(nextPixels.info).toEqual(firstPixels.info);
+  let maximumDifference=0;
+  for(let i=0;i<firstPixels.data.length;i++)maximumDifference=Math.max(maximumDifference,Math.abs(firstPixels.data[i]-nextPixels.data[i]));
+  expect(maximumDifference).toBeLessThanOrEqual(1);
 });
 
 test('mobile discipline models render as their cards enter view without horizontal overflow',async({page})=>{

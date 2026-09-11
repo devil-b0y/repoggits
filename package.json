@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
     "test:dev": "playwright test --config playwright.dev.config.ts",
+    "test:otp": "playwright test --config playwright.otp.config.ts",
     "test": "npm run test:e2e && npm run test:dev",
     "db:setup": "node --env-file-if-exists=.env.local --import tsx scripts/setup.ts",
     "mail:outbox": "node --env-file-if-exists=.env.local --import tsx scripts/outbox.ts",
