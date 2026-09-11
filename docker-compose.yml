@@ -1,7 +1,9 @@
-# Repoggits on a single VPS: application, PostgreSQL, and an optional HTTPS proxy.
+# Repoggits on a single VPS: application and an optional HTTPS proxy. This deployment uses an
+# external managed database (Neon) rather than the bundled Postgres container — DATABASE_URL,
+# APP_ORIGIN, MAIL_*, DOWNLOAD_SECRET, and EMAIL_VERIFICATION_REQUIRED all come from .env.
 #
-#   cp deploy/docker.env.example .env      # then edit it
-#   docker compose up -d --build           # app on 127.0.0.1:3000, proxy it yourself
+#   cp .env.local .env                     # already has DATABASE_URL, APP_ORIGIN, etc.
+#   docker compose up -d --build           # app on port 3000
 #   docker compose --profile tls up -d     # add Caddy and let it obtain certificates
 #
 # Full instructions, including the first administrator account: docs/DEPLOYMENT.md
@@ -9,39 +11,14 @@
 name: repoggits
 
 services:
-  db:
-    image: postgres:17-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB:-repoggits}
-      POSTGRES_USER: ${POSTGRES_USER:-repoggits}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
-    volumes:
-      - db-data:/var/lib/postgresql/data
-    # Not published to the host. Only services on this network can reach it.
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-repoggits} -d ${POSTGRES_DB:-repoggits}']
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
   app:
     build:
       context: .
       target: runtime
     restart: unless-stopped
-    depends_on:
-      db:
-        condition: service_healthy
-    # APP_ORIGIN, MAIL_*, DOWNLOAD_SECRET, and EMAIL_VERIFICATION_REQUIRED come from .env.
     env_file:
       - .env
     environment:
-      # Set here so the container always reaches the database service, whatever .env says.
-      # Traffic stays on the private compose network, so no TLS is negotiated.
-      DATABASE_URL: postgresql://${POSTGRES_USER:-repoggits}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-repoggits}
-      DATABASE_SSL: disable
       PORT: '3000'
     ports:
       # Exposed directly: no reverse proxy in front (bare-IP deployment, no domain/TLS yet).
@@ -70,7 +47,6 @@ services:
       - caddy-config:/config
 
 volumes:
-  db-data:
   app-local:
   caddy-data:
   caddy-config:
