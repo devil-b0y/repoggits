@@ -98,12 +98,15 @@ ENV_FILE="$APP_DIR/.env.local"
 if [ -f "$ENV_FILE" ]; then
   note '.env.local already exists and was left unchanged.'
   note "Confirm APP_ORIGIN=$APP_ORIGIN is set there before serving traffic."
+  grep -q '^DATA_ENCRYPTION_KEY=.' "$ENV_FILE" || note 'Add DATA_ENCRYPTION_KEY to .env.local (see .env.example) before starting the service.'
 else
   [ -n "$DB_PASSWORD" ] || fail "Role $DB_USER exists but $ENV_FILE does not. Write DATABASE_URL there by hand, then run this script again."
   cat > "$ENV_FILE" <<EOF
 # Written by deploy/install-vps.sh. Keep private.
 DATABASE_URL=postgresql://$DB_USER:$DB_PASSWORD@127.0.0.1:5432/$DB_NAME
 DATABASE_SSL=disable
+# Encrypts private data before it is stored. Back this up: without it that data cannot be read.
+DATA_ENCRYPTION_KEY=$(openssl rand -base64 32)
 APP_ORIGIN=$APP_ORIGIN
 PORT=$APP_PORT
 MAIL_MODE=outbox
@@ -117,7 +120,7 @@ EMAIL_VERIFICATION_REQUIRED=false
 EOF
   chown "$SERVICE_USER:$SERVICE_USER" "$ENV_FILE"
   chmod 600 "$ENV_FILE"
-  note "Wrote $ENV_FILE with a generated database password."
+  note "Wrote $ENV_FILE with a generated database password and DATA_ENCRYPTION_KEY. Copy that key somewhere safe off this server."
 fi
 
 step 'Installing dependencies and building'

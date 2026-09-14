@@ -11,7 +11,7 @@ test('Turbopack serves the styled page and local fonts without a build error', a
   const failedAssets: string[] = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => {
-    if (response.status() >= 400 && /\.(css|ttf)(\?|$)/.test(response.url())) {
+    if (response.status() >= 400 && /\.(css|woff2)(\?|$)/.test(response.url())) {
       failedAssets.push(`${response.status()} ${response.url()}`);
     }
   });
@@ -20,7 +20,8 @@ test('Turbopack serves the styled page and local fonts without a build error', a
   expect(response?.status()).toBe(200);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Good ideas');
   await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(250, 245, 233)');
-  await expect(page.getByRole('heading', { level: 1 })).toHaveCSS('color', 'rgb(48, 89, 181)');
+  // The capsule hero sets its heading in the theme's ink colour on paper.
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCSS('color', 'rgb(36, 62, 119)');
   await page.evaluate(() => document.fonts.ready);
   expect(await page.evaluate(() => {
     const fonts = Array.from(document.fonts);
@@ -29,7 +30,7 @@ test('Turbopack serves the styled page and local fonts without a build error', a
     );
   })).toBe(true);
 
-  await expect(page.locator('.scene canvas')).toBeVisible();
+  await expect(page.locator('.capsule-model canvas')).toBeVisible({ timeout: 15_000 });
 
   // The project filter tabs live on /projects, which now requires an account. Register a
   // throwaway one so styles and fonts can still be confirmed there.

@@ -1,0 +1,236 @@
+/* A calm editorial layer: one focal point per section, restrained depth and motion. */
+.platform:has(.clean-home){background:var(--paper);background-image:none}
+.platform .clean-home{--home-width:1200px;color:var(--ink);overflow:clip}
+.platform .clean-home h1,.platform .clean-home h2,.platform .clean-home h3{text-wrap:balance}
+.platform .clean-home p{text-wrap:pretty}
+.platform .clean-home a:focus-visible,.platform .clean-home button:focus-visible{outline:3px solid var(--orange);outline-offset:5px}
+.platform:has(.clean-home)>.nav{height:88px;padding:0 max(5%,calc((100vw - 1280px)/2));background:var(--paper);border-bottom:1px solid var(--line)}
+.platform:has(.clean-home)>.nav .brand,.platform:has(.clean-home)>.nav .nav-links a,.platform:has(.clean-home)>.nav .icon-button,.platform:has(.clean-home)>.nav .menu-toggle{color:var(--ink)}
+.platform:has(.clean-home)>.nav .nav-submit{border-radius:6px}
+.platform .clean-home .maker-story{height:175svh;min-height:1250px;background:var(--paper)}
+.platform .clean-home .maker-stage{min-height:760px;color:var(--ink)}
+.platform .clean-home .maker-frames{inset:128px 5% 150px 52%;border-radius:20px;overflow:hidden;background:#c8d2d6}
+.platform .clean-home .maker-frame{transform-origin:center}
+.platform .clean-home .maker-frame img{object-position:67% center}
+.platform .clean-home .maker-shade{display:none}
+.platform .clean-home .maker-copy{left:max(5%,calc((100vw - 1280px)/2));right:52%;top:28%;max-width:560px}
+.platform .clean-home .maker-copy h1{font-size:clamp(48px,4.6vw,74px);font-weight:500;line-height:1.08;letter-spacing:-3px;color:var(--ink);margin:0 0 24px;animation:clean-arrive .55s ease-out both;filter:none}
+.platform .clean-home .maker-copy h1 em{font-family:Georgia,serif;letter-spacing:-2.5px;color:var(--blue);background:none;-webkit-text-fill-color:currentColor;animation:none}
+.platform .clean-home .maker-copy>*{animation:none;opacity:1;transform:none;filter:none}
+.platform .clean-home .maker-kicker{font-size:10px;letter-spacing:1.5px;color:var(--muted);margin-bottom:24px}
+.platform .clean-home .maker-copy>p{font-size:17px;line-height:1.75;max-width:365px;color:var(--muted);margin-bottom:30px}
+.platform .clean-home .maker-actions{gap:22px;flex-wrap:wrap}
+.platform .clean-home .maker-actions .button{border-radius:6px;padding:15px 20px;background:#3059b5;color:#fff;box-shadow:none;transition:background .2s,transform .2s}
+.platform .clean-home .maker-actions .button:hover{background:#254995;transform:translateY(-2px);box-shadow:none}
+.platform .clean-home .maker-actions .button:after{display:none;animation:none}
+.platform .clean-home .maker-actions>a:last-child{color:var(--ink);border-color:var(--line);font-size:12px}
+.platform .clean-home .maker-topline{top:126px;left:5%;right:53%;color:var(--muted);font-size:9px;letter-spacing:1px;line-height:1.8}
+.platform .clean-home .maker-topline>span:last-child,.platform .clean-home .maker-example,.platform .clean-home .coding-terminal,.platform .clean-home .coding-glow,.platform .clean-home .maker-object-halo,.platform .clean-home .maker-object-note{display:none}
+.platform .clean-home .maker-objects{right:3%;bottom:116px;width:23vw;height:25vh;min-height:185px;max-height:260px;max-width:350px}
+.platform .clean-home .maker-objects canvas{filter:drop-shadow(0 10px 12px #1c355225)}
+.platform .clean-home .maker-bottom{left:5%;right:5%;bottom:54px;gap:20px;justify-content:flex-end}
+.platform .clean-home .maker-scroll{margin-right:auto;color:var(--muted);letter-spacing:1px;font-size:9px}
+.platform .clean-home .maker-filmstrip{gap:8px}
+.platform .clean-home .maker-filmstrip button{width:115px;height:48px;background:transparent;border:1px solid var(--line);border-radius:6px;color:var(--muted);transform:none}
+.platform .clean-home .maker-filmstrip img{display:none}
+.platform .clean-home .maker-filmstrip button span{position:static;display:flex;justify-content:center;align-items:center;gap:8px;text-shadow:none;font-size:11px}
+.platform .clean-home .maker-filmstrip b{color:inherit;font-weight:400}
+.platform .clean-home .maker-filmstrip button[aria-pressed=true]{background:var(--ink);border-color:var(--ink);color:var(--paper);transform:none}
+.platform .clean-home .maker-pause{background:transparent;border-color:var(--line);color:var(--muted);font-size:10px;border-radius:6px}
+.platform .clean-home .maker-art-credit{color:var(--muted);font-size:8px;bottom:22px;right:5%}
+.platform .clean-home .maker-progress{height:1px;background:var(--line)}
+.platform .clean-home .home-progress{height:2px}
+.platform .clean-home .edition-dock{box-shadow:0 4px 16px #162e4410;border-radius:8px;background:var(--paper);border-color:var(--line);backdrop-filter:none}
+.platform .clean-home .edition-dock a{color:var(--muted);font-size:10px}
+.platform .clean-home .edition-dock a[aria-current=location]{background:var(--ink);color:var(--paper)}
+.platform .clean-home .discipline-strip.motion-strip{padding:22px 0;background:transparent;color:var(--muted);border-color:var(--line)}
+.platform .clean-home .motion-strip-track{width:100%;transform:none;justify-content:center}
+.platform .clean-home .motion-strip-track>div{gap:24px}
+.platform .clean-home .motion-strip-track>div:not(:first-child),.platform .clean-home .motion-strip-track i{display:none}
+.platform .clean-home .motion-strip-track strong{font-size:15px;font-weight:400;line-height:1.4;font-family:inherit;gap:10px}
+.platform .clean-home .motion-strip-track strong:nth-of-type(2){font-family:inherit;font-style:normal}
+.platform .clean-home .motion-strip-track span{font-size:9px;letter-spacing:1px;margin-right:25px}
+.platform .clean-home .motion-strip-track svg{width:17px;color:var(--blue)}
+.platform .clean-home .build-showcase{height:135svh;min-height:1000px;background:var(--paper)}
+.platform .clean-home .build-showcase-stage{min-height:740px;background:none}
+.platform .clean-home .showcase-heading{top:9%}
+.platform .clean-home .showcase-heading h2{font-size:clamp(38px,4vw,56px);letter-spacing:-2px;line-height:1.12;margin:18px 0}
+.platform .clean-home .showcase-heading p{font-size:15px;line-height:1.7}
+.platform .clean-home .showcase-space{top:37%}
+.platform .clean-home .showcase-card{border-radius:12px;box-shadow:0 12px 34px #19345f16;border-color:var(--line)}
+.platform .clean-home .showcase-orbit,.platform .clean-home .showcase-bottom>span{display:none}
+.platform .clean-home .showcase-blueprint{display:none}
+.platform .clean-home .showcase-bottom{justify-content:flex-end}
+.platform .clean-home .home-overview{background:var(--paper)}
+.platform .clean-home .overview-intro{margin:70px auto;max-width:700px}
+.platform .clean-home .overview-intro h2{font-size:48px;letter-spacing:-1.8px;line-height:1.15}
+.platform .clean-home .overview-intro>p{font-size:16px;line-height:1.8;max-width:530px}
+.platform .clean-home .overview-intro:after,.platform .clean-home .overview-section-heading:after{display:none}
+.platform .clean-home .overview-chapters{margin-top:25px}
+.platform .clean-home .circuit-chapter{width:90%;max-width:1280px;margin:0 auto 30px;height:640px;min-height:640px;border-radius:20px}
+.platform .clean-home .circuit-chapter h2{font-size:70px;letter-spacing:-3px;margin:20px 0;line-height:1.05}
+.platform .clean-home .circuit-chapter .photo-chapter-copy{left:6%;top:10%}
+.platform .clean-home .circuit-chapter .photo-chapter-copy p{font-size:16px;max-width:340px}
+.platform .clean-home .circuit-grid,.platform .clean-home .circuit-readout{display:none}
+.platform .clean-home .circuit-bottom{left:6%;right:6%;bottom:12%}
+.platform .clean-home .circuit-illustration-note{left:6%;bottom:5%}
+.platform .clean-home .circuit-steps button{border-radius:6px;min-height:52px;min-width:100px;padding:12px}
+.platform .clean-home .circuit-caption h3{font-size:26px}
+.platform .clean-home .overview-story,.platform .clean-home .overview-types,.platform .clean-home .overview-roles{max-width:1280px;padding-top:75px;padding-bottom:75px}
+.platform .clean-home .home-overview h2{font-size:clamp(36px,3.6vw,52px);letter-spacing:-1.8px;line-height:1.15}
+.platform .clean-home .overview-story{gap:55px}
+.platform .clean-home .paper-scene{height:490px;background:none}
+.platform .clean-home .scene-handnote{font-family:inherit;font-size:9px;letter-spacing:1px;transform:none;color:var(--muted)}
+.platform .clean-home .overview-story-copy>p{font-size:15px}
+.platform .clean-home .overview-story h3{font-size:16px}
+.platform .clean-home .overview-types{border-top:1px solid var(--line)}
+.platform .clean-home .maker-types{gap:20px}
+.platform .clean-home .maker-types article{padding:26px;border:1px solid var(--line);border-radius:12px;background:var(--white);box-shadow:none;overflow:visible}
+.platform .clean-home .maker-types article:hover{background:var(--white);box-shadow:0 8px 28px #142b4a08}
+.platform .clean-home .motion-paused .maker-types article:hover{box-shadow:none}
+.platform .clean-home .maker-types .type-object{height:170px;margin-bottom:24px;background:none}
+.platform .clean-home #types-title{font-size:52px;letter-spacing:-1.8px;line-height:1.15}
+.platform .clean-home .overview-section-heading>p{font-family:inherit;font-size:15px;line-height:1.7;max-width:250px}
+.platform .clean-home .overview-intro>p{font-family:inherit;letter-spacing:0}
+.platform .clean-home .maker-types h3{font-size:23px;letter-spacing:-.5px;margin:18px 0 12px}
+.platform .clean-home .maker-types p{font-size:14px;line-height:1.75;min-height:100px}
+.platform .clean-home .type-note{font-size:8px;line-height:1.6;letter-spacing:.8px}
+.platform .clean-home .overview-collective{min-height:580px;margin:30px 0;background:#173448;padding-top:80px;padding-bottom:80px;gap:50px}
+.platform .clean-home .collective-photograph{left:52%;z-index:0;opacity:.75}
+.platform .clean-home .collective-photograph:after{background:linear-gradient(90deg,#173448,transparent 55%)}
+.platform .clean-home .collective-copy{max-width:470px}
+.platform .clean-home .collective-copy p{font-size:15px;line-height:1.8;max-width:380px;color:#d5e0e8}
+.platform .clean-home .orbit-scene{visibility:hidden;pointer-events:none}
+.platform .clean-home .overview-roles{gap:60px}
+.platform .clean-home .role-notes article:after{display:none}
+.platform .clean-home .role-notes h3{font-size:22px}
+.platform .clean-home .next-chapter{background:#254b91;padding-top:32px;padding-bottom:32px}
+.platform .clean-home .chapter-grid,.platform .clean-home .chapter-halo,.platform .clean-home .chapter-scene-star,.platform .clean-home .chapter-axis,.platform .clean-home .chapter-handnote{display:none}
+.platform .clean-home .chapter-main{padding:45px 0 35px}
+.platform .clean-home .chapter-copy h2{font-size:clamp(44px,4.4vw,64px);letter-spacing:-2px;line-height:1.1}
+.platform .clean-home .chapter-object{box-shadow:0 15px 40px #0c205b30}
+.platform .clean-home .chapter-track button{min-height:150px}
+.platform .clean-home .chapter-step-copy>strong{font-size:16px}
+.platform .clean-home .chapter-step-number{font-family:inherit;font-style:normal;font-size:17px}
+.platform .clean-home .home-finale{min-height:0;padding:105px 24px;margin:0;background:var(--paper)}
+.platform .clean-home .home-finale:before,.platform .clean-home .home-finale:after{display:none}
+.platform .clean-home .home-finale h2{font-size:clamp(40px,4.5vw,64px);letter-spacing:-2px;line-height:1.12;margin:0}
+.platform .clean-home .home-finale p{font-size:16px;margin:24px auto;max-width:470px;line-height:1.75}
+.platform .clean-home .button{border-radius:6px}
+@keyframes clean-arrive{from{translate:0 10px}to{translate:0 0}}
+.platform .clean-home .maker-story.is-paused .maker-copy h1,.platform .clean-home .maker-story[data-motion=reduced] .maker-copy h1{animation:none}
+@media(min-width:1200px){
+ .platform .clean-home .edition-dock{max-width:138px;left:16px;padding:6px}
+ .platform .clean-home .edition-dock a{padding:8px}
+}
+@media(max-width:1000px){
+ .platform .clean-home .maker-copy{right:51%;top:25%}
+ .platform .clean-home .maker-copy h1{font-size:52px;letter-spacing:-2px}
+ .platform .clean-home .maker-copy>p{font-size:15px}
+ .platform .clean-home .maker-actions{gap:12px}
+ .platform .clean-home .maker-topline{font-size:8px}
+ .platform .clean-home .maker-scroll{display:none}
+ .platform .clean-home .maker-bottom{justify-content:center}
+ .platform .clean-home .motion-strip-track span{display:none}
+ .platform .clean-home .overview-story{gap:25px}
+ .platform .clean-home .maker-types article{padding:20px}
+ .platform .clean-home .maker-types p{min-height:125px}
+ .platform .clean-home .circuit-bottom{flex-direction:column;align-items:flex-start;gap:20px}
+}
+@media(max-width:680px){
+ .platform:has(.clean-home)>.nav{height:72px;padding:0 18px}
+ .platform:has(.clean-home)>.nav .nav-links.open{background:var(--paper);border:1px solid var(--line);box-shadow:0 12px 24px #162e4410}
+ .platform:has(.clean-home) .nav-links.open .nav-mobile-theme{color:var(--ink);border-color:var(--line)}
+ .platform .clean-home .maker-story{height:205svh;min-height:1600px}
+ .platform .clean-home .maker-stage{min-height:850px}
+ .platform .clean-home .maker-topline{top:100px;left:24px;right:24px;font-size:8px}
+ .platform .clean-home .maker-copy{top:145px;left:24px;right:24px;max-width:none}
+ .platform .clean-home .maker-kicker{font-size:9px;margin-bottom:15px}
+ .platform .clean-home .maker-copy h1{font-size:clamp(39px,11vw,53px);letter-spacing:-1.8px;margin-bottom:16px;line-height:1.05}
+ .platform .clean-home .maker-copy h1 em{letter-spacing:-1.7px}
+ .platform .clean-home .maker-copy>p{font-size:16px;line-height:1.6;margin-bottom:18px;max-width:340px}
+ .platform .clean-home .maker-actions{gap:16px;align-items:center}
+ .platform .clean-home .maker-actions .button{padding:12px 15px;font-size:11px}
+ .platform .clean-home .maker-actions>a:last-child{font-size:10px;gap:6px}
+ .platform .clean-home .maker-frames{inset:435px 24px 155px;border-radius:12px}
+ .platform .clean-home .maker-frame img,.platform .clean-home .coding-depth img{object-position:65% center}
+ .platform .clean-home .maker-objects{width:140px;height:130px;min-height:0;right:13px;bottom:150px}
+ .platform .clean-home .maker-bottom{left:24px;right:24px;bottom:48px;gap:12px;justify-content:space-between}
+ .platform .clean-home .maker-filmstrip{width:100%;gap:6px;order:-1}
+ .platform .clean-home .maker-filmstrip button{width:calc((100% - 12px)/3);height:44px}
+ .platform .clean-home .maker-filmstrip button span{font-size:10px;gap:6px}
+ .platform .clean-home .maker-pause{font-size:9px;padding:10px;min-height:44px}
+ .platform .clean-home .maker-art-credit{right:24px;bottom:21px;font-size:7px}
+ .platform .clean-home:has(.edition-dock.is-visible) .maker-bottom{bottom:102px}
+ .platform .clean-home:has(.edition-dock.is-visible) .maker-pause{position:static}
+ .platform .clean-home:has(.edition-dock.is-visible) .maker-frames{bottom:210px}
+ .platform .clean-home:has(.edition-dock.is-visible) .maker-objects{bottom:205px}
+ .platform .clean-home .motion-strip-track>div{gap:20px}
+ .platform .clean-home .motion-strip-track strong{font-size:12px;gap:6px}
+ .platform .clean-home .motion-strip-track svg{display:none}
+ .platform .clean-home .discipline-strip.motion-strip{padding:20px 12px}
+ .platform .clean-home .build-showcase{height:135svh;min-height:1060px}
+ .platform .clean-home .build-showcase-stage{min-height:760px}
+ .platform .clean-home .showcase-heading{top:65px}
+ .platform .clean-home .showcase-heading h2{font-size:38px;letter-spacing:-1.5px}
+ .platform .clean-home .showcase-heading p{font-size:13px}
+ .platform .clean-home .showcase-space{top:40%}
+ .platform .clean-home .overview-intro{margin:50px auto;padding:0 24px}
+ .platform .clean-home .home-overview h2,.platform .clean-home .overview-intro h2{font-size:36px;letter-spacing:-1.3px}
+ .platform .clean-home .overview-intro>p{font-size:15px}
+ .platform .clean-home .overview-story,.platform .clean-home .overview-types,.platform .clean-home .overview-roles{padding:50px 24px}
+ .platform .clean-home .overview-story{gap:25px}
+ .platform .clean-home .paper-scene{height:420px}
+ .platform .clean-home .circuit-chapter{width:calc(100% - 32px);height:700px;min-height:700px;border-radius:12px}
+ .platform .clean-home .circuit-chapter .photo-chapter-copy{top:40px;left:24px;right:24px}
+ .platform .clean-home .circuit-chapter h2{font-size:54px;letter-spacing:-2px}
+ .platform .clean-home .circuit-chapter .photo-chapter-copy p{font-size:14px;max-width:260px}
+ .platform .clean-home .circuit-bottom{left:24px;right:24px;bottom:90px}
+ .platform .clean-home .circuit-caption h3{font-size:23px}
+ .platform .clean-home .circuit-steps button{min-width:0;min-height:48px;padding:10px 7px}
+ .platform .clean-home .circuit-illustration-note{left:24px;bottom:60px;font-size:6px}
+ .platform .clean-home .maker-types{gap:16px}
+ .platform .clean-home .maker-types article{padding:26px}
+ .platform .clean-home .maker-types p{min-height:0}
+ .platform .clean-home .maker-types .type-object{height:150px}
+ .platform .clean-home #types-title{font-size:36px;letter-spacing:-1.3px}
+ .platform .clean-home .overview-collective{min-height:740px;display:block;padding:50px 24px 290px;margin:0}
+ .platform .clean-home .collective-photograph{inset:48% 0 0;opacity:.8}
+ .platform .clean-home .collective-photograph:after{background:linear-gradient(#173448,transparent 65%)}
+ .platform .clean-home .collective-copy{max-width:none}
+ .platform .clean-home .collective-copy p{font-size:14px;max-width:330px}
+ .platform .clean-home .orbit-scene{display:none}
+ .platform .clean-home .overview-roles{gap:25px}
+ .platform .clean-home .chapter-main{padding:35px 0 20px}
+ .platform .clean-home .chapter-copy h2{font-size:46px;letter-spacing:-1.7px}
+ .platform .clean-home .chapter-track button{min-height:0;padding:20px 3px}
+ .platform .clean-home .home-finale{padding:70px 24px 100px}
+ .platform .clean-home .home-finale h2{font-size:39px;letter-spacing:-1.5px}
+ .platform .clean-home .home-finale p{font-size:14px}
+}
+@media(max-width:360px){
+ .platform .clean-home .maker-copy,.platform .clean-home .maker-topline{left:20px;right:20px}
+ .platform .clean-home .maker-copy{top:140px}
+ .platform .clean-home .maker-actions{gap:10px}
+ .platform .clean-home .maker-actions .button{padding:12px;font-size:10px}
+ .platform .clean-home .maker-actions>a:last-child{font-size:9px}
+ .platform .clean-home .maker-frames{left:20px;right:20px;top:435px}
+ .platform .clean-home .maker-bottom{left:20px;right:20px}
+ .platform .clean-home .maker-objects{width:120px;right:12px}
+ .platform .clean-home .maker-filmstrip button span{font-size:9px}
+ .platform .clean-home .motion-strip-track>div{gap:15px}
+}
+@media(max-height:600px) and (min-width:681px) and (max-width:1100px){
+ .platform .clean-home .maker-story{height:auto;min-height:0}
+ .platform .clean-home .maker-stage{position:relative;min-height:760px}
+ .platform .clean-home .maker-objects{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+ .platform .clean-home .maker-types article:hover{box-shadow:none}
+ .platform .clean-home .discipline-model{transition:none}
+ .platform .clean-home .maker-story,.platform .clean-home .build-showcase{height:auto;min-height:0}
+ .platform .clean-home .maker-stage,.platform .clean-home .build-showcase-stage{position:relative}
+ .platform .clean-home .maker-copy h1{animation:none}
+ .platform .clean-home .maker-actions .button{transition:none}
+ .platform .clean-home .maker-actions .button:hover{transform:none}
+}

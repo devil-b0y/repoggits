@@ -33,12 +33,18 @@ export default function ProjectSculpture({paused}:{paused:boolean}){
     const reduced=matchMedia('(prefers-reduced-motion: reduce)');
     function scroll(){if(paused||reduced.matches)return;const bounds=el!.closest('.overview-story')!.getBoundingClientRect();target=THREE.MathUtils.clamp((innerHeight*.7-bounds.top)/(bounds.height*.9),0,1);}
     const resize=new ResizeObserver(()=>{const {width,height}=el.getBoundingClientRect();if(!width||!height)return;renderer.setSize(width,height);camera.aspect=width/height;camera.updateProjectionMatrix();scroll();});resize.observe(el);
-    const observer=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;scroll();});observer.observe(el);
+    const observer=new IntersectionObserver(([entry])=>{visible=entry.isIntersecting;scroll();schedule();});observer.observe(el);
+    const visibility=()=>schedule();document.addEventListener('visibilitychange',visibility);
     const move=(e:PointerEvent)=>{if(paused||reduced.matches)return;const bounds=el.getBoundingClientRect();pointer=((e.clientX-bounds.left)/bounds.width-.5)*.12;};
     const leave=()=>{pointer=0;};el.addEventListener('pointermove',move);el.addEventListener('pointerleave',leave);window.addEventListener('scroll',scroll,{passive:true});
-    const render=()=>{frame=requestAnimationFrame(render);if(!visible||document.hidden)return;progress+=(target-progress)*.065;const value=(paused||reduced.matches)? .5:progress;
-      layers.forEach((layer,i)=>{layer.position.y=-.65+i*(.35+value*1.35);layer.rotation.y=(i-1)*value*.13;});model.rotation.y=-.22+value*.38+pointer;renderer.render(scene,camera);el.dataset.progress=value.toFixed(3);};render();
-    return()=>{cancelAnimationFrame(frame);resize.disconnect();observer.disconnect();window.removeEventListener('scroll',scroll);el.removeEventListener('pointermove',move);el.removeEventListener('pointerleave',leave);const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>();scene.traverse(obj=>{if(obj instanceof THREE.Mesh){geometries.add(obj.geometry);(Array.isArray(obj.material)?obj.material:[obj.material]).forEach(m=>materials.add(m));}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();};
+    // The loop used to request a frame for the life of the page, including off screen and in a
+    // background tab. It now parks itself instead, and the observer and the listeners restart it.
+    const render=()=>{if(!visible||document.hidden){frame=0;return;}
+      frame=requestAnimationFrame(render);progress+=(target-progress)*.065;const value=(paused||reduced.matches)? .5:progress;
+      layers.forEach((layer,i)=>{layer.position.y=-.65+i*(.35+value*1.35);layer.rotation.y=(i-1)*value*.13;});model.rotation.y=-.22+value*.38+pointer;renderer.render(scene,camera);el.dataset.progress=value.toFixed(3);};
+    function schedule(){if(!frame&&visible&&!document.hidden)frame=requestAnimationFrame(render);}
+    schedule();
+    return()=>{cancelAnimationFrame(frame);resize.disconnect();observer.disconnect();window.removeEventListener('scroll',scroll);document.removeEventListener('visibilitychange',visibility);el.removeEventListener('pointermove',move);el.removeEventListener('pointerleave',leave);const geometries=new Set<THREE.BufferGeometry>(),materials=new Set<THREE.Material>();scene.traverse(obj=>{if(obj instanceof THREE.Mesh){geometries.add(obj.geometry);(Array.isArray(obj.material)?obj.material:[obj.material]).forEach(m=>materials.add(m));}});geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose());renderer.dispose();renderer.domElement.remove();};
   },[paused]);
   return <div ref={host} className={`project-sculpture ${available?'sculpture-ready':''}`} aria-hidden="true"/>;
 }

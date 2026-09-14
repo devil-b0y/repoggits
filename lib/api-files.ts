@@ -7,6 +7,7 @@ import { canEdit } from './projects';
 import { requireCondition } from './errors';
 import { readBody, json } from './http';
 import { MAX_UPLOAD, safeFilename, validateImage, validateZip } from './file-validation';
+import { openBytes, openText, sealBytes, sealText } from './encryption';
 
 async function downloadSecret() {
   if(process.env.DOWNLOAD_SECRET)return process.env.DOWNLOAD_SECRET;
@@ -23,7 +24,7 @@ export async function upload(request:NextRequest) {
   if(extension==='zip')await validateZip(original);
   else {content=await validateImage(original);mime='image/webp';filename=name.replace(/\.[^.]+$/,'.webp');}
   const id=randomUUID();
-  await db.query("INSERT INTO r.files(id,owner_id,filename,mime,size,content,scan_status) VALUES($1,$2,$3,$4,$5,$6,'validated_internal')",[id,user.id,filename,mime,content.length,content]);
+  await db.query("INSERT INTO r.files(id,owner_id,filename,mime,size,content,scan_status) VALUES($1,$2,$3,$4,$5,$6,'validated_internal')",[id,user.id,sealText(filename,'files.filename'),mime,content.length,sealBytes(content,'files.content')]);
   return json({id,filename,mime,size:content.length,url:`/api/files/${id}`},201);
 }
 async function accessibleFile(request:NextRequest,id:string) {
@@ -58,5 +59,6 @@ export async function fileRoute(request:NextRequest,id:string,sign=false) {
     if(publicVersion)await db.query('UPDATE r.projects SET downloads=downloads+1 WHERE id=$1',[publicVersion.project_id]);
   }
   const [bytes]=await db.query('SELECT content FROM r.files WHERE id=$1',[id]);
-  return new Response(new Uint8Array(bytes.content),{headers:{'Content-Type':file.mime,'Content-Length':String(file.size),'Content-Disposition':`${file.mime==='application/zip'?'attachment':'inline'}; filename="${file.filename}"`,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; sandbox"}});
+  const content=openBytes(bytes.content,'files.content');
+  return new Response(new Uint8Array(content),{headers:{'Content-Type':file.mime,'Content-Length':String(content.length),'Content-Disposition':`${file.mime==='application/zip'?'attachment':'inline'}; filename="${openText(file.filename,'files.filename')}"`,'Cache-Control':'private, no-store','X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; sandbox"}});
 }

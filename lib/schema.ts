@@ -11,7 +11,7 @@ export const profileSchema = z.object({
   batch: text(30).default(''), bio: text(1500).default(''), github: optionalUrl, linkedin: optionalUrl,
   avatarId: z.string().uuid().or(z.literal('')).default(''),
 });
-export const teamMemberSchema = z.object({ name: text(100).min(1), email: emailSchema, contribution: text(200).min(1), branch: text(100).default(''), semester: z.union([z.literal(''),z.enum(['1','2','3','4','5','6','7','8'])]).default(''), college: z.enum(['','GGITS','GGCT']).default(''), photoId: z.string().uuid().or(z.literal('')).default('') });
+export const teamMemberSchema = z.object({ name: text(100).min(1), email: emailSchema, rollNumber: text(60).optional(), contribution: text(200).min(1), branch: text(100).default(''), semester: z.union([z.literal(''),z.enum(['1','2','3','4','5','6','7','8'])]).default(''), college: z.enum(['','GGITS','GGCT']).default(''), photoId: z.string().uuid().or(z.literal('')).default('') });
 export const projectSchema = z.object({
   title: text(120).min(3), subject: text(100).default(''), department: text(100).min(2),
   summary: text(300).default(''), description: text(20000).default(''),

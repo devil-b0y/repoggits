@@ -4,6 +4,7 @@ import { createHash } from 'node:crypto';
 import { crc32 } from 'node:zlib';
 import { transaction } from '../lib/db';
 import { audit } from '../lib/auth';
+import { sealBytes, sealProfile, sealText, storedEmail } from '../lib/encryption';
 import { projectSchema } from '../lib/schema';
 import { validateImage, validateZip } from '../lib/file-validation';
 
@@ -27,7 +28,7 @@ async function sourceArchive(){
   const archive=Buffer.concat([...local,central,end]);await validateZip(archive);return archive;
 }
 
-export async function seedSample(){
+export async function seedSample(options:{refresh?:boolean}={}){
   const origin=process.env.APP_ORIGIN||'http://localhost:3000';
   const names=['cover','dashboard','new-task','completed-task','mobile','aarav','ananya'];
   const images=await Promise.all(names.map(async(name,i)=>({id:fileId(i+1),filename:`campusflow-${name}.webp`,mime:'image/webp',content:await validateImage(await readFile(resolve(folder,'assets',`${name}.png`)))})));
@@ -38,13 +39,13 @@ export async function seedSample(){
     type:'Software',department:'Computer Science',subject:'Mini Project',year:'2026',teamName:'Campus Makers',
     summary:'A calm student workspace for assignments, project milestones, and team tasks. Plan what comes next, track progress, and make room for your best work.',
     description:'CampusFlow brings the scattered parts of student work into one clear notebook: a task board, due dates, teammate assignments, and a simple view of progress. The prototype runs entirely in the browser, making it easy to try and easy to understand.\n\nCreate a task, choose a teammate and priority, move it from Up next to In the making, and mark it complete. The dashboard totals update as you work. Search helps you find tasks by title, subject, or teammate, and browser-local storage keeps your changes after a refresh.\n\nThis is a sample submission with a fictional team and AI-generated portraits. The attached screenshots and recorded video show the actual working demo. The source ZIP contains the complete HTML, CSS, JavaScript, README, and MIT license. Open index.html to run it without a build step.\n\nScope: this is a browser-local prototype, not a shared multi-user service. The optional deployment costs below are illustrative estimates; running the downloaded demo is free.',
-    features:['Three-stage task board: Up next, In the making, and Made it happen','Create tasks with a subject, teammate, priority, and due date','Live task counts and a project-completion indicator','Search across task names, subjects, and teammates','Browser-local persistence, with a resettable demo workspace','Responsive desktop and mobile layouts with keyboard-accessible forms','Readable, dependency-free source that runs without installation'],
+    features:['Plan work on a three-stage task board: Up next, In the making, and Made it happen','Capture each task with its subject, teammate, priority, and due date','See live task counts and a project-completion indicator','Find work by task name, subject, or teammate','Keep changes after refresh with browser-local storage and reset the demo when needed','Work on desktop or mobile using keyboard-accessible forms','Download the full dependency-free HTML, CSS, and JavaScript source and run it without installation'],
     team:[
       {name:'Aarav Sharma',email:'aarav.campusflow@students.invalid',contribution:'Task logic, local storage, and browser testing',branch:'Computer Science',semester:'6',college:'GGITS',photoId:fileId(6)},
       {name:'Ananya Verma',email:'ananya.campusflow@students.invalid',contribution:'Interface design, responsive layout, and documentation',branch:'Information Technology',semester:'6',college:'GGCT',photoId:fileId(7)},
     ],
     tags:['JavaScript','HTML','CSS','Student productivity','LocalStorage'],
-    stack:{frontend:'Semantic HTML and responsive CSS',backend:'Browser-local prototype; no server required',database:'Browser localStorage',languages:'JavaScript, HTML, CSS',frameworks:'Vanilla JavaScript',tools:'Playwright, Chrome DevTools'},
+    stack:{frontend:'Semantic HTML, responsive CSS Grid and Flexbox',backend:'No backend — this prototype runs in the browser',database:'Browser localStorage (device-local, no cloud sync)',languages:'JavaScript, HTML, CSS',frameworks:'None — vanilla JavaScript',tools:'Playwright, Chrome DevTools'},
     services:[{name:'Web Storage API',purpose:'Saves tasks in this browser across page reloads',url:'https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API'},{name:'Static web hosting',purpose:'Optional deployment target; the supplied demo is served locally by Repoggits',url:''}],
     startDate:'2026-08-01',endDate:'2026-08-22',purchaseDate:'',
     coverId:fileId(1),galleryIds:[fileId(2),fileId(3),fileId(4),fileId(5)],sourceId:fileId(8),
@@ -53,9 +54,15 @@ export async function seedSample(){
   });
   return transaction(async client=>{
     await client.query("SELECT pg_advisory_xact_lock(hashtext('repoggits-campusflow-sample'))");
-    const [existing]=await client.query('SELECT p.id,p.example,v.id AS version_id,v.data FROM r.projects p JOIN r.versions v ON v.project_id=p.id WHERE p.id=$1',[SAMPLE_PROJECT_ID]);
+    const [existing]=await client.query('SELECT p.id,p.example,p.owner_id,v.id AS version_id,v.data FROM r.projects p JOIN r.versions v ON v.project_id=p.id WHERE p.id=$1 AND v.id=$2',[SAMPLE_PROJECT_ID,SAMPLE_VERSION_ID]);
     if(existing){
       if(!existing.example)throw new Error('Sample identifier belongs to a non-sample project.');
+      if(options.refresh){
+        if(existing.owner_id!==ownerId)throw new Error('Sample owner does not match the repository sample identity.');
+        await client.query('UPDATE r.versions SET data=$1,changelog=$2,updated_at=now() WHERE id=$3',[JSON.stringify(data),'Sample release 1.1: refreshed feature highlights and build-stack details, canonical language selections, complete team profiles, ordered desktop/mobile gallery, working demo video, downloadable source, service notes, timeline and transparent cost estimates. Fictional showcase example, not a student submission.',SAMPLE_VERSION_ID]);
+        await audit(client,null,'example.refreshed',SAMPLE_PROJECT_ID,{version:'1.1',reason:'Updated example for the enhanced submission studio'});
+        return {id:SAMPLE_PROJECT_ID,created:false,updated:true};
+      }
       // liveUrl/videoUrl point at static files this same deployment serves, but they were baked in
       // with whatever APP_ORIGIN was active when this row was first seeded (e.g. seeded once while
       // testing locally, before pointing this database at a live server). Reseeding otherwise
@@ -66,8 +73,9 @@ export async function seedSample(){
       return {id:SAMPLE_PROJECT_ID,created:false};
     }
     // No password or sessions: this sample identity cannot sign in or impersonate a student.
-    await client.query("INSERT INTO r.users(id,email,name,role,suspended,profile) VALUES($1,'campusflow.sample@repoggits.invalid','Campus Makers (sample)','student',true,$2)",[ownerId,JSON.stringify({name:'Campus Makers (sample)',bio:'Fictional author for the clearly labeled CampusFlow example.'})]);
-    for(const file of files)await client.query("INSERT INTO r.files(id,owner_id,filename,mime,size,content,scan_status) VALUES($1,$2,$3,$4,$5,$6,'trusted_sample')",[file.id,ownerId,file.filename,file.mime,file.content.length,file.content]);
+    const owner=storedEmail('campusflow.sample@repoggits.invalid');
+    await client.query("INSERT INTO r.users(id,email,email_hash,name,role,suspended,profile) VALUES($1,$2,$3,'Campus Makers (sample)','student',true,$4)",[ownerId,owner.email,owner.emailHash,sealProfile({name:'Campus Makers (sample)',bio:'Fictional author for the clearly labeled CampusFlow example.'})]);
+    for(const file of files)await client.query("INSERT INTO r.files(id,owner_id,filename,mime,size,content,scan_status) VALUES($1,$2,$3,$4,$5,$6,'trusted_sample')",[file.id,ownerId,sealText(file.filename,'files.filename'),file.mime,file.content.length,sealBytes(file.content,'files.content')]);
     await client.query('INSERT INTO r.projects(id,owner_id,example) VALUES($1,$2,true)',[SAMPLE_PROJECT_ID,ownerId]);
     await client.query("INSERT INTO r.versions(id,project_id,number,status,data,changelog) VALUES($1,$2,1,'approved',$3,$4)",[SAMPLE_VERSION_ID,SAMPLE_PROJECT_ID,JSON.stringify(data),'Sample release 1.0: working task board, search, browser-local persistence, desktop/mobile layouts, recorded walkthrough, full source archive, and fictional team profiles. Published as a display example, not an educator-reviewed student submission.']);
     await audit(client,null,'example.published',SAMPLE_PROJECT_ID,{provenance:'repository-authored sample; not a student upload or malware-scan verdict',assets:files.map(f=>({filename:f.filename,sha256:createHash('sha256').update(f.content).digest('hex')}))});

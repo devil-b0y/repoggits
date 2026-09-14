@@ -2,6 +2,8 @@ import { test, expect, type APIRequestContext } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
 import { db, migrate } from '../lib/db';
 import { hashPassword } from '../lib/auth';
+import { emailIndex } from '../lib/encryption';
+import { openOutboxRow } from '../lib/mail';
 import { emptyProject, projectSchema, type ProjectData } from '../lib/schema';
 import { zipFixture } from './helpers/zip';
 import sharp from 'sharp';
@@ -140,15 +142,15 @@ test('sample video plays and live demo persists a new task',async({page})=>{
 test('registration works without verification and single-use password reset revokes sessions',async({playwright})=>{
   const client=await playwright.request.newContext({baseURL:origin,extraHTTPHeaders:headers});
   expect((await client.post('/api/auth/register',{data:{name:'New Maker',email:'new@example.test',password}})).status()).toBe(202);
-  expect(await db.query('SELECT id FROM r.outbox WHERE recipient=$1',['new@example.test'])).toHaveLength(0);
+  expect(await db.query('SELECT id FROM r.outbox WHERE recipient_hash=$1',[emailIndex('new@example.test')])).toHaveLength(0);
   expect((await client.post('/api/auth/login',{data:{email:'new@example.test',password}})).status()).toBe(200);
   expect(await (await client.get('/api/auth/me')).json()).toMatchObject({user:{verified:false},emailVerificationRequired:false});
   expect((await client.post('/api/projects',{data:{data:{...data,sourceId:''},submit:false}})).status()).toBe(201);
   expect((await client.post('/api/auth/resend',{data:{}})).status()).toBe(200);
-  expect(await db.query('SELECT id FROM r.outbox WHERE recipient=$1',['new@example.test'])).toHaveLength(0);
+  expect(await db.query('SELECT id FROM r.outbox WHERE recipient_hash=$1',[emailIndex('new@example.test')])).toHaveLength(0);
   expect((await client.post('/api/auth/forgot',{data:{email:'new@example.test'}})).status()).toBe(200);
-  const [resetMail]=await db.query('SELECT body FROM r.outbox WHERE recipient=$1 ORDER BY created_at DESC LIMIT 1',['new@example.test']);
-  const resetToken=resetMail.body.match(/token=([a-f0-9]+)/)[1];
+  const [resetMail]=(await db.query('SELECT body FROM r.outbox WHERE recipient_hash=$1 ORDER BY created_at DESC LIMIT 1',[emailIndex('new@example.test')])).map(openOutboxRow);
+  const resetToken=resetMail.body.match(/token=([a-f0-9]+)/)![1];
   expect((await client.post('/api/auth/reset',{data:{token:resetToken,password:'a different long password for testing'}})).status()).toBe(200);
   expect((await client.post('/api/auth/reset',{data:{token:resetToken,password:'another long password for testing'}})).status()).toBe(400);
   expect((await (await client.get('/api/auth/me')).json()).user).toBeNull();
@@ -180,7 +182,7 @@ test('password reset accepts the emailed 6-digit code instead of the link, and l
   const email=`otp-${randomUUID()}@example.test`,first='a long enough passphrase for otp checks',second='a brand new passphrase set with a code';
   expect((await request.post('/api/auth/register',{headers,data:{name:'Otp Maker',email,password:first}})).status()).toBe(202);
   // Outbox mode stores the real message body, so the code can be read without sending mail.
-  const latestMail=async()=>{const [mail]=await db.query('SELECT body FROM r.outbox WHERE recipient=$1 ORDER BY created_at DESC LIMIT 1',[email]);return {code:mail.body.match(/instead: (\d{6})/)![1] as string,token:mail.body.match(/token=([a-f0-9]{64})/)![1] as string};};
+  const latestMail=async()=>{const [mail]=(await db.query('SELECT body FROM r.outbox WHERE recipient_hash=$1 ORDER BY created_at DESC LIMIT 1',[emailIndex(email)])).map(openOutboxRow);return {code:mail.body.match(/instead: (\d{6})/)![1] as string,token:mail.body.match(/token=([a-f0-9]{64})/)![1] as string};};
   expect((await request.post('/api/auth/forgot',{headers,data:{email}})).status()).toBe(200);
   const {code,token}=await latestMail();
   const wrong=(c:string)=>c==='000000'?'111111':'000000';
@@ -190,10 +192,10 @@ test('password reset accepts the emailed 6-digit code instead of the link, and l
   expect((await request.post('/api/auth/reset',{headers,data:{token,password:first}})).status()).toBe(400);
   expect((await request.post('/api/auth/login',{headers,data:{email,password:second}})).status()).toBe(200);
   // Asking again within a minute succeeds but sends nothing new; skip the wait rather than sleeping through it.
-  const sentSoFar=(await db.query('SELECT id FROM r.outbox WHERE recipient=$1',[email])).length;
+  const sentSoFar=(await db.query('SELECT id FROM r.outbox WHERE recipient_hash=$1',[emailIndex(email)])).length;
   expect((await request.post('/api/auth/forgot',{headers,data:{email}})).status()).toBe(200);
-  expect(await db.query('SELECT id FROM r.outbox WHERE recipient=$1',[email])).toHaveLength(sentSoFar);
-  await db.query('DELETE FROM r.rate_limits WHERE key=$1',[`code-sent:reset:${email}`]);
+  expect(await db.query('SELECT id FROM r.outbox WHERE recipient_hash=$1',[emailIndex(email)])).toHaveLength(sentSoFar);
+  await db.query('DELETE FROM r.rate_limits WHERE key=$1',[`code-sent:reset:${emailIndex(email)}`]);
   expect((await request.post('/api/auth/forgot',{headers,data:{email}})).status()).toBe(200);
   const next=await latestMail();
   for(let i=0;i<5;i++)expect((await request.post('/api/auth/reset',{headers,data:{email,code:wrong(next.code),password:first}})).status()).toBe(400);
@@ -205,7 +207,7 @@ test('password reset accepts the emailed 6-digit code instead of the link, and l
 test('email verification accepts a code, and invites stay link-only',async({request})=>{
   const email=`verify-${randomUUID()}@example.test`,password='a long enough passphrase for verify checks';
   expect((await request.post('/api/auth/register',{headers,data:{name:'Verify Maker',email,password}})).status()).toBe(202);
-  const [user]=await db.query('SELECT id,verified FROM r.users WHERE email=$1',[email]);expect(user.verified).toBe(false);
+  const [user]=await db.query('SELECT id,verified FROM r.users WHERE email_hash=$1',[emailIndex(email)]);expect(user.verified).toBe(false);
   const hash="encode(sha256(convert_to($1,'UTF8')),'hex')";
   await db.query(`INSERT INTO r.tokens(hash,user_id,purpose,expires_at,code_hash) VALUES(${hash},$2,'verify',now()+interval '1 hour',encode(sha256(convert_to($3,'UTF8')),'hex'))`,[randomUUID(),user.id,'482913']);
   expect((await request.post('/api/auth/verify',{headers,data:{email,code:'482913'}})).status()).toBe(200);

@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { db, transaction, type Db } from './db';
 import { audit, canReview } from './auth';
+import { openText } from './encryption';
 import { requireCondition } from './errors';
 import { projectSchema, type ProjectData, type User, type Version, type Project } from './schema';
 
@@ -109,7 +110,7 @@ export async function reviewVersions(user:User,ids:string[],action:'approve'|'re
       const message=`${v.data.title} · version ${v.number}: ${status.replaceAll('_',' ')}${status==='pending'?` (${count.n}/${v.required_approvals} approvals)`:''}.${reason?' '+reason:''}`;
       await client.query('INSERT INTO r.notifications(id,user_id,message,project_id) VALUES($1,$2,$3,$4)',[randomUUID(),v.owner_id,message,v.project_id]);
       const [owner]=await client.query('SELECT email FROM r.users WHERE id=$1',[v.owner_id]);
-      messages.push({email:owner.email,message});
+      messages.push({email:openText(owner.email,'users.email'),message});
     }
     return messages;
   });
@@ -117,7 +118,7 @@ export async function reviewVersions(user:User,ids:string[],action:'approve'|'re
 export async function publicProjects() {
   return (await db.query(`${projectSelect} WHERE v.status='approved' AND NOT p.archived AND v.number=(SELECT max(v2.number) FROM r.versions v2 WHERE v2.project_id=p.id AND v2.status='approved') ORDER BY stars DESC,likes DESC,v.created_at DESC,p.id LIMIT 500`)).map(row=>{
     const project=projectView(row);
-    project.version.data={...project.version.data,team:project.version.data.team.map(member=>({...member,email:''}))};
+    project.version.data={...project.version.data,team:project.version.data.team.map(member=>({...member,email:'',rollNumber:''}))};
     return project;
   });
 }

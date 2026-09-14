@@ -220,6 +220,7 @@ re-read while the server runs.
 | `DATABASE_SSL` | `disable`, `no-verify`, `require`, `verify-ca`, `verify-full`. Defaults to verification for a remote host and to `disable` for localhost. |
 | `DATABASE_CA_CERT_FILE` | Path to a private certificate authority, for a self-hosted server presenting its own certificate. `DATABASE_CA_CERT` takes the same PEM inline. |
 | `DATABASE_POOL_MAX` | Connections held by this process. Default 5. |
+| `TARGET_DATABASE_URL` | Only while moving: the new database for `npm run db:transfer`. `TARGET_DATABASE_SSL`, `TARGET_DATABASE_CA_CERT_FILE`, and `TARGET_DATABASE_CA_CERT` take the same values as their `DATABASE_*` counterparts; `TARGET_DATABASE_SCHEMA` defaults to the current schema. See [Moving to another database](#moving-to-another-database). |
 | `APP_ORIGIN` | Exact public browser origin. Required in production. |
 | `PORT` | Port the Node process listens on. Default 3000. |
 | `MAIL_MODE` | `outbox` stores messages unsent; `smtp` or `azure` delivers them. |
@@ -228,6 +229,30 @@ re-read while the server runs.
 | `AZURE_COMMUNICATION_CONNECTION_STRING` | Azure Communication Services connection string (resource → Settings → Keys) when `MAIL_MODE=azure`. |
 | `DOWNLOAD_SECRET` | Signing key for expiring download links. Generated and stored in the database when blank. |
 | `EMAIL_VERIFICATION_REQUIRED` | `true` restores the email verification gate. |
+| `DATA_ENCRYPTION_KEY` | 32 random bytes in base64 that encrypt private data. Required; see [Data encryption](#data-encryption). |
+| `GEMINI_API_KEY` | Google Gemini API key for the "Tell Gemini what you built" helper on the submit page. Optional: without it the helper reports that it is not configured and the form works manually. The student's prompt, which may include team names and roll numbers, is sent to Google; uploads and the rest of the form are not. Every request is logged against the account with its prompt encrypted, visible only to Super Admins in Admin › AI activity, and deleted after 180 days. The on/off switch and per-account and whole-site limits are in Admin › Settings; see [Gemini project assistant](OPERATIONS.md#gemini-project-assistant). |
+| `GEMINI_API_KEYS` | Optional comma-separated backup keys, tried in order when a key is rate-limited or rejected (at most 3 per request). Keys in the same Google project share quota. |
+| `GEMINI_MODEL` | Gemini model name. Default `gemini-2.5-flash`. |
+
+### Data encryption
+
+Email addresses, the private parts of profiles (student ID, batch, department,
+bio, and profile links), queued emails, and uploaded files are encrypted with
+AES-256-GCM before they are written. Accounts are looked up by a keyed hash of
+the address, so the plain value is never needed in the database. Names, project
+pages, and comments stay readable because they are shown publicly and searched
+in SQL. Team member addresses inside project data are part of that project
+content and are not encrypted.
+
+- `DATA_ENCRYPTION_KEY` is required; the application refuses to read or write
+  the database without it. Generate it once with `openssl rand -base64 32`.
+- **Keep a copy off the server and away from database dumps.** Without this exact
+  key the encrypted data cannot be recovered, and there is no rotation command.
+- Every server that uses the same database must have the same key.
+- When upgrading a database that already holds accounts, deploy this version to
+  every server first, then convert the older rows once with `npm run db:encrypt`
+  (Docker: `docker compose exec app npm run db:encrypt`). It is safe to rerun, and
+  unconverted rows keep working until it has run.
 
 ### Origins and cookies
 
@@ -293,11 +318,100 @@ pg_restore --clean --if-exists --no-owner --dbname="$DATABASE_URL" <file>
 Copy dumps off the server. A backup that only exists on the machine it protects
 is not a backup.
 
+Dumps hold encrypted columns, so a restore is only readable with the matching
+`DATA_ENCRYPTION_KEY`. Store the key separately from the dumps, never beside them.
+
 **The website source** is what **Admin → Backups** produces: a ZIP of the source
 tree honouring `.gitignore`, excluding dependencies, build output, Git metadata,
 private environment files, and private keys. It contains no database records and
 no uploaded files. It needs the full source tree present on the server, which is
 why both deployment paths keep it.
+
+---
+
+## Moving to another database
+
+`npm run db:transfer` copies a Repoggits database to another PostgreSQL server:
+Amazon RDS or Aurora PostgreSQL, Google Cloud SQL or AlloyDB, Azure Database for
+PostgreSQL, another Neon project, or PostgreSQL on your own machine. Accounts,
+sessions, projects, reviews, comments, settings, and every uploaded file move
+together, so nobody signs up or uploads anything again.
+
+Any PostgreSQL 12 or newer server works. Repoggits relies on PostgreSQL features
+such as `jsonb`, `bytea`, and partial indexes, so MySQL, SQL Server, DynamoDB, and
+Firestore cannot be targets.
+
+What the command guarantees:
+
+- The source is read from one consistent snapshot and never changed.
+- The target receives the tables and every row in a single transaction. Before it
+  commits, each table is compared with the source by row count and a SHA-256
+  checksum. If anything differs or the connection drops, the target is left
+  exactly as it was.
+- A target that already holds data is refused unless you pass `--replace`, and a
+  database is never copied onto itself.
+- Encrypted columns are copied byte for byte, so keep the same `DATA_ENCRYPTION_KEY`.
+
+### Steps
+
+1. **Create an empty database** on the new provider, and allow connections from
+   the machine that will run the copy (security group, authorized networks, or
+   firewall rule). The application server is a good choice.
+2. **Describe the target** in `.env.local` (Docker: `.env`), in the same format as
+   the `DATABASE_*` settings:
+
+   ```bash
+   TARGET_DATABASE_URL=postgresql://USER:PASSWORD@NEW-HOST:5432/repoggits
+   TARGET_DATABASE_SSL=verify-full
+   TARGET_DATABASE_CA_CERT_FILE=/etc/repoggits/target-ca.pem
+   ```
+
+3. **Check** that both databases are reachable and compatible. Nothing is written:
+
+   ```bash
+   npm run db:transfer -- --check
+   ```
+
+4. **Stop the application** so nothing changes during the copy:
+   `sudo systemctl stop repoggits`, or `docker compose stop app`.
+5. **Copy:**
+
+   ```bash
+   npm run db:transfer
+   ```
+
+   If it warns that the source changed while copying, the application was still
+   running. Stop it and run again with `--replace`.
+6. **Switch over.** Move the target values into `DATABASE_URL`, `DATABASE_SSL`,
+   and `DATABASE_CA_CERT_FILE`, delete the `TARGET_*` lines, start the
+   application, and confirm `GET /api/health` and a sign-in.
+7. **Keep the old database** until you are satisfied. To go back, restore the old
+   `DATABASE_*` values and restart.
+
+On a native install, run the commands as the service account, which owns
+`.env.local`: `sudo -u repoggits bash -c 'cd /opt/repoggits && npm run db:transfer -- --check'`.
+
+Under Docker, a one-off application container runs the copy and reads `TARGET_*`
+from `.env`. It works while the app is stopped. Mount a certificate file when the
+provider needs one:
+
+```bash
+docker compose run --rm -v "$PWD/target-ca.pem:/run/target-ca.pem:ro" \
+  -e TARGET_DATABASE_CA_CERT_FILE=/run/target-ca.pem app npm run db:transfer -- --check
+```
+
+A copy made while the site is still running is a safe rehearsal. It proves the
+connection and shows how long the real move will take. Do the real copy later,
+with the application stopped, using `--replace`.
+
+### Provider notes
+
+| Provider | Connecting |
+| --- | --- |
+| Amazon RDS / Aurora PostgreSQL | Allow the copying machine's IP in the instance's security group. Download the RDS certificate bundle (`global-bundle.pem`) from the AWS documentation, then set `TARGET_DATABASE_SSL=verify-full` and point `TARGET_DATABASE_CA_CERT_FILE` at it. |
+| Google Cloud SQL / AlloyDB | Run the Cloud SQL or AlloyDB Auth Proxy on the copying machine and connect to `127.0.0.1`. The proxy encrypts the connection to Google, so use `TARGET_DATABASE_SSL=disable` for that local hop. |
+| Azure Database for PostgreSQL | Add a firewall rule for the copying machine's IP. Its certificates chain to public authorities, so the default verification works without a CA file. |
+| PostgreSQL on your own server | As in [Database TLS](#database-tls): `disable` over loopback, otherwise your certificate authority in `TARGET_DATABASE_CA_CERT_FILE`. |
 
 ---
 
@@ -346,6 +460,10 @@ balancer would additionally need a shared Next.js cache handler and a fixed
 | `413` on upload | Raise the proxy's body limit. The supplied nginx and Caddy configurations already allow 24 MB. |
 | Uploads fail just under 20 MB | Multipart overhead pushes the request past the proxy limit before the application sees it. |
 | Health check reports `503` | The database is unreachable. Check `DATABASE_URL`, that PostgreSQL is running, and firewall rules. |
+| `db:transfer` cannot connect to the target | The provider is blocking the copying machine. Allow its IP in the security group, authorized networks, or firewall, or use the provider's auth proxy. |
+| `db:transfer` fails with `self-signed certificate in certificate chain` | The provider signs with its own authority (Amazon RDS does). Download its certificate bundle and set `TARGET_DATABASE_CA_CERT_FILE`. |
+| `db:transfer` says the target already holds rows | A previous copy or another installation used that schema. Pass `--replace` to overwrite it, or point `TARGET_DATABASE_SCHEMA` somewhere empty. |
+| `db:transfer` says the source is missing a table or column | The source was last used by an older release. Run `npm run db:setup` against it first, then copy. |
 | *"The website source is not available in this deployment."* | Admin → Backups needs the source tree next to the running server. |
 | Password reset emails never arrive | `MAIL_MODE=outbox` stores them without sending. Configure SMTP. |
 | Build killed on a small server | `next build` needs roughly 2 GB. Add swap, or build elsewhere and copy `.next`. |

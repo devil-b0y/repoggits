@@ -57,8 +57,8 @@ test('narrow-phone navigation supports touch, themes, Escape, and page links',as
 
 test('landscape homepage avoids pinning a scene taller than the viewport',async({page})=>{
  await page.setViewportSize({width:844,height:390});await page.goto('/');
- expect(await page.locator('.maker-stage').evaluate(el=>getComputedStyle(el).position)).toBe('relative');
- await page.getByRole('button',{name:'Show the build',exact:true}).click();
- await expect(page.getByRole('heading',{level:1})).toContainText('Small board.');
+ expect(await page.locator('.capsule-stage').evaluate(el=>getComputedStyle(el).position)).toBe('relative');
+ await page.getByRole('group',{name:'Capsule chapters'}).getByRole('button',{name:/The build/}).click();
+ await expect(page.getByRole('heading',{level:2,name:'The wiring, not just the result.'})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });

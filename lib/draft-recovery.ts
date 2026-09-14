@@ -8,7 +8,7 @@ const recoveryData=z.object({
   type:z.enum(['Software','Hardware','Hybrid']),currency:z.enum(['INR','USD','EUR','GBP']),openSource:z.boolean(),
   features:strings,tags:strings,galleryIds:strings,
   stack:z.object(Object.fromEntries(Object.keys(emptyProject.stack).map(k=>[k,z.string()]))),
-  team:z.array(z.object({name:z.string(),email:z.string(),contribution:z.string(),branch:z.string(),semester:z.string(),college:z.string(),photoId:z.string()})),
+  team:z.array(z.object({name:z.string(),email:z.string(),rollNumber:z.string().optional(),contribution:z.string(),branch:z.string(),semester:z.string(),college:z.string(),photoId:z.string()})),
   services:z.array(z.object({name:z.string(),purpose:z.string(),url:z.string()})),
   hardwareCosts:z.array(z.object({name:z.string(),quantity:z.number(),unitCost:z.number()})),
   softwareCosts:z.array(z.object({name:z.string(),amount:z.number()})),

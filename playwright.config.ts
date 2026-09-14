@@ -7,12 +7,15 @@ process.env.APP_ORIGIN=baseURL;
 process.env.MAIL_MODE='outbox';
 process.env.EMAIL_VERIFICATION_REQUIRED='false';
 process.env.CLAMD_HOST='';
+// A fixed key is fine when .env.local has none: tests only touch their own throwaway schema.
+process.env.DATA_ENCRYPTION_KEY ||= Buffer.alloc(32, 7).toString('base64');
 process.env.REPOGGITS_DB_SCHEMA ||= `repoggits_test_${process.pid}`;
 
 export default defineConfig({
   testDir: './tests',
   outputDir:'test-results/e2e',
-  testIgnore: '**/development/**',
+  // tests/retired holds the specs for the homepage before the Project Capsule; kept for reference, not run.
+  testIgnore: ['**/development/**', '**/retired/**'],
   workers: 1,
   forbidOnly: true,
   globalTeardown:'./tests/teardown.ts',

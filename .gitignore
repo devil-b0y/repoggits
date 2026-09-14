@@ -1,6 +1,8 @@
 node_modules/
 .next/
 .next-test-dev/
+.next-e2e/
+.next-perf/
 out/
 *.tsbuildinfo
 test-results/

@@ -1,6 +1,6 @@
 # Repoggits on a single VPS: application and an optional HTTPS proxy. This deployment uses an
 # external managed database (Neon) rather than the bundled Postgres container — DATABASE_URL,
-# APP_ORIGIN, MAIL_*, DOWNLOAD_SECRET, and EMAIL_VERIFICATION_REQUIRED all come from .env.
+# APP_ORIGIN, DATA_ENCRYPTION_KEY, MAIL_*, DOWNLOAD_SECRET, and EMAIL_VERIFICATION_REQUIRED all come from .env.
 #
 #   cp .env.local .env                     # already has DATABASE_URL, APP_ORIGIN, etc.
 #   docker compose up -d --build           # app on port 3000

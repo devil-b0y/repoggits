@@ -10,6 +10,7 @@ const baseURL = 'http://127.0.0.1:3109';
 process.env.APP_ORIGIN = baseURL;
 process.env.MAIL_MODE = process.env.AZURE_COMMUNICATION_CONNECTION_STRING ? 'azure' : 'smtp';
 process.env.EMAIL_VERIFICATION_REQUIRED = 'true';
+process.env.DATA_ENCRYPTION_KEY ||= Buffer.alloc(32, 7).toString('base64');
 process.env.REPOGGITS_DB_SCHEMA ||= `repoggits_test_otp_${process.pid}`;
 const configured = Boolean(process.env.TESTMAIL_NAMESPACE && process.env.TESTMAIL_APIKEY && (process.env.AZURE_COMMUNICATION_CONNECTION_STRING || process.env.SMTP_HOST));
 

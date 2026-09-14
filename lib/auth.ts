@@ -4,6 +4,7 @@ import { db, type Db } from './db';
 import { emailVerificationRequired } from './policy';
 import { HttpError, requireCondition } from './errors';
 import { profileSchema, type User, type ProjectData } from './schema';
+import { openProfile, openText } from './encryption';
 // Each derivation holds 128 MiB, and a burst of logins all pass the rate limiter together, so cap concurrency to keep memory bounded.
 const MAX_CONCURRENT_HASHES=4;
 let activeHashes=0;const waitingHashes:(()=>void)[]=[];
@@ -30,7 +31,7 @@ export async function checkPassword(password:string,stored:string|null) {
   return expected.length===key.length && timingSafeEqual(key,expected) && !!stored;
 }
 export function userView(row:Record<string,unknown>):User {
-  return {id:String(row.id),email:String(row.email),name:String(row.name),role:row.role as User['role'],verified:!!row.verified,suspended:!!row.suspended,scopes:row.scopes as string[],profile:profileSchema.parse({name:row.name,...row.profile as object})};
+  return {id:String(row.id),email:openText(String(row.email),'users.email'),name:String(row.name),role:row.role as User['role'],verified:!!row.verified,suspended:!!row.suspended,scopes:row.scopes as string[],profile:profileSchema.parse({name:row.name,...openProfile(row.profile)})};
 }
 export async function currentUser(request:NextRequest):Promise<User|null> {
   const token=request.cookies.get(SESSION_COOKIE)?.value;

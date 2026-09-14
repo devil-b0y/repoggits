@@ -1,39 +1,47 @@
 import { readFileSync } from 'node:fs';
-import { Pool, type PoolClient, type QueryResultRow } from 'pg';
+import { Pool, type ClientBase, type PoolClient, type QueryResultRow } from 'pg';
+import { assertEncryptionKey } from './encryption';
 
 const globalDb = globalThis as unknown as { repoPool?:Pool; repoMigration?:Promise<void> };
-export function schemaName() {
-  const schema = process.env.REPOGGITS_DB_SCHEMA || 'repoggits';
+export function checkedSchema(schema:string) {
   if (!/^repoggits(?:_[a-z0-9_]+)?$/.test(schema)) throw new Error('Invalid application database schema.');
   return schema;
+}
+export function schemaName() {
+  return checkedSchema(process.env.REPOGGITS_DB_SCHEMA || 'repoggits');
 }
 const sslModes = ['disable','no-verify','require','verify-ca','verify-full'];
 // A database reached over a network is verified by default; a PostgreSQL server on the same host
 // (the usual VPS layout) speaks plain TCP or a local socket and opts out unless told otherwise.
-export function databaseSsl(url:URL) {
+// The prefix selects the variables: DATABASE_SSL for the application, TARGET_DATABASE_SSL for db:transfer.
+export function databaseSsl(url:URL, prefix='DATABASE') {
   const localServer = /^(?:localhost|127(?:\.\d+){1,3}|\[?::1\]?|)$/.test(url.hostname);
-  const mode = (process.env.DATABASE_SSL || url.searchParams.get('sslmode') || (localServer?'disable':'require')).toLowerCase();
-  if (!sslModes.includes(mode)) throw new Error(`DATABASE_SSL must be one of: ${sslModes.join(', ')}.`);
+  const mode = (process.env[`${prefix}_SSL`] || url.searchParams.get('sslmode') || (localServer?'disable':'require')).toLowerCase();
+  if (!sslModes.includes(mode)) throw new Error(`${prefix}_SSL must be one of: ${sslModes.join(', ')}.`);
   if (mode === 'disable') return false as const;
-  const caFile = process.env.DATABASE_CA_CERT_FILE;
-  const ca = process.env.DATABASE_CA_CERT?.trim() || (caFile ? readFileSync(caFile,'utf8') : '');
+  const caFile = process.env[`${prefix}_CA_CERT_FILE`];
+  const ca = process.env[`${prefix}_CA_CERT`]?.trim() || (caFile ? readFileSync(caFile,'utf8') : '');
   // 'require' keeps certificate verification on, which is stricter than libpq. 'no-verify' encrypts
   // without proving the server's identity; use it only for a private link with a self-signed certificate.
   return { rejectUnauthorized: mode !== 'no-verify', ...(ca?{ca}:{}) };
 }
+export function connectionConfig(connection:string, prefix='DATABASE') {
+  const url = new URL(connection);
+  const ssl = databaseSsl(url, prefix);
+  url.searchParams.delete('sslmode');url.searchParams.delete('channel_binding');
+  return { connectionString:url.toString(), ssl };
+}
 export function pool() {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not configured.');
   if (!globalDb.repoPool) {
-    const url = new URL(process.env.DATABASE_URL);
-    const ssl = databaseSsl(url);
-    url.searchParams.delete('sslmode');url.searchParams.delete('channel_binding');
     const max = Number(process.env.DATABASE_POOL_MAX) || 5;
-    globalDb.repoPool = new Pool({ connectionString:url.toString(), ssl, max, idleTimeoutMillis:10000, connectionTimeoutMillis:15000, statement_timeout:15000 });
+    globalDb.repoPool = new Pool({ ...connectionConfig(process.env.DATABASE_URL), max, idleTimeoutMillis:10000, connectionTimeoutMillis:15000, statement_timeout:15000 });
     globalDb.repoPool.on('error', () => console.error('Database connection interrupted.'));
   }
   return globalDb.repoPool;
 }
-const sql = (value:string) => value.replace(/\br\./g, `"${schemaName()}".`);
+const qualify = (value:string, schema:string) => value.replace(/\br\./g, `"${schema}".`);
+const sql = (value:string) => qualify(value, schemaName());
 export type Db = { query: <T extends QueryResultRow = QueryResultRow>(statement:string, values?:unknown[]) => Promise<T[]> };
 const clientDb = (client:PoolClient):Db => ({ query:async <T extends QueryResultRow>(statement:string,values:unknown[]=[]) => (await client.query<T>(sql(statement),values)).rows });
 export const db:Db = {query:async <T extends QueryResultRow>(statement:string, values:unknown[]=[]) => {await migrate();return (await pool().query<T>(sql(statement),values)).rows;}};
@@ -43,13 +51,25 @@ export async function transaction<T>(fn:(client:Db)=>Promise<T>) {
   catch(error){await client.query('ROLLBACK');throw error;}finally{client.release();}
 }
 export async function migrate() {
+  // Refuse to touch the database at all rather than store private data unencrypted.
+  assertEncryptionKey();
   if (!globalDb.repoMigration) globalDb.repoMigration = (async()=>{
     const client=await pool().connect();
     try{
       await client.query('BEGIN');
-      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[schemaName()]);
-      await client.query(`CREATE SCHEMA IF NOT EXISTS "${schemaName()}"`);
-      await client.query(sql(`
+      await applySchema(client);
+      await client.query('COMMIT');
+    }catch(error){await client.query('ROLLBACK');globalDb.repoMigration=undefined;throw error;}finally{client.release();}
+  })();
+  return globalDb.repoMigration;
+}
+// The complete table layout, applied inside the caller's transaction. Every statement is idempotent,
+// and npm run db:transfer builds a new database with the same function.
+export async function applySchema(client:ClientBase, schema=schemaName()) {
+  checkedSchema(schema);
+  await client.query('SELECT pg_advisory_xact_lock(hashtext($1))',[schema]);
+  await client.query(`CREATE SCHEMA IF NOT EXISTS "${schema}"`);
+  await client.query(qualify(`
         CREATE TABLE IF NOT EXISTS r.users (
           id uuid PRIMARY KEY, email text UNIQUE NOT NULL, password_hash text,
           name text NOT NULL, role text NOT NULL DEFAULT 'student' CHECK(role IN ('student','teacher','superadmin')),
@@ -99,11 +119,17 @@ export async function migrate() {
         END $$;
         CREATE TABLE IF NOT EXISTS r.rate_limits (key text PRIMARY KEY,count integer NOT NULL,expires_at timestamptz NOT NULL);
         CREATE TABLE IF NOT EXISTS r.outbox (id uuid PRIMARY KEY,recipient text NOT NULL,subject text NOT NULL,body text NOT NULL,status text NOT NULL DEFAULT 'pending',created_at timestamptz NOT NULL DEFAULT now());
+        -- Encrypted columns hold a fresh ciphertext on every write, so lookups go through these keyed hashes.
+        ALTER TABLE r.users ADD COLUMN IF NOT EXISTS email_hash text;
+        CREATE UNIQUE INDEX IF NOT EXISTS users_email_hash_idx ON r.users(email_hash);
+        ALTER TABLE r.outbox ADD COLUMN IF NOT EXISTS recipient_hash text;
+        CREATE INDEX IF NOT EXISTS outbox_recipient_hash_idx ON r.outbox(recipient_hash);
+        -- Gemini assistant activity: who asked, when, and what happened. Prompts are sealed with DATA_ENCRYPTION_KEY.
+        ALTER TABLE r.users ADD COLUMN IF NOT EXISTS ai_blocked boolean NOT NULL DEFAULT false;
+        CREATE TABLE IF NOT EXISTS r.ai_requests (id uuid PRIMARY KEY,user_id uuid NOT NULL REFERENCES r.users(id),prompt text NOT NULL,prompt_chars integer NOT NULL,status text NOT NULL CHECK(status IN ('pending','completed','blocked','failed')),reason text NOT NULL DEFAULT '',fields jsonb NOT NULL DEFAULT '[]',model text NOT NULL DEFAULT '',duration_ms integer,created_at timestamptz NOT NULL DEFAULT now());
+        CREATE INDEX IF NOT EXISTS ai_requests_user_idx ON r.ai_requests(user_id,created_at DESC);
+        CREATE INDEX IF NOT EXISTS ai_requests_created_idx ON r.ai_requests(created_at);
         CREATE TABLE IF NOT EXISTS r.settings (key text PRIMARY KEY,value jsonb NOT NULL);
-        INSERT INTO r.settings(key,value) VALUES ('moderation','{"requiredApprovals":1,"allowedEmailDomains":[]}'),('categories','{"departments":["Computer Science","Electronics & Communication","Mechanical Engineering","Electrical Engineering"],"subjects":["Final Year Project","Mini Project","Research"],"tags":["Next.js","Python","Arduino","IoT","Robotics"]}') ON CONFLICT DO NOTHING;
-      `));
-      await client.query('COMMIT');
-    }catch(error){await client.query('ROLLBACK');globalDb.repoMigration=undefined;throw error;}finally{client.release();}
-  })();
-  return globalDb.repoMigration;
+        INSERT INTO r.settings(key,value) VALUES ('ai','{"enabled":true,"hourlyLimit":10,"dailyLimit":40,"siteDailyLimit":300}'),('moderation','{"requiredApprovals":1,"allowedEmailDomains":[]}'),('categories','{"departments":["Computer Science","Electronics & Communication","Mechanical Engineering","Electrical Engineering"],"subjects":["Final Year Project","Mini Project","Research"],"tags":["Next.js","Python","Arduino","IoT","Robotics"]}') ON CONFLICT DO NOTHING;
+      `, schema));
 }

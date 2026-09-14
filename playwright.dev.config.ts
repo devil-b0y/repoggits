@@ -5,6 +5,7 @@ process.loadEnvFile('.env.local');
 process.env.APP_ORIGIN='http://localhost:3108';
 process.env.MAIL_MODE='outbox';
 process.env.EMAIL_VERIFICATION_REQUIRED='false';
+process.env.DATA_ENCRYPTION_KEY ||= Buffer.alloc(32, 7).toString('base64');
 process.env.REPOGGITS_DB_SCHEMA ||= `repoggits_test_dev_${process.pid}`;
 
 export default defineConfig({

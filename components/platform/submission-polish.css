@@ -1,0 +1,131 @@
+/* Editorial typography and a quieter workspace around the existing project editor. */
+.platform:has(.submission-studio){background:var(--paper);background-image:none}
+.platform .submission-studio{max-width:1340px;padding:28px 40px 100px}
+.platform .submission-studio h1,.platform .submission-studio h2,.platform .submission-studio h3{text-wrap:balance}
+.platform .submission-studio p{text-wrap:pretty}
+.platform .submission-studio .studio-hero{grid-template-columns:1.2fr 1fr;gap:24px 48px;padding:42px 48px 0;background:var(--white);border:1px solid var(--line);border-radius:20px;color:var(--ink);margin-bottom:40px;box-shadow:0 12px 50px #223e7205}
+.platform .submission-studio .studio-hero:before{background:radial-gradient(ellipse at 85% 35%,#7e9ccb13,transparent 60%)}
+.platform .submission-studio .studio-hero-copy>a:first-child{color:var(--muted);font-size:12px;margin-bottom:30px;min-height:30px;width:fit-content}
+.platform .submission-studio .studio-eyebrow{display:flex;align-items:center;flex-wrap:wrap;gap:9px;color:var(--blue);font-size:10px;letter-spacing:1.3px;font-weight:500}
+.platform .submission-studio .studio-eyebrow>span{font-size:8px;letter-spacing:.7px;padding:5px 7px;background:#ef976b18;color:var(--ink);border:1px solid #df9b7230;border-radius:4px}
+.platform .submission-studio .studio-hero h1{font-size:clamp(48px,5.2vw,72px);line-height:1.04;letter-spacing:-3px;font-weight:500;color:var(--ink);margin:24px 0}
+.platform .submission-studio .studio-hero h1 em{font-family:Georgia,serif;font-weight:400;color:var(--blue);letter-spacing:-2.6px}
+.platform .submission-studio .studio-hero-copy>p{font-size:16px;line-height:1.75;max-width:415px;color:var(--muted)}
+.platform .submission-studio .studio-start{display:inline-flex;align-items:center;gap:24px;margin:26px 0 0;padding:14px 19px;border-radius:7px;color:#fff;background:#3059b5;font-size:13px;font-weight:500;min-height:48px;transition:background .2s,transform .2s}
+.platform .submission-studio .studio-start:hover{background:#244994;transform:translateY(-2px)}
+.platform .submission-studio .studio-hero-note{color:var(--muted);font-size:11px;margin:18px 0 10px;line-height:1.6;gap:8px}
+.platform .submission-studio .studio-hero-note svg{color:var(--blue);flex-shrink:0}
+.platform .submission-studio .studio-hero-art{min-height:390px;align-self:center;perspective:1400px}
+.platform .submission-studio .studio-orbit{inset:7% 0 4%;border:0;border-radius:22px;background:linear-gradient(135deg,#a4b7db20,#f0bb9420);transform:rotate(-5deg)}
+.platform .submission-studio .studio-paper{width:265px;height:305px;left:calc(50% - 132px);top:38px;padding:22px;border-radius:13px;box-shadow:0 3px 0 #c5ccda,0 18px 40px #1c37621c}
+.platform .submission-studio .paper-back{background:#3159aa;transform:translateX(-22px) rotate(-10deg);color:#d4e2ff;box-shadow:0 16px 28px #17356714}
+.platform .submission-studio .paper-front{background:#fffdf8;transform:translateX(16px) rotate(5deg);color:#243e77;transition:transform .35s ease}
+.platform .submission-studio .studio-hero-art:hover .paper-front{transform:translateX(16px) translateY(-4px) rotate(2deg)}
+.platform .submission-studio .paper-front>span{display:flex;align-items:center;gap:7px;font-size:7px;letter-spacing:.8px;white-space:nowrap}
+.platform .submission-studio .studio-preview-dot{width:5px;height:5px;border-radius:50%;background:#e78a5d;flex-shrink:0}
+.platform .submission-studio .studio-art-mark{display:flex;flex-direction:column;justify-content:center;gap:16px;background:#edf1f8;border-radius:8px;min-height:125px;margin:17px 0 16px;overflow:hidden;color:#3159aa}
+.platform .submission-studio .studio-art-mark>svg:last-of-type{position:absolute;right:32px;top:18px;color:#df855a}
+.platform .submission-studio .studio-art-mark>span{font-size:8px;letter-spacing:1.2px}
+.platform .submission-studio .studio-art-mark.has-image{display:block;position:relative}
+.platform .submission-studio .studio-art-mark img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.platform .submission-studio .paper-front strong{font-family:inherit;font-size:22px;font-weight:500;line-height:1.2;letter-spacing:-.6px;flex-shrink:0}
+.platform .submission-studio .paper-front small{display:flex;justify-content:space-between;gap:12px;margin-top:14px;font-size:8px;letter-spacing:.5px;text-transform:uppercase}
+.platform .submission-studio .paper-front small>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:150px}
+.platform .submission-studio .studio-art-note{display:flex;align-items:center;gap:7px;right:28px;bottom:3px;padding:10px 13px;border:1px solid var(--line);border-radius:30px;background:var(--white);color:var(--muted);font-family:inherit;font-size:11px;line-height:1.5;font-style:normal;transform:none;box-shadow:0 4px 18px #1c376208}
+.platform .submission-studio .studio-art-note svg{color:#508265}
+.platform .submission-studio .studio-benefits{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:16px 22px;border-top:1px solid var(--line);padding:22px 0;margin-top:16px}
+.platform .submission-studio .studio-benefits>span{display:flex;align-items:center;gap:9px;font-size:11px;color:var(--muted)}
+.platform .submission-studio .studio-benefits svg{color:var(--blue);stroke-width:1.5;flex-shrink:0}
+.platform .submission-studio .studio-layout{grid-template-columns:264px minmax(0,1fr);gap:30px}
+.platform .submission-studio .studio-sidebar nav{border-radius:12px;padding:19px 12px;background:var(--white)}
+.platform .submission-studio .studio-sidebar-label{font-size:9px;line-height:1.5;letter-spacing:1px;padding-bottom:18px}
+.platform .submission-studio .studio-sidebar nav a{font-size:13px;gap:12px;min-height:49px;margin:2px 0}
+.platform .submission-studio .studio-sidebar nav a>span{font:500 11px/1.5 monospace;opacity:.75}
+.platform .submission-studio .studio-sidebar nav a[aria-current=step]{background:#3059b50e;color:var(--blue);box-shadow:inset 3px 0 0 var(--blue)}
+.platform .submission-studio .studio-preview{padding:17px;border-radius:12px}
+.platform .submission-studio .studio-preview-heading{font-size:8px;line-height:1.5;letter-spacing:.6px}
+.platform .submission-studio .studio-preview-cover{height:140px;background:linear-gradient(135deg,#e4ebf6,#eee9df)}
+.platform .submission-studio .studio-preview-cover>span{font-size:11px}
+.platform .submission-studio .studio-preview h2{font-size:22px;font-weight:500;line-height:1.25}
+.platform .submission-studio .studio-preview>p{font-size:12px;line-height:1.7}
+.platform .submission-studio .studio-preview>small{font-size:10px;line-height:1.6}
+.platform .submission-studio .studio-preview-tags>span{font-size:10px;padding:4px 7px}
+.platform .submission-studio .studio-checklist{padding:22px 10px}
+.platform .submission-studio .studio-checklist>div{font-size:13px}
+.platform .submission-studio .studio-checklist>p{font-size:11px;line-height:1.6}
+.platform .submission-studio .studio-checklist li{font-size:11px;line-height:1.6}
+.platform .submission-studio .form-section{padding:34px 36px;margin-bottom:24px;border:1px solid var(--line);border-radius:14px;background:var(--white);box-shadow:0 5px 20px #243e7703}
+.platform .submission-studio .form-section-title{align-items:flex-start;gap:17px;padding-bottom:26px;margin-bottom:28px}
+.platform .submission-studio .form-section-title>span{font:500 13px/1 monospace;letter-spacing:-.5px;flex-shrink:0;width:43px;height:43px;border:1px solid #3059b518;background:#3059b509;border-radius:11px;color:var(--blue)}
+.platform .submission-studio .form-section-title h2{font-size:30px;line-height:1.2;font-weight:500;letter-spacing:-1px;margin:0}
+.platform .submission-studio .form-section-title p{font-size:14px;line-height:1.7;margin-top:9px;color:var(--muted)}
+.platform .submission-studio label{font-size:14px;font-weight:500;line-height:1.6;color:var(--ink)}
+.platform .submission-studio input:not([type=checkbox]):not([type=file]),.platform .submission-studio select,.platform .submission-studio textarea{font-family:inherit;font-size:16px;font-weight:400;line-height:1.6;min-height:49px;padding:12px 14px;border-radius:8px;background:var(--paper);border:1px solid var(--line);color:var(--ink)}
+.platform .submission-studio input::placeholder,.platform .submission-studio textarea::placeholder{color:var(--muted);opacity:.8;font-weight:400}
+.platform .submission-studio label>small{font-size:12px;line-height:1.6;font-weight:400}
+.platform .submission-studio .form-row{gap:22px}
+.platform .submission-studio .file-picker{padding:24px;border:1px dashed #8dabc9;background:#3059b505;border-radius:12px}
+.platform .submission-studio .file-picker>label{display:grid;gap:13px;font-size:15px}
+.platform .submission-studio input[type=file]{font-family:inherit;font-size:12px;font-weight:400;min-height:46px;color:var(--muted)}
+.platform .submission-studio input[type=file]::file-selector-button{font-family:inherit;font-weight:500;font-size:12px;line-height:1.5;min-height:44px;padding:12px 16px;background:#3059b5;border-radius:7px}
+.platform .submission-studio .studio-section-next{min-height:55px;font-size:13px;font-weight:500;padding-top:20px;margin-top:25px}
+.platform .submission-studio .studio-section-next>span{font-size:9px;font-weight:400;letter-spacing:1px}
+.platform .submission-studio .draft-recovery-status{font-size:12px;padding:15px 18px;line-height:1.7;border-radius:10px}
+.platform .submission-studio .editor-actions{gap:12px}
+.platform .submission-studio .editor-actions .button{font-size:14px;min-height:50px;padding:14px 20px}
+.platform .submission-studio .editor-actions .button.blue{color:#fff;background:#3059b5;border-color:#3059b5}
+.platform .submission-studio a:focus-visible,.platform .submission-studio button:focus-visible{outline:3px solid var(--blue);outline-offset:4px}
+.dark .submission-studio .studio-hero{box-shadow:none}
+.dark .submission-studio .studio-sidebar nav a[aria-current=step]{background:#9dbbfa12}
+.dark .submission-studio .studio-preview-cover{background:#263d52;color:#b5cbe6}
+@media(max-width:1050px){
+ .platform .submission-studio{padding:20px 24px 75px}
+ .platform .submission-studio .studio-hero{padding:32px 32px 0;gap:20px}
+ .platform .submission-studio .studio-hero h1{font-size:54px}
+ .platform .submission-studio .studio-layout{grid-template-columns:225px minmax(0,1fr);gap:22px}
+ .platform .submission-studio .form-section{padding:28px}
+ .platform .submission-studio .studio-paper{scale:.85}
+ .platform .submission-studio .studio-hero-art{min-height:365px}
+}
+@media(max-width:760px){
+ .platform .submission-studio{padding:14px 16px 65px}
+ .platform .submission-studio .studio-hero{grid-template-columns:1fr;padding:26px 24px 0;border-radius:14px;gap:8px;margin-bottom:24px}
+ .platform .submission-studio .studio-hero-copy>a:first-child{margin-bottom:24px;min-height:36px}
+ .platform .submission-studio .studio-eyebrow{font-size:9px;gap:7px;letter-spacing:.8px}
+ .platform .submission-studio .studio-eyebrow>span{font-size:7px}
+ .platform .submission-studio .studio-hero h1{font-size:clamp(40px,10.5vw,60px);letter-spacing:-1.8px;line-height:1.08;margin:22px 0}
+ .platform .submission-studio .studio-hero h1 em{letter-spacing:-1.7px}
+ .platform .submission-studio .studio-hero-copy>p{font-size:16px;line-height:1.7}
+ .platform .submission-studio .studio-start{margin-top:22px;font-size:13px;min-height:48px}
+ .platform .submission-studio .studio-hero-note{font-size:11px;margin:16px 0 12px}
+ .platform .submission-studio .studio-hero-art{display:none}
+ .platform .submission-studio .studio-benefits{display:grid;grid-template-columns:1fr;gap:14px;padding:20px 0;margin-top:10px}
+ .platform .submission-studio .studio-benefits>span{font-size:12px}
+ .platform .submission-studio .studio-layout{grid-template-columns:1fr;gap:22px}
+ .platform .submission-studio .studio-sidebar nav{padding:14px;gap:5px}
+ .platform .submission-studio .studio-sidebar nav a{font-size:12px;gap:7px;padding:9px;min-height:46px}
+ .platform .submission-studio .studio-sidebar nav a>span{font-size:10px}
+ .platform .submission-studio .studio-sidebar-label{font-size:9px;padding:4px 8px 10px}
+ .platform .submission-studio .form-section{padding:25px 20px;border-radius:12px}
+ .platform .submission-studio .form-section-title{gap:12px;margin-bottom:24px;padding-bottom:22px}
+ .platform .submission-studio .form-section-title>span{width:34px;height:36px;border-radius:8px;font-size:11px}
+ .platform .submission-studio .form-section-title h2{font-size:26px;letter-spacing:-.7px}
+ .platform .submission-studio .form-section-title p{font-size:14px}
+ .platform .submission-studio .form-row{gap:18px}
+ .platform .submission-studio .file-picker{padding:17px}
+ .platform .submission-studio .editor-actions{flex-wrap:wrap}
+ .platform .submission-studio .editor-actions .button{font-size:12px;padding:12px;min-height:48px}
+ .platform .submission-studio .studio-section-next{font-size:12px;gap:12px}
+}
+@media(max-width:360px){
+ .platform .submission-studio .studio-hero{padding:24px 19px 0}
+ .platform .submission-studio .form-section{padding:22px 15px}
+ .platform .submission-studio .studio-sidebar nav a{font-size:11px;padding:8px 6px}
+ .platform .submission-studio .studio-eyebrow{letter-spacing:.5px}
+ .platform .submission-studio .studio-hero h1{font-size:39px}
+}
+@media(prefers-reduced-motion:reduce){
+ .platform .submission-studio .studio-start{transition:none}
+ .platform .submission-studio .studio-start:hover{transform:none}
+ .platform .submission-studio .studio-hero-art:hover .paper-front{transform:translateX(16px) rotate(5deg)}
+}

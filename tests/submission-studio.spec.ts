@@ -1,4 +1,6 @@
 import {test,expect,type Page} from '@playwright/test';
+import languages from '../lib/programming-languages.json';
+import {readFile} from 'node:fs/promises';
 const fileId='a10cd424-dcda-4b15-8a3b-7845e40ae0fe';
 const pixel=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=','base64');
 async function mockSession(page:Page){
@@ -6,6 +8,156 @@ async function mockSession(page:Page){
  await page.route('**/api/settings',r=>r.fulfill({json:{categories:{departments:['Computer Science','Electronics'],subjects:['Final Year Project'],tags:['ESP32','TypeScript']}}}));
  await page.route('**/api/upload',r=>r.fulfill({json:{id:fileId}}));
  await page.route(`**/api/files/${fileId}`,r=>r.fulfill({contentType:'image/png',body:pixel}));
+}
+
+test('starter kits preserve custom answers and the downloadable draft matches recovered work',async({page})=>{
+ await mockSession(page);await page.goto('/submit');
+ await page.getByLabel('Project title',{exact:true}).fill('Smart garden notebook');
+ await page.getByLabel('Frontend',{exact:false}).fill('My custom interface');
+ await page.locator('.starter-details > summary').click();
+ await page.getByRole('button',{name:/ESP32 \/ connected device/}).click();
+ await expect(page.getByLabel('Frontend',{exact:false})).toHaveValue('My custom interface');
+ await expect(page.locator('.language-chip')).toHaveCount(2);
+ await page.getByRole('button',{name:'Use writing outline'}).click();
+ await expect(page.getByLabel('Full story',{exact:true})).toHaveValue(/The problem/);
+ await expect(page.getByRole('button',{name:'Use writing outline'})).toBeDisabled();
+ await page.reload();await expect(page.locator('.language-chip')).toHaveCount(2);
+ const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Download draft JSON'}).click();
+ const download=await downloadPromise;const exported=JSON.parse(await readFile((await download.path())!,'utf8'));
+ expect(exported.data.title).toBe('Smart garden notebook');expect(exported.data.stack.frontend).toBe('My custom interface');expect(exported.data.stack.languages).toBe('C++, Python');
+});
+
+test('review explains missing fields and submits only after required details are ready',async({page})=>{
+ await mockSession(page);await page.goto('/submit');
+ await page.getByLabel('Project title',{exact:true}).fill('A working project');
+ await page.getByRole('button',{name:'Submit for review'}).click();
+ await expect(page.locator('#submission-review')).toBeFocused();
+ await expect(page.locator('.readiness')).toContainText('Choose a subject.');
+ await page.getByLabel('Subject',{exact:false}).fill('Mini Project');
+ await page.getByLabel('Short description',{exact:false}).fill('A helpful project that students can reuse for their own work.');
+ await page.getByLabel('Full story',{exact:true}).fill('We built a helpful project for students to organise their academic work and share their discoveries with the next team.');
+ await page.locator('.starter-details > summary').click();await page.getByRole('button',{name:/Web application/}).click();
+ await expect(page.locator('.readiness')).toContainText('All required details are ready');
+ let saved:any;await page.route('**/api/projects',async r=>{saved=r.request().postDataJSON();await r.fulfill({json:{id:'project-test',versionId:'version-test'}});});
+ await page.route('**/workspace',r=>r.fulfill({contentType:'text/html',body:'<h1>Workspace</h1>'}));
+ await page.getByRole('button',{name:'Submit for review'}).click();await page.waitForURL('**/workspace');expect(saved.submit).toBe(true);
+});
+
+test('gallery order is editable and survives refresh without losing files',async({page})=>{
+ await mockSession(page);let counter=1;
+ await page.route('**/api/upload',r=>r.fulfill({json:{id:`b10cd424-dcda-4b15-8a3b-${String(counter++).padStart(12,'0')}`}}));
+ await page.route('**/api/files/b10cd424-*',r=>r.fulfill({contentType:'image/png',body:pixel}));
+ await page.goto('/submit');
+ for(let i=0;i<2;i++){await page.getByLabel('Add gallery image',{exact:true}).setInputFiles({name:`photo-${i}.png`,mimeType:'image/png',buffer:pixel});await expect(page.locator('.gallery-thumbs>div')).toHaveCount(i+1);}
+ await page.getByRole('button',{name:'Move gallery image 2 earlier'}).click();
+ await page.reload();await expect(page.locator('.gallery-thumbs img').first()).toHaveAttribute('src','/api/files/b10cd424-dcda-4b15-8a3b-000000000002');
+ await expect(page.getByRole('button',{name:'Move gallery image 1 earlier'})).toBeDisabled();
+ await page.getByRole('button',{name:'Remove gallery image 1',exact:true}).click();await expect(page.locator('.gallery-thumbs>div')).toHaveCount(1);
+});
+
+test('language menu supports logos, aliases, multiple selections and custom languages',async({page})=>{
+ await mockSession(page);await page.goto('/submit');
+ await page.getByLabel('Project title',{exact:true}).fill('Language picker sample project');
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
+ const picker=page.locator('.language-picker'),input=picker.getByRole('combobox',{name:'Languages'});
+ await input.fill('py');await picker.getByRole('option',{name:'Python Programming',exact:true}).click();
+ await expect(picker.locator('.language-chip img')).toHaveAttribute('src','/images/languages/python.svg');
+ await input.fill('cpp');await input.press('ArrowDown');await input.press('Enter');
+ await expect(picker.getByRole('button',{name:'Remove language C++',exact:true})).toBeVisible();
+ await input.fill('JS');await input.press('Enter');
+ await expect(picker.getByRole('button',{name:'Remove language JavaScript',exact:true})).toBeVisible();
+ await input.press('Escape');
+ await picker.getByRole('button',{name:'Other / add a language',exact:true}).click();
+ await picker.getByLabel('Other coding language',{exact:true}).fill('CampusLang');
+ await picker.getByRole('button',{name:'Add language',exact:true}).click();
+ await expect(picker.getByRole('button',{name:'Remove language CampusLang',exact:true})).toBeVisible();
+ await page.reload();await expect(picker.locator('.language-chip')).toHaveCount(4);
+ await picker.getByRole('button',{name:'Remove language C++',exact:true}).click();await expect(picker.locator('.language-chip')).toHaveCount(3);
+ let saved:any;await page.route('**/api/projects',async route=>{saved=route.request().postDataJSON();await route.fulfill({json:{id:'language-project',versionId:'language-version'}});});
+ await page.getByRole('button',{name:'Save draft',exact:true}).click();await expect(page.getByText('Draft saved to your account.',{exact:false})).toBeVisible();
+ expect(saved.data.stack.languages).toBe('Python, JavaScript, CampusLang');
+});
+
+test('all bundled language logos load locally',async({request})=>{
+ const results=await Promise.all(languages.filter(language=>language.icon).map(async language=>{
+  const response=await request.get(language.icon!);return {name:language.name,ok:response.ok()&&(await response.text()).includes('<svg')};
+ }));
+ expect(results.filter(result=>!result.ok)).toEqual([]);expect(results.length).toBeGreaterThan(60);
+});
+
+test('language choices fit a phone and custom names respect the stored field limit',async({page})=>{
+ await mockSession(page);await page.setViewportSize({width:320,height:844});await page.goto('/submit');
+ const picker=page.locator('.language-picker');await picker.scrollIntoViewIfNeeded();
+ await picker.getByRole('button',{name:'Open language menu'}).click();
+ await expect(picker.getByRole('option')).toHaveCount(languages.length+1);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await picker.getByRole('combobox').fill('not-a-listed-language');
+ await picker.getByRole('option',{name:/Other language/}).click();
+ const custom=picker.getByLabel('Other coding language',{exact:true});
+ await custom.fill('x'.repeat(61));await custom.press('Enter');await expect(picker.getByRole('status')).toContainText('60 characters');
+ await custom.fill(Array.from({length:6},(_,i)=>String(i)+'x'.repeat(49)).join(','));await custom.press('Enter');
+ await expect(picker.getByRole('status')).toContainText('300 characters');
+ await expect(picker.locator('.language-chip')).toHaveCount(0);
+ await page.screenshot({path:'test-results/language-picker-mobile.png'});
+});
+
+test('technology picker supports keyboard choices, custom chips and refresh recovery',async({page})=>{
+ await mockSession(page);await page.goto('/submit');
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
+ const input=page.getByRole('combobox',{name:'Technology tags'});
+ expect(await input.evaluate(el=>parseFloat(getComputedStyle(el).paddingLeft))).toBeGreaterThanOrEqual(40);
+ await input.focus();await input.press('ArrowUp');
+ const lastChoice=page.getByRole('listbox',{name:'Technology suggestions'}).getByRole('option',{selected:true});
+ await expect(lastChoice).toBeVisible();
+ await expect.poll(async()=>{const option=(await lastChoice.boundingBox())!,list=(await page.getByRole('listbox',{name:'Technology suggestions'}).boundingBox())!;return option.y>=list.y&&option.y+option.height<=list.y+list.height;}).toBe(true);
+ await input.fill('Type');await input.press('ArrowDown');await input.press('Enter');
+ await expect(page.getByRole('button',{name:'Remove technology TypeScript',exact:true})).toBeVisible();
+ await input.fill('Custom board, ESP32');await input.press('Enter');
+ await input.fill('esp32');await input.press('Enter');
+ await expect(page.locator('.tech-chip')).toHaveCount(3);
+ await input.press('Escape');await expect(input).toHaveAttribute('aria-expanded','false');
+ await page.getByLabel('Frontend',{exact:true}).fill('React');await page.reload();
+ await expect(page.locator('.tech-chip')).toHaveCount(3);
+ await expect(page.getByLabel('Frontend',{exact:true})).toHaveValue('React');
+ await page.getByRole('button',{name:'Remove technology Custom board',exact:true}).click();
+ await expect(page.locator('.tech-chip')).toHaveCount(2);
+});
+
+test('technology picker fits a dark mobile screen and rejects oversized tags',async({page})=>{
+ await mockSession(page);await page.setViewportSize({width:320,height:844});await page.goto('/submit');
+ await page.getByRole('button',{name:'Toggle navigation'}).click();await page.locator('.nav-mobile-theme').click();
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
+ const input=page.getByRole('combobox',{name:'Technology tags'});
+ await input.fill('x'.repeat(41));await input.press('Enter');
+ await expect(page.getByRole('status').filter({hasText:'40 characters'})).toBeVisible();
+ await expect(page.locator('.tech-chip')).toHaveCount(0);
+ await input.fill('ESP');await page.getByRole('option',{name:'ESP32',exact:true}).click();
+ await input.press('Escape');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ await page.locator('.tech-tag-editor').screenshot({path:'test-results/technology-picker-mobile.png'});
+});
+
+for(const width of [320,834,1440]){
+ test(`studio typography, introduction and form navigation fit ${width}px`,async({page})=>{
+  await mockSession(page);await page.setViewportSize({width,height:1000});await page.goto('/submit');
+  const start=page.getByRole('link',{name:'Let’s tell your story'});
+  await expect(start).toBeVisible();expect((await start.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  await page.screenshot({path:`test-results/studio-introduction-${width}.png`});
+  await start.click();await expect(page).toHaveURL(/#studio-section-1$/);
+  const title=page.getByLabel('Project title',{exact:true});
+  await title.fill('A connected campus garden built by students, for students');
+  expect(await title.evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(16);
+  await page.locator('#studio-section-1').screenshot({path:`test-results/studio-form-${width}.png`});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  for(const link of await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link').all())expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  if(width===320){
+   await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
+   await page.getByRole('button',{name:'Toggle navigation'}).click();
+   await page.locator('.nav-mobile-theme').click();
+   await expect(page.locator('.platform')).toHaveClass(/dark/);
+   await expect(title).toHaveValue('A connected campus garden built by students, for students');
+  }
+ });
 }
 test('studio previews edits, retains refresh recovery, uploads, and saves the existing payload',async({page})=>{
  await mockSession(page);await page.setViewportSize({width:1440,height:1000});await page.goto('/submit');

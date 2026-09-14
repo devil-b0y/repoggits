@@ -12,6 +12,9 @@ import { roles, type ProjectData, type User } from '@/lib/schema';
 import { queueMail } from '@/lib/mail';
 import { reactToProject, modifyProject, projectLineage } from '@/lib/project-community';
 import { websiteBackup } from '@/lib/site-backup';
+import { openText } from '@/lib/encryption';
+import {geminiInput} from '@/lib/gemini';
+import {aiActivity,aiSettingsSchema,setAiAccess,trackedProjectDraft} from '@/lib/ai-usage';
 let backupRunning=false;
 
 export const runtime='nodejs';
@@ -25,7 +28,7 @@ async function adminData(user:User,exportAll=false) {
   const queue=projects.filter(p=>p.version.status==='pending'&&!p.archived);
   const targets=rows.flatMap(r=>[r.id,r.project_id]);
   const audits=user.role==='superadmin'?await db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id ORDER BY a.created_at DESC LIMIT 100'):await db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id WHERE target_id=ANY($1::text[]) ORDER BY a.created_at DESC LIMIT 100',[targets]);
-  const users=user.role==='superadmin'?await db.query('SELECT id,email,name,role,scopes,verified,suspended FROM r.users ORDER BY created_at DESC LIMIT 500'):[];
+  const users=user.role==='superadmin'?(await db.query('SELECT id,email,name,role,scopes,verified,suspended FROM r.users ORDER BY created_at DESC LIMIT 500')).map(row=>({...row,email:openText(row.email,'users.email')})):[];
   return {queue,projects,audit:audits,users};
 }
 async function handler(request:NextRequest,context:Context) {
@@ -38,6 +41,11 @@ async function handler(request:NextRequest,context:Context) {
     return json({status:'ok',database:true});
   }
   if(!['GET','HEAD'].includes(method))originCheck(request);
+  if(resource==='ai'&&id==='project-draft'&&path.length===2&&method==='POST'){
+    const user=await requireUser(request);
+    const input=geminiInput.parse(await bodyJson(request));
+    return json(await trackedProjectDraft(user,input.prompt));
+  }
   if(resource==='admin'&&id==='backup'){
     const user=await requireUser(request);
     requireCondition(user.role==='superadmin',403,'Super Admin access required.');
@@ -56,7 +64,7 @@ async function handler(request:NextRequest,context:Context) {
     requireCondition(allowed[id]===method,405,'Method not allowed.');return await authRoute(request,id);
   }
   if(resource==='settings'&&method==='GET'){
-    const rows=await db.query("SELECT key,value FROM r.settings WHERE key IN ('categories','moderation')");return json(Object.fromEntries(rows.map(r=>[r.key,r.value])));
+    const rows=await db.query("SELECT key,value FROM r.settings WHERE key IN ('categories','moderation','ai')");return json(Object.fromEntries(rows.map(r=>[r.key,r.value])));
   }
   if(resource==='upload'&&method==='POST')return await upload(request);
   if(resource==='files'&&method==='GET')return await fileRoute(request,uuid(id),sub==='sign');
@@ -93,7 +101,7 @@ async function handler(request:NextRequest,context:Context) {
     ]);
     const saved=bookmarks.length>0;
     // Team email addresses are for collaborator authorization, never public display.
-    if(!editable&&!canReview(user,active.data))result.version.data={...result.version.data,team:result.version.data.team.map(member=>({...member,email:''}))};
+    if(!editable&&!canReview(user,active.data))result.version.data={...result.version.data,team:result.version.data.team.map(member=>({...member,email:'',rollNumber:''}))};
     const related=publicList.filter(p=>p.id!==id&&(p.version.data.department===active.data.department||p.version.data.tags.some(tag=>active.data.tags.includes(tag)))).slice(0,3);
     return json({project:result,...lineage,starred:reactions.some(r=>r.kind==='star'),liked:reactions.some(r=>r.kind==='like'),versions:visible.map(row=>({id:row.id,number:row.number,status:row.status,changelog:row.changelog,createdAt:row.created_at})),comments,reviews,editable,saved,related});
   }
@@ -165,8 +173,19 @@ async function handler(request:NextRequest,context:Context) {
       requireCondition(user.role==='superadmin',403,'Super Admin access required.');
       // An empty list means any email domain may register; otherwise only exact domain matches may.
       const domain=z.string().trim().max(100).regex(/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]*[a-z0-9])?)+$/i,'Enter a valid domain, e.g. college.edu').transform(value=>value.toLowerCase());
-      const input=z.object({requiredApprovals:z.union([z.literal(1),z.literal(2)]),departments:z.array(z.string().trim().min(2).max(100)).min(1).max(50),subjects:z.array(z.string().trim().min(2).max(100)).max(100),tags:z.array(z.string().trim().min(1).max(40)).max(100),allowedEmailDomains:z.array(domain).max(50).default([])}).parse(await bodyJson(request));
-      await transaction(async client=>{await client.query("UPDATE r.settings SET value=$1 WHERE key='moderation'",[JSON.stringify({requiredApprovals:input.requiredApprovals,allowedEmailDomains:[...new Set(input.allowedEmailDomains)]})]);await client.query("UPDATE r.settings SET value=$1 WHERE key='categories'",[JSON.stringify({departments:input.departments,subjects:input.subjects,tags:input.tags})]);await audit(client,user.id,'settings.updated','settings',input);});return json({ok:true});
+      const input=z.object({requiredApprovals:z.union([z.literal(1),z.literal(2)]),departments:z.array(z.string().trim().min(2).max(100)).min(1).max(50),subjects:z.array(z.string().trim().min(2).max(100)).max(100),tags:z.array(z.string().trim().min(1).max(40)).max(100),allowedEmailDomains:z.array(domain).max(50).default([]),ai:aiSettingsSchema.optional()}).parse(await bodyJson(request));
+      await transaction(async client=>{await client.query("UPDATE r.settings SET value=$1 WHERE key='moderation'",[JSON.stringify({requiredApprovals:input.requiredApprovals,allowedEmailDomains:[...new Set(input.allowedEmailDomains)]})]);await client.query("UPDATE r.settings SET value=$1 WHERE key='categories'",[JSON.stringify({departments:input.departments,subjects:input.subjects,tags:input.tags})]);if(input.ai)await client.query("INSERT INTO r.settings(key,value) VALUES('ai',$1) ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value",[JSON.stringify(input.ai)]);await audit(client,user.id,'settings.updated','settings',input);});return json({ok:true});
+    }
+    // Prompts are personal data, so only Super Admins can read the log or change someone's access.
+    if(id==='ai-requests'&&method==='GET'){
+      requireCondition(user.role==='superadmin',403,'Super Admin access required.');
+      const filter=request.nextUrl.searchParams.get('user');
+      return json(await aiActivity(filter?z.uuid().parse(filter):undefined));
+    }
+    if(id==='ai-access'&&method==='PATCH'){
+      requireCondition(user.role==='superadmin',403,'Super Admin access required.');
+      const input=z.object({id:z.uuid(),blocked:z.boolean()}).parse(await bodyJson(request));
+      await setAiAccess(user.id,input.id,input.blocked);return json({ok:true});
     }
     if(id==='export'&&method==='GET'){
       const data=await adminData(user,true);

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@playwright/mcp@latest"]
+    },
+    "markitdown": {
+      "command": "uvx",
+      "args": ["--from", "markitdown-mcp==0.0.1a4", "markitdown-mcp"]
+    }
+  }
+}

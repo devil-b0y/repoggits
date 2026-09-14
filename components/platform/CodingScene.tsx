@@ -6,7 +6,7 @@ export default function CodingScene({paused}:{paused:boolean}){
   useEffect(()=>{
     const el=root.current;if(!el)return;const media=matchMedia('(prefers-reduced-motion: reduce)');let visible=true,frame=0;
     function refresh(){if(!el)return;el.dataset.motion=paused||media.matches?'paused':visible&&!document.hidden?'running':'paused';if(paused||media.matches){el.style.setProperty('--code-x','0px');el.style.setProperty('--code-y','0px');}}
-    function pointer(event:PointerEvent){if(!el||paused||media.matches||frame)return;frame=requestAnimationFrame(()=>{frame=0;const bounds=el!.getBoundingClientRect();el!.style.setProperty('--code-x',`${((event.clientX-bounds.left)/bounds.width-.5)*12}px`);el!.style.setProperty('--code-y',`${((event.clientY-bounds.top)/bounds.height-.5)*8}px`);});}
+    function pointer(event:PointerEvent){if(!el||paused||media.matches||!visible||document.hidden||event.pointerType==='touch'||frame)return;frame=requestAnimationFrame(()=>{frame=0;const bounds=el!.getBoundingClientRect();el!.style.setProperty('--code-x',`${((event.clientX-bounds.left)/bounds.width-.5)*12}px`);el!.style.setProperty('--code-y',`${((event.clientY-bounds.top)/bounds.height-.5)*8}px`);});}
     const observer=new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;refresh();});observer.observe(el);refresh();
     window.addEventListener('pointermove',pointer,{passive:true});document.addEventListener('visibilitychange',refresh);media.addEventListener('change',refresh);
     return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('pointermove',pointer);document.removeEventListener('visibilitychange',refresh);media.removeEventListener('change',refresh);};

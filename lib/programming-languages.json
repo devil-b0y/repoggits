@@ -1,0 +1,589 @@
+[
+  {
+    "name": "Ada",
+    "aliases": [],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "Apex",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/apex.svg"
+  },
+  {
+    "name": "APL",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/apl.svg"
+  },
+  {
+    "name": "Assembly",
+    "aliases": [
+      "asm",
+      "assembler"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/aarch64.svg"
+  },
+  {
+    "name": "AWK",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/awk.svg"
+  },
+  {
+    "name": "Bash",
+    "aliases": [
+      "shell",
+      "sh"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/bash.svg"
+  },
+  {
+    "name": "C",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/c.svg"
+  },
+  {
+    "name": "C#",
+    "aliases": [
+      "c sharp",
+      "cs"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/csharp.svg"
+  },
+  {
+    "name": "C++",
+    "aliases": [
+      "cpp",
+      "c plus plus"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/cplusplus.svg"
+  },
+  {
+    "name": "Carbon",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/carbon.svg"
+  },
+  {
+    "name": "Ceylon",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/ceylon.svg"
+  },
+  {
+    "name": "Clojure",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/clojure.svg"
+  },
+  {
+    "name": "ClojureScript",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/clojurescript.svg"
+  },
+  {
+    "name": "COBOL",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/cobol.svg"
+  },
+  {
+    "name": "CoffeeScript",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/coffeescript.svg"
+  },
+  {
+    "name": "Common Lisp",
+    "aliases": [
+      "lisp"
+    ],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "Crystal",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/crystal.svg"
+  },
+  {
+    "name": "CSS",
+    "aliases": [
+      "css3"
+    ],
+    "category": "Styling",
+    "icon": "/images/languages/css3.svg"
+  },
+  {
+    "name": "D",
+    "aliases": [],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "Dart",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/dart.svg"
+  },
+  {
+    "name": "Delphi",
+    "aliases": [
+      "object pascal"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/delphi.svg"
+  },
+  {
+    "name": "Elixir",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/elixir.svg"
+  },
+  {
+    "name": "Elm",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/elm.svg"
+  },
+  {
+    "name": "Embedded C",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/embeddedc.svg"
+  },
+  {
+    "name": "Erlang",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/erlang.svg"
+  },
+  {
+    "name": "F#",
+    "aliases": [
+      "f sharp"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/fsharp.svg"
+  },
+  {
+    "name": "Fortran",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/fortran.svg"
+  },
+  {
+    "name": "Gleam",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/gleam.svg"
+  },
+  {
+    "name": "Go",
+    "aliases": [
+      "golang"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/go.svg"
+  },
+  {
+    "name": "GraphQL",
+    "aliases": [],
+    "category": "Query",
+    "icon": "/images/languages/graphql.svg"
+  },
+  {
+    "name": "Groovy",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/groovy.svg"
+  },
+  {
+    "name": "Hack",
+    "aliases": [],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "Haskell",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/haskell.svg"
+  },
+  {
+    "name": "Haxe",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/haxe.svg"
+  },
+  {
+    "name": "HTML",
+    "aliases": [
+      "html5"
+    ],
+    "category": "Markup",
+    "icon": "/images/languages/html5.svg"
+  },
+  {
+    "name": "Java",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/java.svg"
+  },
+  {
+    "name": "JavaScript",
+    "aliases": [
+      "js",
+      "ecmascript"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/javascript.svg"
+  },
+  {
+    "name": "JSON",
+    "aliases": [],
+    "category": "Data format",
+    "icon": "/images/languages/json.svg"
+  },
+  {
+    "name": "Jule",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/jule.svg"
+  },
+  {
+    "name": "Julia",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/julia.svg"
+  },
+  {
+    "name": "Kotlin",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/kotlin.svg"
+  },
+  {
+    "name": "LabVIEW",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/labview.svg"
+  },
+  {
+    "name": "LaTeX",
+    "aliases": [
+      "tex"
+    ],
+    "category": "Markup",
+    "icon": "/images/languages/latex.svg"
+  },
+  {
+    "name": "Lua",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/lua.svg"
+  },
+  {
+    "name": "Markdown",
+    "aliases": [
+      "md"
+    ],
+    "category": "Markup",
+    "icon": "/images/languages/markdown.svg"
+  },
+  {
+    "name": "MATLAB",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/matlab.svg"
+  },
+  {
+    "name": "Nim",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/nim.svg"
+  },
+  {
+    "name": "Objective-C",
+    "aliases": [
+      "objc"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/objectivec.svg"
+  },
+  {
+    "name": "OCaml",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/ocaml.svg"
+  },
+  {
+    "name": "Octave",
+    "aliases": [
+      "gnu octave"
+    ],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "Odin",
+    "aliases": [],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "OpenCL",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/opencl.svg"
+  },
+  {
+    "name": "Pascal",
+    "aliases": [],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "Perl",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/perl.svg"
+  },
+  {
+    "name": "PHP",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/php.svg"
+  },
+  {
+    "name": "PowerShell",
+    "aliases": [
+      "pwsh"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/powershell.svg"
+  },
+  {
+    "name": "Prolog",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/prolog.svg"
+  },
+  {
+    "name": "PureScript",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/purescript.svg"
+  },
+  {
+    "name": "Python",
+    "aliases": [
+      "py"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/python.svg"
+  },
+  {
+    "name": "R",
+    "aliases": [
+      "rstats"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/r.svg"
+  },
+  {
+    "name": "Racket",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/racket.svg"
+  },
+  {
+    "name": "Raku",
+    "aliases": [
+      "perl 6"
+    ],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "Rexx",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/rexx.svg"
+  },
+  {
+    "name": "Ruby",
+    "aliases": [
+      "rb"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/ruby.svg"
+  },
+  {
+    "name": "Rust",
+    "aliases": [
+      "rs"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/rust.svg"
+  },
+  {
+    "name": "Sass",
+    "aliases": [
+      "scss"
+    ],
+    "category": "Styling",
+    "icon": "/images/languages/sass.svg"
+  },
+  {
+    "name": "Scala",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/scala.svg"
+  },
+  {
+    "name": "Scheme",
+    "aliases": [],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "Scratch",
+    "aliases": [],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "Smalltalk",
+    "aliases": [],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "Solidity",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/solidity.svg"
+  },
+  {
+    "name": "SQL",
+    "aliases": [
+      "structured query language"
+    ],
+    "category": "Query",
+    "icon": null
+  },
+  {
+    "name": "Swift",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/swift.svg"
+  },
+  {
+    "name": "Tcl",
+    "aliases": [],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "TypeScript",
+    "aliases": [
+      "ts"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/typescript.svg"
+  },
+  {
+    "name": "V",
+    "aliases": [
+      "vlang"
+    ],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "Vala",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/vala.svg"
+  },
+  {
+    "name": "Verilog",
+    "aliases": [],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "VHDL",
+    "aliases": [],
+    "category": "Programming",
+    "icon": null
+  },
+  {
+    "name": "Visual Basic",
+    "aliases": [
+      "vb",
+      "vb.net"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/visualbasic.svg"
+  },
+  {
+    "name": "Vyper",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/vyper.svg"
+  },
+  {
+    "name": "WebAssembly",
+    "aliases": [
+      "wasm",
+      "wat"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/wasm.svg"
+  },
+  {
+    "name": "Wolfram Language",
+    "aliases": [
+      "mathematica"
+    ],
+    "category": "Programming",
+    "icon": "/images/languages/wolfram.svg"
+  },
+  {
+    "name": "XML",
+    "aliases": [],
+    "category": "Markup",
+    "icon": "/images/languages/xml.svg"
+  },
+  {
+    "name": "YAML",
+    "aliases": [
+      "yml"
+    ],
+    "category": "Configuration",
+    "icon": "/images/languages/yaml.svg"
+  },
+  {
+    "name": "Zig",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/zig.svg"
+  },
+  {
+    "name": "Zsh",
+    "aliases": [],
+    "category": "Programming",
+    "icon": "/images/languages/zsh.svg"
+  }
+]

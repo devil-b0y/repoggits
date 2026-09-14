@@ -44,3 +44,19 @@
 @media(min-width:681px) and (max-height:800px){.maker-copy{top:22%}.platform .maker-copy h1{font-size:72px;margin-bottom:20px}.maker-kicker{margin-bottom:18px}.maker-copy>p{font-size:16px;margin-bottom:18px}.coding-terminal{top:155px}}
 @media(prefers-reduced-motion:reduce){.edition-page .maker-types article:hover{background:transparent;box-shadow:none}}
 .edition-page .motion-paused .maker-types article:hover{background:transparent;box-shadow:none}
+/* Cinematic hero entrance. `.maker-copy` is keyed on the active scene, so this replays per scene. */
+@keyframes hero-rise{from{opacity:0;transform:translate3d(0,38px,0)}to{opacity:1;transform:none}}
+@keyframes hero-sheen{0%{background-position:190% 0}55%,100%{background-position:-90% 0}}
+@keyframes hero-shine{0%{transform:translate3d(-260%,0,0) skewX(-18deg)}55%,100%{transform:translate3d(460%,0,0) skewX(-18deg)}}
+.maker-copy>*{animation:hero-rise .9s cubic-bezier(.16,1,.3,1) both}
+.maker-copy .maker-kicker{animation-delay:.06s}
+.maker-copy>p{animation-delay:.36s}
+.maker-copy .maker-actions{animation-delay:.48s}
+.maker-copy h1 em{display:inline-block;background:linear-gradient(100deg,#fff8ec 38%,#ffd9b6 47%,#f9a97f 52%,#fff8ec 62%);background-size:220% 100%;background-position:-90% 0;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:hero-rise 1s cubic-bezier(.16,1,.3,1) .32s both,hero-sheen 6.5s ease-in-out 1.7s infinite}
+.maker-actions .button.orange{position:relative;overflow:hidden;transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .35s}
+.maker-actions .button.orange:hover{transform:translateY(-3px);box-shadow:0 15px 32px #f27e5155}
+.maker-actions .button.orange:after{content:'';position:absolute;top:0;left:0;width:38%;height:100%;background:linear-gradient(100deg,transparent,#fff9,transparent);animation:hero-shine 5.5s ease-in-out 2.2s infinite;pointer-events:none}
+/* Paused and reduced motion land on the finished pose instead of freezing mid-reveal. */
+.maker-story[data-motion=paused] .maker-copy>*,.maker-story[data-motion=reduced] .maker-copy>*,.maker-story[data-motion=paused] .maker-copy h1 em,.maker-story[data-motion=reduced] .maker-copy h1 em{animation:none;opacity:1;transform:none;filter:none}
+.maker-story[data-motion=paused] .maker-actions .button.orange:after,.maker-story[data-motion=reduced] .maker-actions .button.orange:after{animation:none;display:none}
+@media(prefers-reduced-motion:reduce){.maker-copy>*,.maker-copy h1,.maker-copy h1 em{animation:none;opacity:1;transform:none;filter:none}.maker-actions .button.orange{transition:none}.maker-actions .button.orange:hover{transform:none;box-shadow:none}.maker-actions .button.orange:after{display:none}}

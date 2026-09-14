@@ -4,6 +4,7 @@ import type { NextRequest } from 'next/server';
 import { db, transaction } from './db';
 import { hashPassword, checkPassword, currentUser, requireUser, newToken, newCode, hashToken, SESSION_COOKIE, audit, rateLimit, userView } from './auth';
 import { emailSchema, passwordSchema, profileSchema } from './schema';
+import { EMAIL_MATCH, emailIndex, emailMatchParams, sealProfile, storedEmail } from './encryption';
 import { bodyJson, json } from './http';
 import { requireCondition, HttpError } from './errors';
 import { queueMail } from './mail';
@@ -28,7 +29,7 @@ async function issueToken(userId:string,email:string,purpose:string) {
 // At most one code per address and purpose each minute. Inside that window the request still succeeds but sends
 // nothing, so "Create account" and "Send reset link" never fail on a repeat click; only the resend button reports the wait.
 async function sendCode(userId:string,email:string,purpose:'verify'|'reset') {
-  try{await rateLimit(`code-sent:${purpose}:${email}`,1,60);}
+  try{await rateLimit(`code-sent:${purpose}:${emailIndex(email)}`,1,60);}
   catch(error){if(error instanceof HttpError&&error.status===429)return;throw error;}
   await issueToken(userId,email,purpose);
 }
@@ -44,8 +45,8 @@ export async function authRoute(request:NextRequest,action:string) {
     // Signed-in users resend for their own account; right after sign-up (not signed in yet) the page sends the address.
     const user=await currentUser(request);
     const email=user?.email??z.object({email:emailSchema}).parse(await bodyJson(request)).email;
-    await rateLimit(`resend:${email}`,1,60,CODE_COOLDOWN);
-    const [row]=await db.query('SELECT id,verified FROM r.users WHERE email=$1 AND NOT suspended',[email]);
+    await rateLimit(`resend:${emailIndex(email)}`,1,60,CODE_COOLDOWN);
+    const [row]=await db.query(`SELECT id,verified FROM r.users WHERE ${EMAIL_MATCH} AND NOT suspended`,emailMatchParams(email));
     if(row&&!row.verified)await sendCode(row.id,email,'verify');
     return json({message:user?'A new code is on its way. Check your inbox.':'If this account still needs verifying, a new code is on its way.'});
   }
@@ -58,8 +59,8 @@ export async function authRoute(request:NextRequest,action:string) {
     const [moderation]=await db.query("SELECT value FROM r.settings WHERE key='moderation'");
     const allowedDomains:string[]=Array.isArray(moderation?.value?.allowedEmailDomains)?moderation.value.allowedEmailDomains:[];
     if(allowedDomains.length)requireCondition(allowedDomains.includes(input.email.split('@').pop()||''),403,`Sign-up is limited to these email domains: ${allowedDomains.join(', ')}.`);
-    const [existing]=await db.query('SELECT id,verified FROM r.users WHERE email=$1',[input.email]);
-    if(!existing){const id=randomUUID();const password=await hashPassword(input.password);await db.query('INSERT INTO r.users(id,email,password_hash,name,profile) VALUES($1,$2,$3,$4,$5)',[id,input.email,password,input.name,JSON.stringify({name:input.name})]);if(emailVerificationRequired())await sendCode(id,input.email,'verify');}
+    const [existing]=await db.query(`SELECT id,verified FROM r.users WHERE ${EMAIL_MATCH}`,emailMatchParams(input.email));
+    if(!existing){const id=randomUUID();const password=await hashPassword(input.password);const stored=storedEmail(input.email);await db.query('INSERT INTO r.users(id,email,email_hash,password_hash,name,profile) VALUES($1,$2,$3,$4,$5,$6)',[id,stored.email,stored.emailHash,password,input.name,sealProfile({name:input.name})]);if(emailVerificationRequired())await sendCode(id,input.email,'verify');}
     // Registering again before verifying resends the code. The stored password and name are never replaced here,
     // or anyone could take over an unverified account; the response is identical either way, so it reveals nothing.
     else if(emailVerificationRequired()&&!existing.verified)await sendCode(existing.id,input.email,'verify');
@@ -67,8 +68,8 @@ export async function authRoute(request:NextRequest,action:string) {
   }
   if(action==='login') {
     const input=z.object({email:emailSchema,password:z.string().max(128)}).parse(body);
-    await rateLimit(`login:${input.email}`,10,900);await rateLimit('login:global',300,900);
-    const [row]=await db.query('SELECT * FROM r.users WHERE email=$1',[input.email]);
+    await rateLimit(`login:${emailIndex(input.email)}`,10,900);await rateLimit('login:global',300,900);
+    const [row]=await db.query(`SELECT * FROM r.users WHERE ${EMAIL_MATCH}`,emailMatchParams(input.email));
     const valid=await checkPassword(input.password,row?.password_hash||null);
     requireCondition(valid&&row&&!row.suspended,401,'Email or password is incorrect.');
     const token=newToken();await db.query("INSERT INTO r.sessions(hash,user_id,expires_at) VALUES($1,$2,now()+interval '7 days')",[hashToken(token),row.id]);
@@ -76,7 +77,7 @@ export async function authRoute(request:NextRequest,action:string) {
   }
   if(action==='forgot') {
     const {email}=z.object({email:emailSchema}).parse(body);
-    const [row]=await db.query('SELECT id FROM r.users WHERE email=$1 AND NOT suspended',[email]);
+    const [row]=await db.query(`SELECT id FROM r.users WHERE ${EMAIL_MATCH} AND NOT suspended`,emailMatchParams(email));
     if(row)await sendCode(row.id,email,'reset');
     return json({message:'If an account exists, a password-reset message has been queued.'});
   }
@@ -90,7 +91,7 @@ export async function authRoute(request:NextRequest,action:string) {
     ).parse(body) as {token?:string;email?:string;code?:string;password?:string};
     requireCondition(action==='verify'||input.password,400,'A new password is required.');
     requireCondition(!!input.token||!!(codeEligible&&input.email&&input.code),400,'A verification link or code is required.');
-    if(input.email&&input.code)await rateLimit(`code:${action}:${input.email}`,10,3600);
+    if(input.email&&input.code)await rateLimit(`code:${action}:${emailIndex(input.email)}`,10,3600);
     const passwordHash=input.password?await hashPassword(input.password):null;
     const outcome=await transaction(async client=>{
       let userId:string;
@@ -99,7 +100,7 @@ export async function authRoute(request:NextRequest,action:string) {
         requireCondition(row,400,'This link is invalid or has expired. Request a new one.');
         userId=row.user_id;
       } else {
-        const [user]=await client.query('SELECT id FROM r.users WHERE email=$1',[input.email]);
+        const [user]=await client.query(`SELECT id FROM r.users WHERE ${EMAIL_MATCH}`,emailMatchParams(input.email!));
         const [pending]=user?await client.query('SELECT hash,code_hash,code_attempts FROM r.tokens WHERE user_id=$1 AND purpose=$2 AND expires_at>now() FOR UPDATE',[user.id,action]):[];
         requireCondition(pending?.code_hash,400,'This code is invalid or has expired. Request a new one.');
         requireCondition(pending.code_attempts<5,429,'Too many incorrect attempts. Request a new code.');
@@ -124,7 +125,7 @@ export async function authRoute(request:NextRequest,action:string) {
   if(action==='profile') {
     const user=await requireUser(request,false);const profile=profileSchema.parse(body);
     if(profile.avatarId){const [file]=await db.query("SELECT id FROM r.files WHERE id=$1 AND owner_id=$2 AND mime='image/webp'",[profile.avatarId,user.id]);requireCondition(file,400,'Choose an image you uploaded.');}
-    await db.query('UPDATE r.users SET name=$1,profile=$2 WHERE id=$3',[profile.name,JSON.stringify(profile),user.id]);
+    await db.query('UPDATE r.users SET name=$1,profile=$2 WHERE id=$3',[profile.name,sealProfile(profile),user.id]);
     return json({ok:true});
   }
   return json({error:'Unknown account action.'},404);

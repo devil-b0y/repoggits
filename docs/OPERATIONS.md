@@ -28,7 +28,7 @@ When no Super Admin exists, this creates one and writes a single-use, 24-hour se
 - `/`: a signed-out overview of the site — no project data is shown here.
 - `/projects`: approved projects with title/team/technology search, type/department/subject/technology/year filters, and featured/newest/download/view sorting. **Requires a signed-in account** (any role; email verification not required).
 - `/auth`: signup, login, optional email verification, forgotten-password and single-use reset flows.
-- `/account`: name, department, batch, student ID, bio, avatar, and external profile links.
+- `/account`: a live profile card with a completeness checklist; name, department, batch, student ID, bio, and GitHub/LinkedIn links (usernames are expanded to full URLs); and a profile photo editor with drag/pinch cropping, zoom, rotate, straighten, flip, looks, and brightness/contrast/saturation. The edited photo is saved immediately as a 720×720 image.
 - `/submit`: account-backed drafts, team contributions, stack fields, media, dates, conditional itemized costs, and changelogs.
 - `/workspace`: owned/team projects, resumable drafts, review feedback, saved projects, and in-app notifications.
 - `/projects/:id`: images, video, costs, source downloads, team, comments, related projects, and version history. **Requires a signed-in account.** Unpublished versions additionally require ownership or review authorization.
@@ -42,7 +42,7 @@ Roles are enforced server-side. Contributors cannot review their own work. Each 
 
 Email verification is temporarily optional (`EMAIL_VERIFICATION_REQUIRED=false`, the default). New users can sign in immediately; existing unverified accounts can submit, comment, review according to their role, and download. Signup does not queue verification emails. Set this option to `true` to restore verification gates. Actual email-verification records, password resets, and single-use administrator invitations remain intact.
 
-The local setup currently uses `MAIL_MODE=outbox`. Password-reset and review messages (plus verification messages when enabled) are stored privately in Neon and **are not sent** in this mode.
+The local setup currently uses `MAIL_MODE=outbox`. Password-reset and review messages (plus verification messages when enabled) are stored encrypted in Neon and **are not sent** in this mode.
 
 ```sh
 npm run mail:outbox
@@ -61,9 +61,9 @@ Uploads use built-in structural and content validation, without an external scan
 - ZIP inspection never writes archive entries to disk. Limits: 2,000 entries, 100 MB actual decompressed content, compression-ratio checks, CRC verification, and a processing timeout.
 - Traversal paths, symlinks, duplicates, encrypted/nested archives, unsupported types, and detected executable signatures are rejected.
 - All accepted uploads pass validation before storage, recorded as `validated_internal`. Source entries must be UTF-8 text; embedded raster images must decode successfully. Each entry is limited to 20 MB.
-- Validated bytes are stored privately in Neon, outside the public web root. Source files are never executed. For a larger collection, migrate file storage to private object storage before increasing limits.
+- Validated bytes are encrypted with `DATA_ENCRYPTION_KEY` (AES-256-GCM) and stored privately in Neon, outside the public web root. Source files are never executed. For a larger collection, migrate file storage to private object storage before increasing limits.
 - Source downloads require a signed-in account (and email verification when enabled) and a five-minute HMAC URL bound to that account. Authorization is rechecked on every download. Images use an authorization-aware handler with explicit MIME and nosniff headers.
-- Server-side rate limits cover authentication, uploads, submissions, downloads, and comments.
+- Server-side rate limits cover authentication, uploads, submissions, downloads, comments, and Gemini drafts (see [Gemini project assistant](#gemini-project-assistant)).
 
 ## Verification
 
@@ -109,3 +109,15 @@ Stars and likes are separate, reversible account actions with one vote of each k
 Project editor recovery: unfinished form data and completed upload references are saved automatically in this browser, separately per account and version. Save draft also stores progress in Neon for access from another device. Successful saves clear the previous recovery copy. Changed server versions are not overwritten by stale recovery. In-progress uploads prompt before refresh; browser storage failures are shown in the form.
 
 Super Admin website backups: open Admin > Backups to download a source ZIP. The export follows root and nested .gitignore files, skips symlinks, dependencies, builds, private environment files, Git metadata and private key files, and includes restore instructions. It requires a Super Admin session and same-origin POST, is rate-limited, and writes an audit entry. Limits: 128 MB of source and 10,000 files. The full source tree must be present on the server. Neon records and uploaded files in Neon require a separate database backup; this source export does not include them.
+
+## Gemini project assistant
+
+The "Tell Gemini what you built" helper on `/submit` sends only the student's prompt to Google Gemini (`GEMINI_API_KEY`). Safeguards against misuse:
+
+- Only signed-in, non-suspended accounts can use it, through same-origin requests, with prompts of 20–12,000 characters.
+- Every attempt is recorded in the `ai_requests` table against the account: time, outcome, refusal reason, returned field names, and duration. The prompt is encrypted with `DATA_ENCRYPTION_KEY`; generated text is not stored. Records older than 180 days are deleted automatically.
+- Super Admins review prompts in Admin › AI activity, search by name, email, or prompt text, and pause or restore one account's access. Each pause or restore is written to the audit log.
+- Admin › Settings turns the assistant off for everyone and sets per-account hourly and daily limits plus a whole-site daily limit. Separately, one account can make at most 60 attempts an hour, refused ones included, so the log cannot be flooded.
+- Gemini runs with stricter safety filters, and prompts that do not describe a project are refused instead of drafted, so the key cannot be used as a general chatbot.
+- Output must match a strict schema: upload IDs, unknown fields, and invalid dates are rejected, and nothing reaches the form until the student selects it.
+- Tracking is per account, not per IP address: the bundled Docker setup has no trusted proxy, so forwarded-address headers could be forged.

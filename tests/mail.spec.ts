@@ -4,6 +4,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import type { AddressInfo } from 'node:net';
 import { db, migrate } from '../lib/db';
 import { queueMail } from '../lib/mail';
+import { emailIndex } from '../lib/encryption';
 
 // A local stand-in for the Azure Communication Services Email REST API, so the real SDK runs end to end
 // (signed request, operation polling) without an Azure account.
@@ -41,7 +42,7 @@ test.afterAll(async()=>{
   await new Promise(resolve=>server.close(resolve));
 });
 
-const outboxStatus=async(recipient:string)=>(await db.query('SELECT status FROM r.outbox WHERE recipient=$1',[recipient]))[0]?.status;
+const outboxStatus=async(recipient:string)=>(await db.query('SELECT status FROM r.outbox WHERE recipient_hash=$1',[emailIndex(recipient)]))[0]?.status;
 
 test('Azure Communication Services delivers the message and marks it sent', async () => {
   finalStatus='Succeeded';

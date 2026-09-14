@@ -44,6 +44,14 @@ Start with a thumbnail, then explore the working video, gallery, feature highlig
 
 Work in progress is saved automatically in the same browser, separately for each account and version. Refresh recovery includes completed uploads. **Save draft** also stores a copy in Neon, so you can continue from another device. Leaving during an active upload triggers a browser warning.
 
+The submission studio includes four optional build starter kits, searchable language logos, a writing outline, drag-and-drop uploads, gallery ordering, and a final readiness checklist with links to missing details. Starter kits fill empty stack fields without replacing your answers. Team members can reuse the first member’s college, branch, and semester in empty fields. **Download draft JSON** exports the current form text and uploaded-file references; it does not bundle the files themselves. The review preview shows the cover, summary, features, team size, build duration, languages, and cost total before you submit.
+
+**Gemini writing assistant:** describe the project in English, Hindi, or Hinglish, including any known team names, roll numbers, dates, technologies and costs. Review the proposed fields, deselect anything you want to keep, then apply the rest. Nothing is submitted automatically. Unknown facts are requested rather than invented; review AI output for accuracy. Photos and source ZIPs remain manual, and existing project uploads are preserved. Only the prompt is sent to Google; form contents and uploaded files are not sent automatically. Team roll numbers are retained in drafts and hidden from ordinary project viewers, like member email addresses.
+
+Set `GEMINI_API_KEY` in `.env.local` (and your VPS runtime environment). Optional `GEMINI_API_KEYS` contains comma-separated backup keys; duplicates are ignored, with up to three distinct keys attempted on authentication, quota, or transient provider failures within a shared 45-second timeout. Keys from the same Google project may share quotas. `GEMINI_MODEL` defaults to `gemini-2.5-flash`. Restart the server after changing these values. Generation requires a signed-in user and is limited to 10 requests per hour and 40 per day per account. Without a key, manual submission still works. The integration uses [Gemini structured output](https://ai.google.dev/gemini-api/docs/generate-content/structured-output) followed by local validation.
+
+To refresh the repository-owned CampusFlow example after an update, run `npm run db:sample -- --refresh`. This updates the fixed sample version while retaining its project identity, media references, and counters; it does not update student submissions.
+
 <details>
 <summary><strong>Explore the project submission form</strong></summary>
 
@@ -118,6 +126,8 @@ Copy `.env.example` to `.env.local` using your editor, then configure:
 
 ```dotenv
 DATABASE_URL=your_neon_postgresql_connection_string
+# Required: 32 random bytes in base64, e.g. from `openssl rand -base64 32`. Back it up.
+DATA_ENCRYPTION_KEY=your_generated_key
 APP_ORIGIN=http://localhost:3000
 EMAIL_VERIFICATION_REQUIRED=false
 MAIL_MODE=outbox
@@ -170,7 +180,9 @@ Set **`APP_ORIGIN` to the exact public browser origin**—scheme, hostname, and 
 
 The repository ships the pieces for both paths: [`Dockerfile`](Dockerfile), [`docker-compose.yml`](docker-compose.yml), [`deploy/nginx.conf`](deploy/nginx.conf), [`deploy/Caddyfile`](deploy/Caddyfile), [`deploy/repoggits.service`](deploy/repoggits.service), and a nightly [database dump timer](deploy/repoggits-backup.timer).
 
-📘 **[Full deployment guide](docs/DEPLOYMENT.md)** — configuration reference, TLS for the database, backups and restores, upgrades, and troubleshooting.
+📘 **[Full deployment guide](docs/DEPLOYMENT.md)** — configuration reference, TLS for the database, backups and restores, moving to another database, upgrades, and troubleshooting.
+
+**Moving off Neon?** `npm run db:transfer` copies everything, uploaded files included, to Amazon RDS, Google Cloud SQL, Azure, or any PostgreSQL 12+ server. It checks every table against the source before the new database is used. Start with `npm run db:transfer -- --check`; see [Moving to another database](docs/DEPLOYMENT.md#moving-to-another-database).
 
 | Symptom | What to check |
 | --- | --- |
@@ -195,11 +207,11 @@ The repository ships the pieces for both paths: [`Dockerfile`](Dockerfile), [`do
 | Rejected content | Unsafe paths, symlinks, duplicates, encrypted/nested archives, unsupported binaries, and detected executable signatures |
 | Source downloads | Sign-in required; signed URL expires after five minutes and is bound to the account |
 
-These are structural/content checks, **not a full antivirus engine**. Source code is never executed by the server. Files are stored privately in Neon and served through authorization checks.
+These are structural/content checks, **not a full antivirus engine**. Source code is never executed by the server. Files are encrypted with `DATA_ENCRYPTION_KEY` before they are stored in Neon, and served through authorization checks.
 
 **Admin → Backups** downloads website source, public assets, tests, and setup files. It honors `.gitignore` and excludes dependencies, build output, Git metadata, private environment files, and private keys. Restore instructions are included.
 
-**The source ZIP does not include Neon records or files stored in Neon. Back up the database separately to preserve accounts, submissions, and uploaded media.**
+**The source ZIP does not include Neon records or files stored in Neon. Back up the database separately to preserve accounts, submissions, and uploaded media.** Email addresses, private profile details, queued emails, and uploaded files are encrypted, so also keep a copy of `DATA_ENCRYPTION_KEY` somewhere safe and separate: a database backup cannot be read without it.
 
 ## Tested workflows
 

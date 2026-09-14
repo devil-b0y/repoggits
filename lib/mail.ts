@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import nodemailer from 'nodemailer';
 import { EmailClient } from '@azure/communication-email';
 import { db } from './db';
+import { emailIndex, openText, sealText } from './encryption';
 
 export function deliveryMode() {
   const mode=process.env.MAIL_MODE;
@@ -30,10 +31,12 @@ export async function deliverMail(recipient:string,subject:string,body:string) {
 
 export async function queueMail(recipient:string,subject:string,body:string) {
   const id=randomUUID(),mode=deliveryMode();
-  await db.query('INSERT INTO r.outbox(id,recipient,subject,body) VALUES($1,$2,$3,$4)',[id,recipient,subject,body]);
+  await db.query('INSERT INTO r.outbox(id,recipient,recipient_hash,subject,body) VALUES($1,$2,$3,$4,$5)',[id,sealText(recipient,'outbox.recipient'),emailIndex(recipient),sealText(subject,'outbox.subject'),sealText(body,'outbox.body')]);
   if(!mode)return;
   try {
     await deliverMail(recipient,subject,body);
     await db.query("UPDATE r.outbox SET status='sent' WHERE id=$1",[id]);
   }catch(error){console.error(`Email delivery via ${mode} failed (${error instanceof Error?error.name:'unknown error'}); the message stays pending in the private outbox.`);}
 }
+
+export const openOutboxRow=<T extends Record<string,unknown>>(row:T)=>({...row,recipient:openText(String(row.recipient),'outbox.recipient'),subject:openText(String(row.subject),'outbox.subject'),body:openText(String(row.body),'outbox.body')});

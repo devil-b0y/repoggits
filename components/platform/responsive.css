@@ -15,3 +15,9 @@
 @media(max-width:760px){.platform:has(.maker-story) .nav-links.open .nav-mobile-theme{color:#fff8ec;border-color:#ffffff40}}
 @media(max-width:760px){.demo-nav.nav{gap:8px;padding:0 12px;min-height:72px}.demo-nav .brand{font-size:22px;gap:5px}.demo-nav .nav-submit{min-height:44px;font-size:11px;gap:7px;padding:0 10px;margin-left:auto}.demo-nav .menu-toggle{min-width:44px;width:44px;height:44px;flex-shrink:0}.demo-nav .nav-links.open{top:calc(100% + 8px)}.demo-nav .nav-links.open>a,.demo-nav .nav-links.open>button{min-height:44px}}
 @media(max-width:360px){.demo-nav .nav-submit{width:44px;min-width:44px;justify-content:center;padding:0}.demo-nav .nav-submit-label{display:none}}
+/* Keep the hero's motion control above the mobile chapter navigation. */
+@media(max-width:680px){
+ .platform .edition-page:has(.edition-dock.is-visible) .maker-bottom{bottom:calc(95px + max(10px,env(safe-area-inset-bottom)))}
+ .platform .edition-page:has(.edition-dock.is-visible) .maker-scroll{display:none}
+ .platform .edition-page:has(.edition-dock.is-visible) .maker-pause{position:absolute;left:0;bottom:calc(100% + 14px)}
+}

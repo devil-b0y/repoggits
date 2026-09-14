@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { migrate, db, pool, transaction } from '../lib/db';
 import { newToken, hashToken, audit } from '../lib/auth';
+import { sealProfile, storedEmail } from '../lib/encryption';
 
 async function setup() {
   await migrate();
@@ -15,7 +16,8 @@ async function setup() {
       const [existing]=await client.query("SELECT id FROM r.users WHERE role='superadmin' LIMIT 1");
       if(existing)return false;
       const id=randomUUID();
-      await client.query("INSERT INTO r.users(id,email,name,role,profile) VALUES($1,$2,'Administrator','superadmin',$3)",[id,email,JSON.stringify({name:'Administrator'})]);
+      const stored=storedEmail(email);
+      await client.query("INSERT INTO r.users(id,email,email_hash,name,role,profile) VALUES($1,$2,$3,'Administrator','superadmin',$4)",[id,stored.email,stored.emailHash,sealProfile({name:'Administrator'})]);
       await client.query("INSERT INTO r.tokens(hash,user_id,purpose,expires_at) VALUES($1,$2,'invite',now()+interval '24 hours')",[hashToken(token),id]);
       await audit(client,null,'admin.invited',id);
       return true;
