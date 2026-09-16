@@ -62,14 +62,20 @@ export function columnRules(source:TableInfo,target:TableInfo,sourceProvider:Pro
 }
 
 const placeholders=(row:unknown[],start:number)=>`(${row.map((_,index)=>`$${start+index+1}`).join(',')})`;
+// Column names here come from live information_schema/pg_catalog introspection of whatever server an administrator
+// configured (columnRules() in this file), not from the hardcoded, closed SCHEMA_TABLES list that table names come
+// from (see plan.ts's assertPlanCovers). A compromised or malicious server on either side of a sync could therefore
+// answer with a crafted column name; quoting it here — the same way postgres.ts/mysql.ts already quote identifiers
+// in their own checksum()/snapshot() — stops that name from being read as anything but an identifier.
+export const quoteIdent=(name:string)=>`"${name.replace(/"/g,'""')}"`;
 
 /** Copies one table in batches. Returns the rows that still need their deferred reference columns filled in. */
 async function copyTable(source:Adapter,target:Adapter,step:TableStep,rules:Record<string,ColumnRule>,options:CopyOptions){
   const columns=Object.keys(rules),batchSize=options.batchSize??DEFAULTS.batchSize;
   const deferred=step.deferred.filter(column=>columns.includes(column));
   const order=step.key.length?` ORDER BY ${step.key.join(',')}`:'';
-  const select=`SELECT ${columns.join(',')} FROM ${ref(step.table)}${order} LIMIT $1 OFFSET $2`;
-  const insert=`INSERT INTO ${ref(step.table)} (${columns.join(',')}) VALUES `;
+  const select=`SELECT ${columns.map(quoteIdent).join(',')} FROM ${ref(step.table)}${order} LIMIT $1 OFFSET $2`;
+  const insert=`INSERT INTO ${ref(step.table)} (${columns.map(quoteIdent).join(',')}) VALUES `;
   const pending:Row[]=[];
   let copied=0;
   for(let offset=0;;offset+=batchSize){

@@ -63,6 +63,12 @@ async function trail(user:Actor,request:AdminContext['request'],action:string,ta
  * written to the old one mid-flight, copy the last changes, verify the counts, then point the application at it.
  * Any failed step rolls back — the old database is untouched throughout, so rolling back is only re-activating it.
  */
+// Only one switch may run at a time: the write freeze, the activeId and the adapter cache are all process-wide state
+// with no reference counting, so a second switchTo() starting while one is already in flight could freeze/unfreeze,
+// or activate, out from under the first — exactly the race the freeze exists to prevent. Guarded at the call site
+// below rather than in lib/db.ts, which this review leaves alone.
+let switchInProgress=false;
+
 async function switchTo(from:string,to:string):Promise<SwitchReport> {
   const report:SwitchReport={id:randomUUID(),from,to,startedAt:new Date().toISOString(),finishedAt:null,steps:[],integrity:null,succeeded:false,rolledBack:false,error:''};
   const step=async<T,>(name:SwitchStep,run:()=>Promise<[T,string]>):Promise<T>=>{
@@ -77,14 +83,35 @@ async function switchTo(from:string,to:string):Promise<SwitchReport> {
     await step('sync',async()=>{const copy=await runSync(from,to,'full');requireCondition(copy.phase!=='failed',409,copy.errors[0]||'The first copy failed.');return [copy,`${copy.totalCopied} rows copied`];});
     await step('freeze',async()=>{await freezeWrites();return [null,'Writes paused so the last copy cannot miss a row'];});
     await step('final-sync',async()=>{const copy=await runSync(from,to,'incremental');requireCondition(copy.phase!=='failed',409,copy.errors[0]||'The final copy failed.');return [copy,`${copy.totalCopied} rows copied since the first pass`];});
-    report.integrity=await step('verify',async()=>{const check=await verify(from,to);requireCondition(check.passed,409,'The integrity check did not pass, so the switch was abandoned.');return [check,'Row counts, foreign keys and checksums match'];});
-    await step('activate',async()=>{await setActive(to);await setRole(from,'standby');return [null,'The application now reads and writes the new database'];});
+    report.integrity=await step('verify',async()=>{
+      // freezeWrites() in lib/db.ts self-heals after a ~30s watchdog so a crashed switch can never wedge the app
+      // read-only forever — but that means a final sync slow enough to cross it is auto-unfrozen while this switch
+      // still believes it holds an exclusive window. Trusting an integrity check computed after the freeze already
+      // lapsed would be exactly the false "passed" this module exists to prevent.
+      requireCondition(writesFrozen(),409,'The write freeze lapsed before verification finished, so the source may have changed since. The switch was abandoned rather than risk losing data.');
+      const check=await verify(from,to);requireCondition(check.passed,409,'The integrity check did not pass, so the switch was abandoned.');return [check,'Row counts, foreign keys and checksums match'];
+    });
+    await step('activate',async()=>{
+      requireCondition(writesFrozen(),409,'The write freeze lapsed before the switch could activate the new database. The switch was abandoned rather than risk losing data.');
+      await setActive(to);await setRole(from,'standby');return [null,'The application now reads and writes the new database'];
+    });
     await step('unfreeze',async()=>{await unfreezeWrites();return [null,'Writes resumed'];});
     report.succeeded=true;
   } catch(error) {
     report.error=safe((error as Error).message);
     // The old database was never stopped or emptied, so going back is just making it active again and releasing writes.
-    try {await step('rollback',async()=>{await setActive(from);await setRole(from,'active');await unfreezeWrites();return [null,'Returned to the previous database; no data was lost'];});report.rolledBack=true;} catch {}
+    try {
+      await step('rollback',async()=>{await setActive(from);await setRole(from,'active');return [null,'Returned to the previous database; no data was lost'];});
+      report.rolledBack=true;
+    } catch(rollbackError) {
+      // A rollback that itself fails must show up, not vanish: without this, `succeeded:false` gives no hint that the
+      // application might now be pointed at neither database correctly.
+      report.error=`${report.error} Rolling back also failed: ${safe((rollbackError as Error).message)} Check the database manager before retrying — the active database may not be what it was before.`;
+    }
+  } finally {
+    // Whatever happened above, writes must not stay frozen on the strength of a rollback that may itself have failed
+    // before reaching its own unfreeze — the watchdog in lib/db.ts is a last-resort backstop, not something to lean on.
+    unfreezeWrites();
   }
   report.finishedAt=new Date().toISOString();
   return report;
@@ -167,8 +194,11 @@ export async function databaseRoute({request,user,method,path}:AdminContext):Pro
   if(action==='switch') {
     requireCondition(id!==from,409,'That database is already the active one.');
     requireCondition(existing.enabled&&existing.role!=='disabled',409,'Enable this database before switching to it.');
+    requireCondition(!switchInProgress,409,'A database switch is already running. Wait for it to finish before starting another.');
     await rateLimit(`database-switch:${user.id}`,5,3600);
-    const report=await switchTo(from,id);
+    switchInProgress=true;
+    let report:SwitchReport;
+    try {report=await switchTo(from,id);} finally {switchInProgress=false;}
     await trail(user,request,'switched',id,{source:from,destination:where(existing),steps:report.steps.map(entry=>`${entry.step}:${entry.ok?'ok':'failed'}`),error:report.error,
       result:report.succeeded?'active':report.rolledBack?'failed; rolled back to the previous database':'failed'});
     // A failed switch is still a complete answer: the page needs the steps to show where it stopped.

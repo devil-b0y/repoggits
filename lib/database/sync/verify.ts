@@ -10,7 +10,7 @@ import {createHash} from 'node:crypto';
 import type {Adapter,IntegrityCheck,Row,Snapshot} from '../types';
 import {ref,specFor} from './plan';
 import {canonicalCell,type ColumnRule} from './convert';
-import {columnRules} from './copy';
+import {columnRules,quoteIdent} from './copy';
 
 /** Tables whose rows are sampled and hashed on both sides. All have a single-column key, so the sample can be matched
  *  row for row by key instead of by position, which two servers with different collations would not agree on. */
@@ -27,7 +27,7 @@ export async function tableChecksum(adapter:Adapter,table:string,columns:string[
   const order=key.length?` ORDER BY ${key.join(',')}`:'';
   const digests:string[]=[];
   for(let offset=0;;offset+=batchSize){
-    const rows=await adapter.query<Row>(`SELECT ${columns.join(',')} FROM ${ref(table)}${order} LIMIT $1 OFFSET $2`,[batchSize,offset]);
+    const rows=await adapter.query<Row>(`SELECT ${columns.map(quoteIdent).join(',')} FROM ${ref(table)}${order} LIMIT $1 OFFSET $2`,[batchSize,offset]);
     for(const row of rows)digests.push(hashRow(row,columns,rules));
     if(rows.length<batchSize)break;
   }
@@ -83,14 +83,14 @@ async function sampledChecksums(source:Adapter,target:Adapter,shapes:{source:Sna
     try{
       // The sample is chosen on the source and then fetched from the target by key, never by position: the two
       // servers sort text differently, so "the first 200 rows" is not the same 200 rows on both sides.
-      const sample=await source.query<Row>(`SELECT ${columns.join(',')} FROM ${ref(table)} ORDER BY ${key} LIMIT $1`,[SAMPLE_ROWS]);
+      const sample=await source.query<Row>(`SELECT ${columns.map(quoteIdent).join(',')} FROM ${ref(table)} ORDER BY ${key} LIMIT $1`,[SAMPLE_ROWS]);
       if(!sample.length){
         const targetRows=await countOf(target,table);
         if(targetRows!==0){issues.push(`${table}: the source is empty but the target holds ${targetRows} rows.`);ok=false;}
         continue;
       }
       const keys=sample.map(row=>row[key]);
-      const found=await target.query<Row>(`SELECT ${columns.join(',')} FROM ${ref(table)} WHERE ${key} IN (${keys.map((_,index)=>`$${index+1}`).join(',')})`,keys);
+      const found=await target.query<Row>(`SELECT ${columns.map(quoteIdent).join(',')} FROM ${ref(table)} WHERE ${key} IN (${keys.map((_,index)=>`$${index+1}`).join(',')})`,keys);
       const byKey=new Map(found.map(row=>[canonicalCell(row[key],rules[key].logical),row]));
       for(const row of sample){
         const identity=canonicalCell(row[key],rules[key].logical);
