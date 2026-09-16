@@ -1,4 +1,14 @@
 import {test,expect} from '@playwright/test';
+test('discipline objects load, switch, and preserve paused motion',async({page})=>{
+ await page.goto('/');await page.locator('#discover').scrollIntoViewIfNeeded();await expect(page.locator('.pf-real-object[data-object-ready=true][data-kind="0"]')).toBeVisible();
+ await expect(page.locator('#discover h2')).toHaveAttribute('data-text-motion','framer');
+ for(const [name,id] of [['Hardware','1'],['Hybrid','2'],['Software','0']]){await page.getByRole('group',{name:'Explore engineering disciplines'}).getByRole('button',{name:new RegExp(name)}).click();await expect(page.locator(`.pf-real-object[data-object-ready=true][data-kind="${id}"] canvas`)).toBeVisible();}
+ await page.getByRole('button',{name:'Pause animation'}).click();await expect(page.locator('.ph-home')).toHaveAttribute('data-motion','still');await expect(page.locator('.pf-real-object canvas')).toBeVisible();
+});
+test('engineering objects have a usable non-WebGL fallback',async({page})=>{
+ await page.addInitScript(()=>{const original=HTMLCanvasElement.prototype.getContext;HTMLCanvasElement.prototype.getContext=function(this:HTMLCanvasElement,kind:string,...args:unknown[]){if(kind.includes('webgl'))return null;return original.apply(this,[kind,...args] as Parameters<typeof original>);} as typeof original;});
+ await page.goto('/');await page.locator('#discover').scrollIntoViewIfNeeded();await expect(page.locator('.pf-object-fallback')).toBeVisible();await expect(page.getByRole('link',{name:'Discover student projects'})).toBeVisible();
+});
 test('product entry links preserve the existing application and login',async({page})=>{
  await page.route('**/api/auth/me',r=>r.fulfill({json:{user:null}}));await page.goto('/');
  await expect(page.getByRole('heading',{level:1})).toHaveText('Build somethingworth remembering.');
@@ -31,4 +41,37 @@ test('scroll assembly and pause preserve usable content without console errors',
  await page.locator('.ph-hero').evaluate(el=>scrollTo(0,el.clientHeight-innerHeight));await expect(page.locator('.ph-hero .ph-workspace-assembled')).toHaveCSS('opacity','1');
  await page.evaluate(()=>scrollTo(0,0));await expect(page.locator('.ph-hero .ph-workspace-assembled')).toHaveCSS('opacity','0');
  await page.getByRole('button',{name:'Pause animation'}).click();await expect(page.locator('.ph-home')).toHaveAttribute('data-motion','still');await page.getByRole('button',{name:'Resume animation'}).click();await expect(page.locator('.ph-home')).toHaveAttribute('data-motion','running');expect(errors).toEqual([]);
+});
+
+test('text director targets only text and preserves headline masks and gradient',async({page})=>{
+ await page.goto('/');
+ await expect(page.locator('#ph-title pv-mask')).toHaveCount(3);
+ await expect(page.locator('#ph-title pv-text').last()).toHaveCSS('opacity','1');
+ await expect(page.locator('#ph-title span pv-text')).toHaveCSS('background-clip','text');
+ expect(await page.locator('#ph-title span pv-text').evaluate(el=>getComputedStyle(el).backgroundImage)).toContain('linear-gradient');
+ const uncovered=await page.locator('.ph-home').evaluate(root=>{
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const result:string[]=[];let node:Node|null;
+  while((node=walker.nextNode()))if(node.textContent?.trim()&&!node.parentElement?.closest('pv-text,svg,[aria-hidden=true]'))result.push(node.textContent);
+  return result;
+ });
+ expect(uncovered).toEqual([]);
+ expect(await page.locator('.ph-home [data-text-motion=framer]').evaluateAll(els=>els.every(el=>!el.getAttribute('style')?.includes('filter: blur')))).toBeTruthy();
+});
+
+test('text hover leaves navigation control and icon geometry unchanged',async({page})=>{
+ await page.goto('/');const link=page.locator('.ph-nav-cta');await expect(link.locator('pv-text')).toHaveCSS('opacity','1');
+ const before=await link.boundingBox(),icon=await link.locator('svg').boundingBox();
+ await link.hover();await expect(link.locator('pv-text')).toHaveCSS('left','2px');
+ expect(await link.boundingBox()).toEqual(before);expect(await link.locator('svg').boundingBox()).toEqual(icon);
+ await page.mouse.move(0,0);await expect(link.locator('pv-text')).toHaveCSS('left','0px');
+});
+
+test('pausing and reduced motion immediately resolve text and dynamic updates',async({page})=>{
+ const errors:string[]=[];page.on('pageerror',e=>errors.push(e.message));await page.goto('/');
+ await page.getByRole('button',{name:'Pause animation'}).click();
+ const check=()=>page.locator('pv-text').evaluateAll(els=>els.every(el=>{const s=getComputedStyle(el);return s.opacity==='1'&&s.filter==='none'&&s.top==='0px'&&s.transform==='none';}));
+ expect(await check()).toBeTruthy();
+ await page.getByRole('group',{name:'Explore vault capabilities'}).getByRole('button',{name:/Your team/}).click();
+ await expect(page.locator('.pf-feature-copy h3')).toHaveText('Your team');expect(await check()).toBeTruthy();
+ await page.emulateMedia({reducedMotion:'reduce'});await page.reload();await expect(page.locator('.ph-home')).toHaveAttribute('data-motion','still');expect(await check()).toBeTruthy();expect(errors).toEqual([]);
 });

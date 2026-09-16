@@ -58,6 +58,10 @@
     {
       "decision": "Remove fictional/demo projects from every homepage section, including hero previews. Replace with capability orbit, project-story typography, and discipline explorer. Animate semantic text throughout; links/buttons only fade to preserve pointer targets. Retain pause and reduced-motion support.",
       "source": "User homepage correction, 2026-09-16"
+    },
+    {
+      "decision": "Use realistic original laptop/ESP32 Three.js geometry instead of abstract discipline shapes. Text block reveals use Framer Motion animate(), retain semantic DOM, and respect pause/reduced-motion.",
+      "source": "User 3D object and Framer Motion request"
     }
   ],
   "evidence": [
