@@ -54,6 +54,10 @@
     {
       "decision": "2026-09-16 user direction supersedes the student-life narrative: dark-first product film, original engineer workspace artwork, live floating interfaces, fictional dashboard/discovery examples and working previews. Keep saved theme selection and existing application routes.",
       "source": "User product-led homepage brief"
+    },
+    {
+      "decision": "Remove fictional/demo projects from every homepage section, including hero previews. Replace with capability orbit, project-story typography, and discipline explorer. Animate semantic text throughout; links/buttons only fade to preserve pointer targets. Retain pause and reduced-motion support.",
+      "source": "User homepage correction, 2026-09-16"
     }
   ],
   "evidence": [
