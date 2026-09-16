@@ -68,8 +68,16 @@ export async function authRoute(request:NextRequest,action:string) {
   }
   if(action==='login') {
     const input=z.object({email:emailSchema,password:z.string().max(128)}).parse(body);
-    await rateLimit(`login:${emailIndex(input.email)}`,10,900);await rateLimit('login:global',300,900);
-    const [row]=await db.query(`SELECT * FROM r.users WHERE ${EMAIL_MATCH}`,emailMatchParams(input.email));
+    // The per-address limit and the account lookup are independent round trips, so they go together: against a database
+    // in another region, waiting for one before starting the other adds its whole latency before the password is even
+    // checked. The lookup has no side effect, so running it for a request that turns out to be rate limited costs
+    // nothing. The global valve stays *after* the per-address limit on purpose: if it were raised in the same batch,
+    // hammering one address would keep incrementing it and could lock every account out of signing in.
+    const [,[row]]=await Promise.all([
+      rateLimit(`login:${emailIndex(input.email)}`,10,900),
+      db.query(`SELECT * FROM r.users WHERE ${EMAIL_MATCH}`,emailMatchParams(input.email)),
+    ]);
+    await rateLimit('login:global',300,900);
     const valid=await checkPassword(input.password,row?.password_hash||null);
     requireCondition(valid&&row&&!row.suspended,401,'Email or password is incorrect.');
     const token=newToken();await db.query("INSERT INTO r.sessions(hash,user_id,expires_at) VALUES($1,$2,now()+interval '7 days')",[hashToken(token),row.id]);

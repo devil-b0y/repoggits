@@ -223,6 +223,7 @@ re-read while the server runs.
 | `TARGET_DATABASE_URL` | Only while moving: the new database for `npm run db:transfer`. `TARGET_DATABASE_SSL`, `TARGET_DATABASE_CA_CERT_FILE`, and `TARGET_DATABASE_CA_CERT` take the same values as their `DATABASE_*` counterparts; `TARGET_DATABASE_SCHEMA` defaults to the current schema. See [Moving to another database](#moving-to-another-database). |
 | `APP_ORIGIN` | Exact public browser origin. Required in production. |
 | `PORT` | Port the Node process listens on. Default 3000. |
+| `ASSET_PREFIX` | Optional CDN address for the build's `/_next/static` files, such as `https://cdn.your-domain.edu`. It is written into the build, so set it before building (Docker Compose passes it from `.env` as a build argument) and keep it set when the app runs. Point the CDN's origin at `APP_ORIGIN`. |
 | `MAIL_MODE` | `outbox` stores messages unsent; `smtp` or `azure` delivers them. |
 | `MAIL_FROM` | Sender address. With `azure`, it must be on a domain connected to the Communication Services resource. |
 | `SMTP_*` | Delivery credentials when `MAIL_MODE=smtp`. |
@@ -233,6 +234,8 @@ re-read while the server runs.
 | `GEMINI_API_KEY` | Google Gemini API key for the "Tell Gemini what you built" helper on the submit page. Optional: without it the helper reports that it is not configured and the form works manually. The student's prompt, which may include team names and roll numbers, is sent to Google; uploads and the rest of the form are not. Every request is logged against the account with its prompt encrypted, visible only to Super Admins in Admin › AI activity, and deleted after 180 days. The on/off switch and per-account and whole-site limits are in Admin › Settings; see [Gemini project assistant](OPERATIONS.md#gemini-project-assistant). |
 | `GEMINI_API_KEYS` | Optional comma-separated backup keys, tried in order when a key is rate-limited or rejected (at most 3 per request). Keys in the same Google project share quota. |
 | `GEMINI_MODEL` | Gemini model name. Default `gemini-2.5-flash`. |
+| `TRUSTED_PROXY_HOPS` | Reverse proxies in front of the app that append to `X-Forwarded-For`, 0–5. Default 0. Set `1` behind the bundled nginx or Caddy. See [Tracking, IP addresses and the admin panel](#tracking-ip-addresses-and-the-admin-panel). |
+| `PRESENCE_TIMEOUT_SECONDS` | Seconds after its last heartbeat (sent every 45 seconds) that a browser still counts as online, 60–3600. Default 120. |
 
 ### Data encryption
 
@@ -287,6 +290,77 @@ a time.
 
 ---
 
+## Tracking, IP addresses and the admin panel
+
+The admin panel (`/admin/overview`, described in [ADMIN_PANEL.md](ADMIN_PANEL.md))
+records page views, sign-ins, project, file and prompt activity with the session,
+IP address and device each came from. It needs no extra service: everything is
+stored in the application's own PostgreSQL schema, and real-time views poll the
+API, so there is no WebSocket to proxy.
+
+### Proxy headers and client IP addresses
+
+The client address is taken from `X-Forwarded-For`, trusting as many entries
+from the right as `TRUSTED_PROXY_HOPS` says there are proxies. `next start` fills
+that header from the socket **only when a request has none**, so a client that
+reaches Node directly can send its own header and appear under any address.
+
+- **nginx** (`deploy/nginx.conf`): `location /`, which also serves `/api/`, sets
+  `X-Forwarded-For $proxy_add_x_forwarded_for`, `X-Real-IP` and
+  `X-Forwarded-Proto`. Set `TRUSTED_PROXY_HOPS=1` and keep Node listening on
+  127.0.0.1 so nobody can reach it around nginx.
+- **Caddy** (`docker compose --profile tls`): `reverse_proxy` sets
+  `X-Forwarded-For` by default. Set `TRUSTED_PROXY_HOPS=1` in `.env`, and change the
+  app's port mapping to `127.0.0.1:3000:3000` (or remove it) so clients cannot
+  bypass Caddy on port 3000.
+- **Another proxy in front** (a CDN or cloud load balancer that appends to the
+  header): add one hop for each, for example `2` for a load balancer in front of
+  nginx. Never set more hops than there are proxies; each extra one lets a client
+  choose its own address.
+- **No proxy**: the current `docker-compose.yml` publishes port 3000 directly for a
+  bare-IP deployment. Leave `TRUSTED_PROXY_HOPS=0`; IP addresses are then
+  best-effort and can be forged, so treat them as hints rather than evidence.
+  Admin › System health shows a warning while the value is 0.
+
+Both variables are read while the app runs: change them in `.env.local` (native)
+or `.env` (Docker) and restart; no rebuild is needed.
+
+### Presence, visitors and retention
+
+- **Online presence.** A browser sends a heartbeat every 45 seconds while its tab
+  is visible, and counts as online until `PRESENCE_TIMEOUT_SECONDS` (default 120)
+  after the last one. Live monitoring refreshes every 10 seconds.
+- **Visitor cookie.** Anonymous visits are counted with a random first-party
+  cookie; the database keeps only its hash (`r.visitors.token_hash`). There are no
+  third-party scripts and no fingerprinting, and browsers sending Global Privacy
+  Control or Do Not Track are not tracked as anonymous visitors.
+- **Retention.** Activity logs are kept for 90 days, session data for 30 days and
+  security logs for 180 days by default; prompt logs keep their fixed 180 days.
+  Super Admins change the first three in **Admin › System health › Data
+  retention** (`/admin/system#retention`), stored as the `retention` row of
+  `r.settings`. Expired rows are removed automatically every few minutes while the
+  app runs, and **Run cleanup now** removes them immediately. Both actions are
+  written to the admin audit log.
+
+### Database changes and restarting
+
+The tracking tables and columns are created by `applySchema()` in `lib/db.ts`,
+which runs automatically the first time the app uses the database after it
+starts. Every statement is idempotent, so an upgrade needs no separate migration
+step; `npm run db:setup` applies the same schema if you want it in place before
+the app starts.
+
+```bash
+# Plain Node (native install)
+npm ci && npm run build
+sudo systemctl restart repoggits     # or stop and rerun `npm start`
+
+# Docker Compose
+docker compose up -d --build
+```
+
+---
+
 ## Backups
 
 Two separate things need backing up, and only one of them is covered by the
@@ -337,9 +411,12 @@ PostgreSQL, another Neon project, or PostgreSQL on your own machine. Accounts,
 sessions, projects, reviews, comments, settings, and every uploaded file move
 together, so nobody signs up or uploads anything again.
 
-Any PostgreSQL 12 or newer server works. Repoggits relies on PostgreSQL features
-such as `jsonb`, `bytea`, and partial indexes, so MySQL, SQL Server, DynamoDB, and
-Firestore cannot be targets.
+Any PostgreSQL 12 or newer server works. This command relies on PostgreSQL
+features such as `jsonb`, `bytea`, and partial indexes, so MySQL, SQL Server,
+DynamoDB, and Firestore cannot be targets *for this CLI copy*. To move onto
+MySQL/MariaDB (a cPanel host, for instance) instead, use the in-app **Database
+manager** (`/admin/database`, Super Admin only), which translates the schema and
+every query for that dialect. See [docs/DATABASE_MANAGER.md](DATABASE_MANAGER.md).
 
 What the command guarantees:
 
@@ -438,14 +515,28 @@ to 100 MB in memory, so peaks are driven by uploads rather than page traffic.
 `DATABASE_POOL_MAX` defaults to 5 connections; raise it only alongside the
 server's `max_connections`.
 
-Discovery lists cap at 500 projects and administration at 1,000 versions.
-Cursor pagination is needed before growing much beyond that.
+Discovery lists cap at 500 projects and administration at 1,000 versions;
+pages show them 24 to 50 at a time. Cursor pagination is needed before growing
+much beyond that.
+
+Each process keeps the public project list for up to 15 seconds. Reviews,
+reactions, staff picks and suspensions made through that process clear its copy
+at once. Pages ask for uploaded photos at 480, 960 or 1600 px wide, and up to
+32 MB of these scaled copies are kept in memory. JSON, CSV and RSS responses
+over 1 KB are gzip-compressed by the application itself, so API traffic stays
+small even with no proxy in front.
 
 ### Scaling out
 
-The design assumes one application instance. Running several behind a load
-balancer would additionally need a shared Next.js cache handler and a fixed
-`NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` across instances.
+Sessions, rate limits and moderation state live in PostgreSQL, so several
+application instances can share one proxy: list them in the `upstream` block of
+`deploy/nginx.conf`, or give Caddy's `reverse_proxy` more than one address.
+Build once, run that build everywhere with the same `.env`, and keep
+`DATABASE_POOL_MAX` × instances below the database's `max_connections`. A change
+made through one instance reaches the public list on the others within 15
+seconds, and the one-backup-at-a-time guard in Admin › Backups applies per
+instance. Server actions or cached pages, if added later, would also need a
+shared Next.js cache handler and a fixed `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY`.
 
 ---
 

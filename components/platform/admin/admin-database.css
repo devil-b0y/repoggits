@@ -1,0 +1,64 @@
+/* Admin › Database manager (DatabasePage.tsx), in the admin panel tokens. Nothing here is a new colour: good/bad/warn/
+   info reuse the washes admin-panel.css already defines for badges and stat tiles. */
+.admin-database-toolbar-actions{display:flex;gap:10px;flex-wrap:wrap}
+
+/* The active-database banner: name, target and health at a glance above the card grid. */
+.platform .admin-database-banner{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;padding:20px 22px;margin-bottom:22px}
+.admin-database-banner>div:first-child{display:grid;gap:4px;min-width:0}
+.admin-database-eyebrow{font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
+.admin-database-name{font:500 22px/1.25 'Space Grotesk',sans-serif;letter-spacing:-.4px;overflow-wrap:anywhere}
+.admin-database-target{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.admin-database-banner-facts{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+
+/* One card per configured connection. */
+.admin-database-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin:0 0 6px;padding:0;list-style:none}
+.admin-database-cards>li{min-width:0}
+.platform .admin-database-card{display:grid;align-content:start;gap:14px;height:100%;padding:18px 20px}
+.admin-database-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.admin-database-card-head .admin-database-name{font-size:17px}
+.admin-database-tags{display:flex;gap:6px;flex-wrap:wrap}
+.admin-database-error{display:flex;align-items:flex-start;gap:8px;margin:0;padding:9px 11px;border-radius:5px;background:var(--bad-wash);color:var(--bad-ink);font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.admin-database-error>svg{flex:none;margin-top:2px}
+.admin-database-ok{display:flex;align-items:flex-start;gap:8px;margin:0;font-size:13px;line-height:1.5}
+.admin-database-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.platform .admin-database-actions .button{min-height:36px;padding:0 12px;font-size:12px}
+.admin-database-mode{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.admin-database-mode select{min-height:36px;padding:4px 8px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font-size:12px}
+
+/* Typed confirmation: switching, disabling and removing all ask for the database's own name first. */
+.admin-database-confirm{display:grid;gap:8px;padding:14px 16px;margin-top:2px;border-radius:6px;background:var(--warn-wash);color:var(--warn-ink)}
+.admin-database-confirm.remove,.admin-database-confirm.disable{background:var(--bad-wash);color:var(--bad-ink)}
+.admin-database-confirm-title{display:flex;align-items:center;gap:8px;margin:0;font-size:13px;font-weight:600}
+.admin-database-confirm p{margin:0;font-size:12px;line-height:1.55}
+.admin-database-confirm label{font-size:12px;font-weight:500}
+.admin-database-confirm code{background:var(--white)}
+.platform .admin-database-confirm input{width:100%;min-height:38px;margin-top:4px;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--white);color:var(--ink);font-size:13px}
+.admin-database-confirm-actions{display:flex;gap:8px;flex-wrap:wrap}
+.platform .admin-database-confirm-actions .button{min-height:36px;padding:0 14px;font-size:12px}
+
+/* Add / edit form. */
+.admin-database-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 16px}
+.platform .admin-database-form label{display:grid;align-content:start;gap:6px;min-width:0;font-size:12px;font-weight:500}
+.platform .admin-database-form input,.platform .admin-database-form select{width:100%;min-width:0;min-height:42px;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font-size:14px}
+.platform .admin-database-form small{font-size:11px;font-weight:400;line-height:1.5;color:var(--muted)}
+.admin-database-form-actions{grid-column:1/-1;display:flex;gap:10px;flex-wrap:wrap}
+.platform .admin-database-form-actions .button{min-height:42px;padding:0 18px}
+
+/* The outcome of the last action: comparison, sync, verification or a switch's own steps. */
+.admin-database-problems{display:grid;gap:6px;margin:0 0 14px;padding:0;list-style:none}
+.admin-database-problems li{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:5px;background:var(--bad-wash);color:var(--bad-ink);font-size:12px;line-height:1.5;overflow-wrap:anywhere}
+.admin-database-problems li>svg{flex:none;margin-top:2px}
+.admin-database-verify{margin-top:14px}
+.admin-database-steps{display:grid;gap:2px;margin:0;padding:0;list-style:none}
+.admin-database-steps>li{display:grid;grid-template-columns:auto minmax(140px,auto) 1fr auto;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:13px}
+.admin-database-steps>li:first-child{border-top:0}
+.admin-database-steps>li>span:nth-child(3){color:var(--muted);overflow-wrap:anywhere}
+
+@media(max-width:760px){
+  .admin-database-banner{flex-direction:column;align-items:flex-start}
+  .admin-database-cards{grid-template-columns:minmax(0,1fr)}
+  .admin-database-form{grid-template-columns:minmax(0,1fr)}
+  .admin-database-form-actions .button,.admin-database-confirm-actions .button{flex:1 1 auto;justify-content:center}
+  .admin-database-steps>li{grid-template-columns:auto 1fr;row-gap:4px}
+  .admin-database-steps>li>span:nth-child(3){grid-column:1/-1}
+}

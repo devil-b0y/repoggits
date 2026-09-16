@@ -1,8 +1,8 @@
 'use client';
-import {useMemo,useState} from 'react';
+import {useDeferredValue,useMemo,useState} from 'react';
 import {PauseCircle,PlayCircle,Search} from 'lucide-react';
 import type {AiRequestView} from '@/lib/ai-usage';
-import {Notice,send,useData} from './shared';
+import {Notice,ShowMore,send,useData,usePaged} from './shared';
 import './ai-activity.css';
 
 const outcomes={pending:'In progress',completed:'Draft returned',blocked:'Refused',failed:'Failed'} as const;
@@ -11,7 +11,10 @@ const tagClass={pending:'pending',completed:'approved',blocked:'rejected',failed
 export default function AiActivity(){
  const {data,error,loading,reload}=useData<{retentionDays:number;requests:AiRequestView[]}>('admin/ai-requests');
  const [query,setQuery]=useState(''),[outcome,setOutcome]=useState('all'),[busy,setBusy]=useState(''),[actionError,setActionError]=useState(''),[notice,setNotice]=useState('');
- const requests=useMemo(()=>{const q=query.trim().toLowerCase();return (data?.requests||[]).filter(r=>(outcome==='all'||r.status===outcome)&&(!q||`${r.name} ${r.email} ${r.prompt}`.toLowerCase().includes(q)));},[data,query,outcome]);
+ // The log can hold hundreds of prompts; the list follows the search box without holding up typing.
+ const search=useDeferredValue(query);
+ const requests=useMemo(()=>{const q=search.trim().toLowerCase();return (data?.requests||[]).filter(r=>(outcome==='all'||r.status===outcome)&&(!q||`${r.name} ${r.email} ${r.prompt}`.toLowerCase().includes(q)));},[data,search,outcome]);
+ const page=usePaged(requests,25,`${search}\n${outcome}`);
  const busiest=useMemo(()=>{
   const since=Date.now()-86400000,people=new Map<string,{userId:string;name:string;email:string;aiBlocked:boolean;total:number;refused:number}>();
   for(const r of data?.requests||[]){if(Date.parse(r.createdAt)<since)continue;const person=people.get(r.userId)??{userId:r.userId,name:r.name,email:r.email,aiBlocked:r.aiBlocked,total:0,refused:0};person.total++;if(r.status==='blocked')person.refused++;people.set(r.userId,person);}
@@ -30,11 +33,12 @@ export default function AiActivity(){
   {busiest.length>0&&<div className="panel"><h3>Most active in the last 24 hours</h3><ul className="ai-people">{busiest.map(person=><li key={person.userId}><div><strong>{person.name}</strong><small>{person.email}</small></div><span>{person.total} {person.total===1?'request':'requests'}{person.refused?` · ${person.refused} refused`:''}</span>{accessButton(person.userId,person.name,person.aiBlocked)}</li>)}</ul></div>}
   <div className="panel ai-filters"><label>Search prompts, names or emails<span><Search size={16} aria-hidden="true"/><input type="search" value={query} onChange={e=>setQuery(e.target.value)}/></span></label><label>Outcome<select value={outcome} onChange={e=>setOutcome(e.target.value)}><option value="all">All outcomes</option>{Object.entries(outcomes).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><span className="muted">{requests.length} of {data?.requests.length||0} shown</span></div>
   {!requests.length&&<div className="empty-state panel"><h3>No matching requests.</h3><p>Prompts appear here as soon as someone uses the assistant.</p></div>}
-  {requests.map(r=><article className="panel ai-request" key={r.id}>
+  {page.visible.map(r=><article className="panel ai-request" key={r.id}>
    <header><div><strong>{r.name}</strong><small>{r.email} · {r.role}{r.aiBlocked?' · AI access paused':''}</small></div><span className={`status-tag ${tagClass[r.status]}`}>{outcomes[r.status]}</span><time dateTime={r.createdAt}>{new Date(r.createdAt).toLocaleString()}</time></header>
    <details><summary>Prompt · {r.promptChars.toLocaleString()} characters</summary><p className="ai-prompt">{r.prompt||'This prompt could not be decrypted with the current key.'}</p></details>
    <p className="ai-outcome">{r.status==='completed'?`Returned: ${r.fields.join(', ')||'no fields'}`:r.reason||'Waiting for Gemini'}{r.durationMs!==null?` · ${(r.durationMs/1000).toFixed(1)}s`:''}</p>
    {accessButton(r.userId,r.name,r.aiBlocked)}
   </article>)}
+  <ShowMore remaining={page.remaining} onClick={page.showMore} noun="requests"/>
  </section>;
 }

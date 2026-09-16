@@ -1,9 +1,33 @@
+import { createHash } from 'node:crypto';
+import { promisify } from 'node:util';
+import { gzip } from 'node:zlib';
 import { NextResponse, type NextRequest } from 'next/server';
 import { ZodError } from 'zod';
 import { HttpError, requireCondition } from './errors';
 
 export function json(value:unknown,status=200) {
   return NextResponse.json(value,{status,headers:{'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}});
+}
+// For a GET the browser may reuse: it keeps a private copy, checks it on every request, and receives an empty 304
+// while the data is unchanged. Vary: Cookie stops one account's copy from answering for another.
+export function revalidatedJson(request:NextRequest,value:unknown) {
+  const body=JSON.stringify(value);
+  const etag=`W/"${createHash('sha1').update(body).digest('base64url')}"`;
+  const headers={'Cache-Control':'private, no-cache','ETag':etag,'Vary':'Cookie','X-Content-Type-Options':'nosniff'};
+  if(request.headers.get('if-none-match')?.split(',').some(tag=>tag.trim()===etag))return new NextResponse(null,{status:304,headers});
+  return new NextResponse(body,{headers:{...headers,'Content-Type':'application/json'}});
+}
+// next start gzips pages and static files but not what route handlers return, so text responses from the API are
+// compressed here, which matters when no proxy sits in front. A response that is already encoded is left alone.
+const gzipAsync=promisify(gzip);
+const COMPRESSIBLE=/^(?:application\/(?:json|rss\+xml)|text\/)/i;
+export async function compressed(request:Request,response:Response) {
+  if(!response.body||response.headers.has('content-encoding')||!COMPRESSIBLE.test(response.headers.get('content-type')||'')||!/\bgzip\b/i.test(request.headers.get('accept-encoding')||''))return response;
+  const body=Buffer.from(await response.arrayBuffer());
+  const headers=new Headers(response.headers);headers.append('Vary','Accept-Encoding');
+  if(body.length<1024)return new Response(body,{status:response.status,headers});
+  headers.set('Content-Encoding','gzip');headers.delete('Content-Length');
+  return new Response(new Uint8Array(await gzipAsync(body)),{status:response.status,headers});
 }
 export function originCheck(request:NextRequest) {
   const origin=request.headers.get('origin');

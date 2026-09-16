@@ -1,8 +1,6 @@
 node_modules/
-.next/
-.next-test-dev/
-.next-e2e/
-.next-perf/
+# one pattern for every build directory, so an ad-hoc one from a test run cannot ride along in a commit
+.next*/
 out/
 *.tsbuildinfo
 test-results/
@@ -10,3 +8,5 @@ test-results/
 !.env.example
 .local/
 backups/
+# Server-side database registry and sealed passwords: never in a commit.
+.data/

@@ -1,31 +1,24 @@
 'use client';
-import {useEffect,useRef} from 'react';
-import './home-motion.css';
+import {type ReactNode} from 'react';
+import {motion} from 'framer-motion';
+import {Words,group,useStill,useTilt} from './MotionKit';
 
-/** One shared scroll pass drives decorative layers; text and links remain in normal flow. */
-export default function HomeMotion({paused}:{paused:boolean}){
-  const anchor=useRef<HTMLSpanElement>(null);
-  useEffect(()=>{
-    const root=anchor.current?.parentElement;if(!root)return;
-    const preference=matchMedia('(prefers-reduced-motion: reduce)');
-    const scenes=Array.from(root.querySelectorAll<HTMLElement>('.discipline-strip,.overview-intro,.overview-story,.overview-types,.overview-collective,.overview-roles,.next-chapter,.home-finale'));
-    let frame=0;const visible=new Set<HTMLElement>();
-    scenes.forEach(el=>el.classList.add('motion-scene'));
-    function update(){if(frame)return;frame=requestAnimationFrame(()=>{
-      frame=0;const still=paused||preference.matches||document.hidden;root!.dataset.motion=still?'paused':'running';
-      const positions=[...visible].map(el=>({el,p:Math.max(0,Math.min(1,(innerHeight-el.getBoundingClientRect().top)/(innerHeight+el.offsetHeight)))}));
-      positions.forEach(({el,p})=>{el.style.setProperty('--section-progress',String(still?.5:p));el.dataset.scroll=still?'0.500':p.toFixed(3);});
-      const travel=document.documentElement.scrollHeight-innerHeight;
-      root!.style.setProperty('--page-progress',travel>0?(scrollY/travel).toFixed(4):'0');
-    });}
-    const observer=new IntersectionObserver(entries=>{for(const entry of entries){const el=entry.target as HTMLElement;if(entry.isIntersecting)visible.add(el);else visible.delete(el);}update();},{rootMargin:'100px'});
-    scenes.forEach(el=>observer.observe(el));
-    window.addEventListener('scroll',update,{passive:true});window.addEventListener('resize',update);preference.addEventListener('change',update);document.addEventListener('visibilitychange',update);update();
-    return()=>{cancelAnimationFrame(frame);observer.disconnect();window.removeEventListener('scroll',update);window.removeEventListener('resize',update);preference.removeEventListener('change',update);document.removeEventListener('visibilitychange',update);};
-  },[paused]);
-  return <><span ref={anchor} hidden/><div className="home-progress" aria-hidden="true"><i/></div></>;
+/** GSAP owns the image inside; Framer owns this separate interactive surface. */
+export function DepthCard({children}:{children:ReactNode}){
+ const tilt=useTilt(3);
+ return <motion.div className="ec-depth-card" data-motion={tilt.still?'still':'interactive'} style={tilt.style} {...tilt.handlers}
+  whileHover={{y:tilt.still?0:-6}} whileTap={{scale:tilt.still?1:.985}} transition={{type:'spring',stiffness:190,damping:24}}>{children}</motion.div>;
 }
 
-export function FinalePictures(){return <div className="finale-pictures" aria-hidden="true">{[
-  ['coding-v2','01 / A LITTLE CURIOSITY'],['circuit','02 / A WORKING IDEA'],['team','03 / YOUR PEOPLE'],
-].map(([image,label],i)=><div className={`finale-picture picture-${i}`} key={image}><img src={`/images/maker-story/${image}-mobile.webp`} alt="" loading="lazy" width={768} height={512}/><span>{label}</span></div>)}<div className="finale-connection"><span/><span/><span/></div></div>;}
+export function MotionTitle({title,accent}:{title:string;accent:string}){
+ const still=useStill();
+ return <motion.h2 initial={still?false:'hidden'} whileInView="show" viewport={{once:true,amount:.5}} variants={group}><Words text={title}/><br/><em><Words text={accent}/></em></motion.h2>;
+}
+
+export function MotionChoice({children,active,onClick,indicator}:{children:ReactNode;active:boolean;onClick:()=>void;indicator:string}){
+ const still=useStill();
+ return <button className="ec-motion-choice" type="button" aria-pressed={active} onClick={onClick}>
+  {active&&<motion.i aria-hidden="true" className="ec-choice-highlight" layoutId={indicator} transition={still?{duration:0}:{type:'spring',stiffness:330,damping:32}}/>}
+  {children}
+ </button>;
+}

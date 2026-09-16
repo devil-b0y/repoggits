@@ -14,7 +14,7 @@ process.env.REPOGGITS_DB_SCHEMA ||= `repoggits_test_${process.pid}`;
 export default defineConfig({
   testDir: './tests',
   outputDir:'test-results/e2e',
-  // tests/retired holds the specs for the homepage before the Project Capsule; kept for reference, not run.
+  // Historical homepage designs stay in tests/retired; product-home.spec.ts covers the current homepage.
   testIgnore: ['**/development/**', '**/retired/**'],
   workers: 1,
   forbidOnly: true,

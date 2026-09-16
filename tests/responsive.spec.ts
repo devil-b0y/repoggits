@@ -23,7 +23,7 @@ for (const width of [320, 390, 768, 1024]) {
     const problems: string[] = [];
     for (const path of pages) {
       await page.goto(path);
-      await expect(page.locator('.loading-state')).toHaveCount(0, { timeout: 15_000 });
+      await expect(page.locator('.loading-state, [aria-busy="true"]')).toHaveCount(0, { timeout: 15_000 });
       await page.waitForTimeout(300);
       // Elements that stick out past the right edge, ignoring ones inside a deliberate horizontal scroller.
       const overflow = await page.evaluate(() => {

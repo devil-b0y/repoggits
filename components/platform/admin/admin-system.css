@@ -1,0 +1,40 @@
+/* Admin › System health (SystemHealthPage.tsx), in the admin panel tokens. */
+.admin-system-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin:0 0 22px;padding:0;list-style:none}
+.admin-system-cards>li{min-width:0}
+.platform .admin-system-card{display:grid;align-content:start;gap:7px;height:100%;padding:17px}
+.admin-system-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.admin-system-card-label{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}
+.admin-system-card-value{font:500 28px/1.1 'Space Grotesk',sans-serif;letter-spacing:-.8px;overflow-wrap:anywhere}
+.admin-system-card-detail{font-size:12px;line-height:1.5;color:var(--muted);overflow-wrap:anywhere}
+.admin-panel .admin-system-warnings{display:grid;gap:8px;margin:0 0 18px;padding:0;list-style:none}
+.admin-system-warnings li{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:5px;background:var(--warn-wash);color:var(--warn-ink);font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.admin-system-warnings li>svg{flex:none;margin-top:3px}
+.admin-system-ok{display:flex;align-items:center;gap:8px;margin:0 0 18px;font-size:13px}
+.admin-retention-form{display:grid;gap:16px;margin-top:18px}
+.admin-retention-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.platform .admin-retention-fields label{display:grid;align-content:start;gap:6px;min-width:0;font-size:12px;font-weight:500}
+.platform .admin-retention-fields input{width:100%;min-width:0;min-height:42px;padding:8px 10px;border:1px solid var(--line);border-radius:4px;background:var(--paper);color:var(--ink);font-size:14px}
+.platform .admin-retention-fields small{font-size:11px;font-weight:400;line-height:1.5;color:var(--muted)}
+.admin-retention-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.platform .admin-retention-actions .button{min-height:42px;padding:0 16px}
+.admin-retention-note{margin:12px 0 0;font-size:12px}
+.platform .admin-retention-oldest{margin:24px 0 12px;font-size:13px;font-weight:500}
+.admin-system-errors code{overflow-wrap:anywhere;word-break:break-word}
+@media(max-width:760px){
+  .admin-system-cards{grid-template-columns:minmax(0,1fr);gap:10px}
+  .admin-system-card-value{font-size:24px}
+  .admin-retention-fields{grid-template-columns:minmax(0,1fr)}
+  .platform .admin-retention-actions .button{flex:1 1 100%;justify-content:center}
+}
+
+/* Review desk › People: the admin panel permissions granted to a Teacher-Admin. */
+.user-row .admin-permissions{grid-column:1/-1;margin:0;padding-top:14px;border-top:1px solid var(--line)}
+.platform .user-row .admin-permissions legend{float:left;width:100%;margin-bottom:8px;padding:0;font-size:11px;font-weight:500}
+.user-row .admin-permissions>div{clear:both;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 18px}
+.platform .user-row .admin-permissions .checkbox-label{font-size:12px;line-height:1.4}
+.platform .user-row .admin-permissions .status-tag{padding:3px 6px;font-size:9px}
+.platform .user-row .admin-permissions>small{display:block;margin-top:6px}
+@media(max-width:760px){.user-row .admin-permissions>div{grid-template-columns:minmax(0,1fr)}}
+
+/* Admin › Settings: where data retention and the admin panel live. */
+.platform .admin-settings-links{margin:-10px 0 24px;font-size:13px;line-height:1.6}

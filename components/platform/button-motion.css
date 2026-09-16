@@ -1,0 +1,18 @@
+/* Button motion runs on two composable channels driven by ButtonMotion.tsx.
+   `scale` and `translate` are standalone properties, so the theme's own `transform` hovers
+   (maker actions, workshop buttons, the avatar button) keep working underneath instead of
+   being overwritten by an inline transform. Registering the channels with @property lets the
+   browser interpolate them as numbers rather than swapping them discretely. */
+@property --btn-press{syntax:'<number>';inherits:false;initial-value:0}
+@property --btn-hover{syntax:'<number>';inherits:false;initial-value:0}
+/* The attribute is stamped on first interaction, so untouched controls keep their original
+   computed style and never pay for an identity transform or an extra stacking context. */
+[data-btn-motion]{scale:calc(1 - var(--btn-press,0)*var(--btn-press-depth,.035));translate:0 calc(var(--btn-hover,0)*var(--btn-lift,-2px))}
+/* Card-sized surfaces read as a whole panel, so they move far less than a 44px control. */
+.project-preview[data-btn-motion],.workspace-item[data-btn-motion],.admin-stat[data-btn-motion],.project-card h3 button[data-btn-motion]{--btn-press-depth:.012;--btn-lift:-1px}
+/* Bare text and icon controls have no chrome to squash, so the press needs a deeper scale to read. */
+.text-button[data-btn-motion],.icon-button[data-btn-motion],.menu-toggle[data-btn-motion],.dialog-close[data-btn-motion],.admin-chip[data-btn-motion]{--btn-press-depth:.06;--btn-lift:-1px}
+/* Belt and braces: the component already refuses to animate, but a control stamped before the
+   preference flipped must still come to rest. */
+[data-button-motion=off] [data-btn-motion],[data-btn-motion][disabled]{scale:1;translate:none}
+@media (prefers-reduced-motion:reduce){[data-btn-motion]{scale:1;translate:none}}

@@ -5,6 +5,9 @@ const config: NextConfig = {
   devIndicators: false,
   // Give development regression tests their own cache and lock directory.
   distDir: process.env.REPOGGITS_TEST_DIST || '.next',
+  // Optional CDN for the hashed files under /_next/static. The address is written into the build, so set
+  // ASSET_PREFIX before `npm run build` and keep the same value when the app runs. Unset serves them from here.
+  assetPrefix: process.env.ASSET_PREFIX || undefined,
   // Baseline security headers on every response, so they apply regardless of how this is
   // deployed (the VPS nginx/Caddy configs in deploy/ set a similar set for defense in depth,
   // but a deployment that skips those still gets these). The CSP below only sets directives that

@@ -30,14 +30,28 @@ function Editor(){
    catch(e){setData(initial);setChangelog(initialChangelog);setRecoveryStatus((e as Error).message);recovery.current.active=false;}
    setReady(true);
  }
+ // The whole draft is written to browser storage after a short pause in typing, not on every keystroke. A copy still
+ // waiting is written at once when the page is hidden or closed, or before the form is sent.
+ const pendingRecovery=useRef<(()=>void)|null>(null);
  useLayoutEffect(()=>{
    if(!ready||!recovery.current.active)return;
-   try{localStorage.setItem(recovery.current.key,JSON.stringify({data,changelog,baseline:recovery.current.baseline}));setRecoveryStatus('Progress saved automatically in this browser. Save draft to keep a copy in your account.');}
-   catch{setRecoveryStatus('Browser storage is unavailable or full. Use Save draft to protect your progress.');}
+   pendingRecovery.current=()=>{
+     pendingRecovery.current=null;if(!recovery.current.active)return;
+     try{localStorage.setItem(recovery.current.key,JSON.stringify({data,changelog,baseline:recovery.current.baseline}));setRecoveryStatus('Progress saved automatically in this browser. Save draft to keep a copy in your account.');}
+     catch{setRecoveryStatus('Browser storage is unavailable or full. Use Save draft to protect your progress.');}
+   };
+   const timer=setTimeout(()=>pendingRecovery.current?.(),400);
+   return()=>clearTimeout(timer);
  },[data,changelog,ready]);
+ useEffect(()=>{
+   const flush=()=>pendingRecovery.current?.();
+   const hidden=()=>{if(document.visibilityState==='hidden')flush();};
+   window.addEventListener('pagehide',flush);document.addEventListener('visibilitychange',hidden);
+   return()=>{flush();window.removeEventListener('pagehide',flush);document.removeEventListener('visibilitychange',hidden);};
+ },[]);
  const update=<K extends keyof ProjectData>(key:K,value:ProjectData[K])=>setData(d=>({...d,[key]:value}));
  useEffect(()=>{const q=new URLSearchParams(window.location.search);const id=q.get('project'),version=q.get('version');if(id&&version){setLoading(true);api<{project:Project;editable:boolean;original:{id:string;version_id:string;title:string;team_name:string}|null}>(`projects/${id}?version=${version}`).then(result=>{if(!result.editable||!['draft','changes_requested'].includes(result.project.version.status))throw new Error('This version is locked for review.');restore(result.project.version.data,result.project.version.changelog,version);setOriginal(result.original);setProjectId(id);setVersionId(version);}).catch(e=>setError(e.message)).finally(()=>setLoading(false));}else if(user){restore({...emptyProject,title:'',teamName:user.name.split(' ')[0]+"'s team",department:user.profile.department||emptyProject.department,team:[teamMemberSchema.parse({name:user.name,email:user.email,contribution:'Project lead',branch:user.profile.department})]},'Initial version');}},[user]);
- async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();setError('');setNotice('');setBusy(true);const submit=(event.nativeEvent as SubmitEvent).submitter?.getAttribute('value')==='submit';try{if(submit&&submissionIssues(data,changelog).length){setError('Finish the highlighted details in your submission checklist.');document.getElementById('submission-review')?.focus();return;}const payload={data,changelog,submit};const result=versionId?await send<{id:string;versionId:string}>(`versions/${versionId}`,payload,'PATCH'):await send<{id:string;versionId:string}>('projects',payload);try{localStorage.removeItem(recovery.current.key);}catch{}
+ async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();pendingRecovery.current?.();setError('');setNotice('');setBusy(true);const submit=(event.nativeEvent as SubmitEvent).submitter?.getAttribute('value')==='submit';try{if(submit&&submissionIssues(data,changelog).length){setError('Finish the highlighted details in your submission checklist.');document.getElementById('submission-review')?.focus();return;}const payload={data,changelog,submit};const result=versionId?await send<{id:string;versionId:string}>(`versions/${versionId}`,payload,'PATCH'):await send<{id:string;versionId:string}>('projects',payload);try{localStorage.removeItem(recovery.current.key);}catch{}
  recovery.current={key:draftKey(user!.id,result.versionId),baseline:JSON.stringify({data:projectSchema.parse(data),changelog:changelog.trim()}),active:!submit};
  setVersionId(result.versionId);setProjectId(result.id);if(submit){window.location.href='/workspace';return;}setNotice('Draft saved to your account. You can continue here or return from My workspace.');window.scrollTo({top:0,behavior:'instant'});window.history.replaceState({},'',`/submit?project=${result.id}&version=${result.versionId}`);}catch(e){setError((e as Error).message);document.getElementById('editor-errors')?.focus();}finally{setBusy(false);}}
  if(!ready&&error)return <div className="page-wrap"><Notice error>{error}</Notice></div>;

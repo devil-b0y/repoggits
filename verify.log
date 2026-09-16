@@ -1,0 +1,181 @@
+
+Running 23 tests using 1 worker
+
+  ok  1 tests\admin-insights.spec.ts:34:5 › the overview dashboard shows its stat tiles, the activity chart and keeps the date range in the address bar (902ms)
+  ok  2 tests\admin-insights.spec.ts:69:5 › analytics switches between its views, and each view renders its own charts (1.0s)
+  ok  3 tests\admin-insights.spec.ts:120:5 › project analytics ranks projects and people, and AI usage never shows prompt text (730ms)
+  ok  4 tests\admin-insights.spec.ts:166:5 › the global activity log filters, exports and hides IP addresses without the network permission (1.7s)
+  ok  5 tests\admin-insights.spec.ts:208:5 › prompt logs show the text only with prompt_content, and one prompt at a time (670ms)
+  ok  6 tests\admin-insights.spec.ts:248:5 › security logs swap between security events and server errors (623ms)
+  ok  7 tests\admin-insights.spec.ts:280:5 › the audit log offers the actions it has recorded and shows each action its details (624ms)
+  ok  8 tests\admin-insights.spec.ts:306:5 › a section already visited comes back at once and refreshes behind its rows (7.6s)
+  ok  9 tests\admin-insights.spec.ts:360:5 › every admin panel section is reachable from the navigation (470ms)
+  ok 10 tests\admin-live-users.spec.ts:49:5 › live monitoring lists open sessions online first and shows IP addresses only with the network permission (11.2s)
+  ok 11 tests\admin-live-users.spec.ts:81:5 › the user directory finds people by name, exact user ID or exact email and reports presence (7.7s)
+  ok 12 tests\admin-live-users.spec.ts:98:5 › user detail returns device, current session and sessions, with IP history only for the network permission (7.4s)
+  ok 13 tests\admin-live-users.spec.ts:125:5 › the sessions list filters by status, visitor, device, OS family, date, session and IP (12.2s)
+  ok 14 tests\admin-live-users.spec.ts:154:5 › ending a session signs that browser out, is audited, and cannot be repeated (12.0s)
+  x  15 tests\admin-live-users.spec.ts:182:5 › students get 403, signed-out requests 401, and Teacher-Admins need the matching permission (10.8s)
+  ok 16 tests\admin-live-users.spec.ts:212:5 › live monitoring renders sessions like the mock-up and refreshes on the next poll (10.7s)
+  x  17 tests\admin-live-users.spec.ts:238:5 › the users page links each account, keeps sorting and search in the address bar, and fits a phone (5.4s)
+  ok 18 tests\admin-live-users.spec.ts:256:5 › user detail renders its sections and hides network information from a viewer without that permission (1.1s)
+  x  19 tests\admin-live-users.spec.ts:315:5 › session filters stay in the address bar and the sessions list fits a phone (1.0m)
+  x  20 tests\button-motion.spec.ts:25:5 › shared button classes hover, press and settle through framer-motion (6.9s)
+  ok 21 tests\button-motion.spec.ts:56:5 › keyboard activation presses the focused control and focus outlines survive (1.4s)
+  ok 22 tests\button-motion.spec.ts:71:5 › reduced motion leaves every control completely still (870ms)
+  x  23 tests\button-motion.spec.ts:87:5 › the primitive is mounted for the public homepage as well (5.4s)
+
+
+  1) tests\admin-live-users.spec.ts:182:5 › students get 403, signed-out requests 401, and Teacher-Admins need the matching permission 
+
+    Error: apiRequestContext.dispose: ENOENT: no such file or directory, open 'E:\projects\repoggits\test-results\e2e\.playwright-artifacts-0\traces\2d91f425ab2c82c766f7-efe28f1fd1ca74e9b2b0-recording23.network'
+
+    Error: ENOENT: no such file or directory, open 'E:\projects\repoggits\test-results\e2e\.playwright-artifacts-0\57b51c94e11c36be1ad70fe2602e249e.zip'
+
+    Error Context: test-results\e2e\admin-live-users-students--2e5dc-eed-the-matching-permission\error-context.md
+
+  2) tests\admin-live-users.spec.ts:238:5 › the users page links each account, keeps sorting and search in the address bar, and fits a phone 
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator: getByRole('link', { name: 'Riya Sharma' })
+    Expected: "/admin/users/77c41ca3-af27-4929-9cfa-0987171e1f6d"
+    Timeout: 5000ms
+    Error: element(s) not found
+
+    Call log:
+      - Expect "toHaveAttribute" getByRole('link', { name: 'Riya Sharma' }) with timeout 5000ms
+      - waiting for getByRole('link', { name: 'Riya Sharma' })
+
+
+      242 |  await page.setViewportSize({width:1280,height:900});
+      243 |  await page.goto('/admin/users');
+    > 244 |  await expect(page.getByRole('link',{name:'Riya Sharma'})).toHaveAttribute('href',`/admin/users/${id}`);
+          |                                                            ^
+      245 |  await expect(page.locator('.admin-table')).toContainText('riya@example.test');
+      246 |  await expect(page.getByRole('link',{name:'Edit roles in Review desk'})).toHaveAttribute('href','/admin?tab=people');
+      247 |  await page.getByRole('button',{name:'Name',exact:true}).click();
+        at E:\projects\repoggits\tests\admin-live-users.spec.ts:244:60
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\e2e\admin-live-users-the-users-91109-ddress-bar-and-fits-a-phone\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\e2e\admin-live-users-the-users-91109-ddress-bar-and-fits-a-phone\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e\admin-live-users-the-users-91109-ddress-bar-and-fits-a-phone\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e\admin-live-users-the-users-91109-ddress-bar-and-fits-a-phone\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  3) tests\admin-live-users.spec.ts:315:5 › session filters stay in the address bar and the sessions list fits a phone 
+
+    Test timeout of 60000ms exceeded.
+
+    Error: apiRequestContext._wrapApiCall: ENOENT: no such file or directory, copyfile 'E:\projects\repoggits\test-results\e2e\.playwright-artifacts-2\traces\2d91f425ab2c82c766f7-e5eeb3693944d00d0786-recording3.network' -> 'E:\projects\repoggits\test-results\e2e\.playwright-artifacts-2\traces\2d91f425ab2c82c766f7-e5eeb3693944d00d0786-recording3-pwnetcopy-1.network'
+
+    Error: browserContext._wrapApiCall: ENOENT: no such file or directory, open 'E:\projects\repoggits\test-results\e2e\.playwright-artifacts-2\traces\2d91f425ab2c82c766f7-e5eeb3693944d00d0786-recording2.trace'
+
+    Error: locator.selectOption: Test ended.
+    Call log:
+      - waiting for getByLabel('Status', { exact: true })
+
+
+      324 |  await page.getByRole('button',{name:/More filters/}).click();
+      325 |  await expect(page.getByLabel('IP address')).toBeVisible();
+    > 326 |  await page.getByLabel('Status',{exact:true}).selectOption('ended');
+          |                                               ^
+      327 |  await expect(page).toHaveURL(/status=ended/);
+      328 |  await expect.poll(()=>requests.some(url=>url.includes('status=ended'))).toBe(true);
+      329 |  await page.getByLabel('Browser',{exact:true}).selectOption('Firefox');
+        at E:\projects\repoggits\tests\admin-live-users.spec.ts:326:47
+
+    Error: ENOENT: no such file or directory, open 'E:\projects\repoggits\test-results\e2e\.playwright-artifacts-2\369edc4ac16238b67b7fc7581894d81e.zip'
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\e2e\admin-live-users-session-f-6c382--sessions-list-fits-a-phone\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  4) tests\button-motion.spec.ts:25:5 › shared button classes hover, press and settle through framer-motion 
+
+    Error: expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      14 | });
+      15 | type State=Awaited<ReturnType<typeof rest>>;
+    > 16 | const settle=(locator:Locator,check:(state:State)=>boolean)=>expect.poll(async()=>check(await rest(locator)),{timeout:5000}).toBe(true);
+         |                                                                                                                              ^
+      17 | async function hoverOver(page:Page,locator:Locator){
+      18 |  const box=await locator.boundingBox();
+      19 |  if(!box)throw new Error('control is not visible');
+        at settle (E:\projects\repoggits\tests\button-motion.spec.ts:16:126)
+        at E:\projects\repoggits\tests\button-motion.spec.ts:49:8
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\e2e\button-motion-shared-butto-e8d89-ettle-through-framer-motion\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\e2e\button-motion-shared-butto-e8d89-ettle-through-framer-motion\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e\button-motion-shared-butto-e8d89-ettle-through-framer-motion\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e\button-motion-shared-butto-e8d89-ettle-through-framer-motion\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5) tests\button-motion.spec.ts:87:5 › the primitive is mounted for the public homepage as well ───
+
+    Error: expect(locator).toHaveAttribute(expected) failed
+
+    Locator:  locator('html')
+    Expected: "on"
+    Received: ""
+    Timeout:  5000ms
+
+    Call log:
+      - Expect "toHaveAttribute" locator('html') with timeout 5000ms
+      - waiting for locator('html')
+        14 × locator resolved to <html id="__next_error__">…</html>
+           - unexpected value "null"
+
+
+      87 | test('the primitive is mounted for the public homepage as well',async({page})=>{
+      88 |  await page.goto('/');
+    > 89 |  await expect(page.locator('html')).toHaveAttribute('data-button-motion','on');
+         |                                     ^
+      90 |  const theme=page.locator('.pv-theme');
+      91 |  await expect(theme).toBeEnabled();
+      92 |  await hoverOver(page,theme);
+        at E:\projects\repoggits\tests\button-motion.spec.ts:89:37
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results\e2e\button-motion-the-primitiv-e6ae6-the-public-homepage-as-well\test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results\e2e\button-motion-the-primitiv-e6ae6-the-public-homepage-as-well\error-context.md
+
+    attachment #3: trace (application/zip) ─────────────────────────────────────────────────────────
+    test-results\e2e\button-motion-the-primitiv-e6ae6-the-public-homepage-as-well\trace.zip
+    Usage:
+
+        npx playwright show-trace test-results\e2e\button-motion-the-primitiv-e6ae6-the-public-homepage-as-well\trace.zip
+
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+  5 failed
+    tests\admin-live-users.spec.ts:182:5 › students get 403, signed-out requests 401, and Teacher-Admins need the matching permission 
+    tests\admin-live-users.spec.ts:238:5 › the users page links each account, keeps sorting and search in the address bar, and fits a phone 
+    tests\admin-live-users.spec.ts:315:5 › session filters stay in the address bar and the sessions list fits a phone 
+    tests\button-motion.spec.ts:25:5 › shared button classes hover, press and settle through framer-motion 
+    tests\button-motion.spec.ts:87:5 › the primitive is mounted for the public homepage as well ────
+  18 passed (3.4m)

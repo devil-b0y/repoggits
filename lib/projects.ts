@@ -25,6 +25,10 @@ export const projectSelect=`SELECT v.*,p.owner_id,p.featured,p.archived,p.exampl
   (SELECT count(*) FROM r.reviews rv WHERE rv.version_id=v.id AND rv.action='approve') AS approvals,
   (SELECT reason FROM r.reviews rv WHERE rv.version_id=v.id AND rv.action IN ('reject','changes_requested') ORDER BY created_at DESC LIMIT 1) AS feedback
   FROM r.versions v JOIN r.projects p ON p.id=v.project_id`;
+// Every place a version can point at an uploaded file, written as containment tests so the versions_data_idx GIN
+// index answers them. `first` numbers the first of four placeholders, which fileReferenceParams fills in order.
+export const fileReference=(first:number)=>`(data @> $${first}::jsonb OR data @> $${first+1}::jsonb OR data @> $${first+2}::jsonb OR data @> $${first+3}::jsonb)`;
+export const fileReferenceParams=(id:string)=>[{sourceId:id},{coverId:id},{galleryIds:[id]},{team:[{photoId:id}]}].map(value=>JSON.stringify(value));
 
 export async function canEdit(client:Db,user:User,projectId:string) {
   const [project]=await client.query('SELECT owner_id,example FROM r.projects WHERE id=$1',[projectId]);
@@ -37,11 +41,15 @@ export async function canEdit(client:Db,user:User,projectId:string) {
 }
 export async function validateFiles(client:Db,user:User,data:ProjectData,projectId?:string) {
   const imageIds=[data.coverId,...data.galleryIds,...data.team.map(member=>member.photoId)].filter(Boolean);
-  for(const id of new Set([...imageIds,data.sourceId].filter(Boolean))) {
-    const [file]=await client.query('SELECT owner_id,mime,scan_status FROM r.files WHERE id=$1',[id]);
+  const ids=[...new Set([...imageIds,data.sourceId].filter(Boolean))];
+  if(!ids.length)return;
+  // One query for all attached files rather than one per file.
+  const files=new Map((await client.query('SELECT id,owner_id,mime,scan_status FROM r.files WHERE id=ANY($1::uuid[])',[ids])).map(file=>[String(file.id),file]));
+  for(const id of ids) {
+    const file=files.get(id.toLowerCase());
     requireCondition(file&&['clean','validated_internal'].includes(file.scan_status),400,'One of the selected files is unavailable.');
-    let reused=false;
-    if(projectId){const rows=await client.query(`SELECT id FROM r.versions WHERE project_id=$1 AND (data->>'coverId'=$2 OR data->>'sourceId'=$2 OR data->'galleryIds' ? $2 OR EXISTS(SELECT 1 FROM jsonb_array_elements(data->'team') m WHERE m->>'photoId'=$2))`,[projectId,id]);reused=rows.length>0;}
+    // Someone else's file may stay attached only when an earlier version of this project already used it.
+    const reused=file.owner_id!==user.id&&!!projectId&&(await client.query(`SELECT 1 FROM r.versions WHERE project_id=$1 AND ${fileReference(2)} LIMIT 1`,[projectId,...fileReferenceParams(id)])).length>0;
     requireCondition(file.owner_id===user.id||reused,403,'You cannot attach another user’s file.');
     if(id===data.sourceId)requireCondition(file.mime==='application/zip',400,'Use a ZIP for source code.');
     if(imageIds.includes(id))requireCondition(file.mime==='image/webp',400,'Use an image for project and team photos.');
@@ -93,10 +101,11 @@ export async function reviewVersions(user:User,ids:string[],action:'approve'|'re
   requireCondition(user.role!=='student',403,'Administrator access required.');
   requireCondition(ids.length>0&&ids.length<=20,400,'Select between 1 and 20 versions.');
   if(action!=='approve')requireCondition(reason.trim().length>=10,400,'Give a reason of at least 10 characters.');
-  return transaction(async client=>{
-    const messages:{email:string;message:string}[]=[];
+  const messages=await transaction(async client=>{
+    const queued:{email:string;message:string}[]=[];
     for(const id of [...new Set(ids)].sort()) {
-      const [v]=await client.query('SELECT v.*,p.owner_id,p.archived FROM r.versions v JOIN r.projects p ON p.id=v.project_id WHERE v.id=$1 FOR UPDATE OF v,p',[id]);
+      // The owner's address comes with the version, so notifying them needs no query of its own.
+      const [v]=await client.query('SELECT v.*,p.owner_id,p.archived,u.email AS owner_email FROM r.versions v JOIN r.projects p ON p.id=v.project_id JOIN r.users u ON u.id=p.owner_id WHERE v.id=$1 FOR UPDATE OF v,p',[id]);
       requireCondition(v&&canReview(user,v.data),404,'One or more versions are outside your review assignment.');
       requireCondition(v.status==='pending'&&!v.archived,409,'One or more versions are no longer pending review.');
       requireCondition(v.owner_id!==user.id&&!(v.data as ProjectData).team.some(member=>member.email===user.email),403,'You cannot review your own team’s work.');
@@ -109,13 +118,30 @@ export async function reviewVersions(user:User,ids:string[],action:'approve'|'re
       await audit(client,user.id,`review.${action}`,id,{reason,status});
       const message=`${v.data.title} · version ${v.number}: ${status.replaceAll('_',' ')}${status==='pending'?` (${count.n}/${v.required_approvals} approvals)`:''}.${reason?' '+reason:''}`;
       await client.query('INSERT INTO r.notifications(id,user_id,message,project_id) VALUES($1,$2,$3,$4)',[randomUUID(),v.owner_id,message,v.project_id]);
-      const [owner]=await client.query('SELECT email FROM r.users WHERE id=$1',[v.owner_id]);
-      messages.push({email:openText(owner.email,'users.email'),message});
+      queued.push({email:openText(v.owner_email,'users.email'),message});
     }
-    return messages;
+    return queued;
   });
+  invalidatePublicProjects();
+  return messages;
 }
-export async function publicProjects() {
+
+// Discovery, project pages, saved projects and the RSS feed all start from this list, the most expensive query here.
+// Each process keeps it briefly and concurrent requests share one load, so callers must copy before changing anything.
+// Changes made through this process (reviews, reactions, staff picks, suspensions) clear it at once. Changes from
+// anywhere else, such as another instance or npm run db:sample, and view and download counts appear within the TTL.
+const PUBLIC_LIST_TTL_MS=15_000;
+let publicList:{expires:number;projects:Promise<Project[]>}|undefined;
+export function invalidatePublicProjects() {publicList=undefined;}
+export function publicProjects():Promise<Project[]> {
+  if(publicList&&publicList.expires>Date.now())return publicList.projects;
+  const entry={expires:Date.now()+PUBLIC_LIST_TTL_MS,projects:loadPublicProjects()};
+  publicList=entry;
+  // A failed load is dropped so the next request tries again.
+  entry.projects.catch(()=>{if(publicList===entry)publicList=undefined;});
+  return entry.projects;
+}
+async function loadPublicProjects() {
   return (await db.query(`${projectSelect} WHERE v.status='approved' AND NOT p.archived AND v.number=(SELECT max(v2.number) FROM r.versions v2 WHERE v2.project_id=p.id AND v2.status='approved') ORDER BY stars DESC,likes DESC,v.created_at DESC,p.id LIMIT 500`)).map(row=>{
     const project=projectView(row);
     project.version.data={...project.version.data,team:project.version.data.team.map(member=>({...member,email:'',rollNumber:''}))};

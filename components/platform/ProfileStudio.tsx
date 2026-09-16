@@ -1,10 +1,13 @@
 'use client';
 import { useEffect, useRef, useState, type CSSProperties, type DragEvent, type FormEvent } from 'react';
 import { Building2, Camera, Circle, CircleCheck, Github, GraduationCap, IdCard, ImagePlus, Link2, Linkedin, LoaderCircle, Mail, Pencil, ShieldCheck, Sparkles, Trash2 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import { Shell, Gate, PageTitle, Notice, Logout, api, send, useData, useSession } from './shared';
-import AvatarEditor from './AvatarEditor';
 import type { Role, User } from '@/lib/schema';
 import './profile-studio.css';
+
+// The photo editor is needed only once someone picks a photo, so its code is fetched then.
+const AvatarEditor = dynamic(() => import('./AvatarEditor'));
 
 type Fields = { name:string; rollNumber:string; batch:string; department:string; bio:string; github:string; linkedin:string };
 const keys = ['name','rollNumber','batch','department','bio','github','linkedin'] as const;

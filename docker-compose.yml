@@ -15,6 +15,9 @@ services:
     build:
       context: .
       target: runtime
+      args:
+        # Optional CDN for build assets, read from .env; unset serves them from the app.
+        ASSET_PREFIX: ${ASSET_PREFIX:-}
     restart: unless-stopped
     env_file:
       - .env

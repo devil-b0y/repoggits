@@ -13,6 +13,8 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # final image. No database is contacted during the build: every page renders at
 # request time, so DATABASE_URL is a runtime setting.
 FROM base AS build
+# Optional CDN address for /_next/static, written into the build (see ASSET_PREFIX in docs/DEPLOYMENT.md).
+ARG ASSET_PREFIX=
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .

@@ -1,0 +1,19 @@
+/* Live monitoring, users and sessions: the pieces those pages add, in the admin panel tokens. */
+.admin-panel .admin-live-bar{display:flex;align-items:center;justify-content:space-between;gap:8px 18px;flex-wrap:wrap;margin:-8px 0 16px;font-size:12px;color:var(--muted)}
+.admin-panel .admin-live-indicator{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:600;letter-spacing:.9px;text-transform:uppercase;color:var(--good-ink)}
+.admin-panel .admin-live-indicator.paused{color:var(--bad-ink)}
+.admin-panel .admin-user-summary{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:-8px 0 20px;font-size:13px;color:var(--muted);overflow-wrap:anywhere}
+.admin-panel .admin-name-cell{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+.admin-panel .admin-agent{margin-top:14px}
+.admin-panel .admin-agent summary{display:flex;align-items:center;min-height:32px;font-size:12px;color:var(--muted);cursor:pointer}
+.admin-panel .admin-agent code{display:block;margin-top:6px;padding:8px 10px;white-space:pre-wrap;line-height:1.5}
+.admin-panel .admin-section .admin-filters{background:var(--paper);box-shadow:none}
+.admin-panel .admin-section .admin-filters input,.admin-panel .admin-section .admin-filters select{background:var(--white)}
+.admin-panel .admin-section .admin-table-wrap+.admin-note{margin-top:10px}
+.admin-panel .admin-details+.admin-table-wrap{margin-top:18px}
+.admin-panel .admin-timeline time small{display:block;margin-top:2px;font-size:10px}
+.admin-panel .admin-timeline>li>div{min-width:0;font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.admin-panel .admin-timeline[aria-busy=true]{opacity:.62}
+.admin-panel .admin-end-session{display:inline-flex;flex-wrap:wrap;align-items:center;gap:6px}
+.platform .admin-panel .admin-end-session .button{min-height:34px;padding:0 12px;font-size:12px}
+.admin-panel .admin-inline-error{font-size:11px;color:var(--bad-ink)}

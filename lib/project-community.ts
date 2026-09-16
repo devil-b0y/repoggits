@@ -2,10 +2,11 @@ import { randomUUID } from 'node:crypto';
 import { db, transaction } from './db';
 import { audit } from './auth';
 import { requireCondition } from './errors';
+import { invalidatePublicProjects } from './projects';
 import { projectSchema, teamMemberSchema, type User } from './schema';
 
 export async function reactToProject(user:User,id:string,kind:'star'|'like',active:boolean) {
-  return transaction(async client=>{
+  const result=await transaction(async client=>{
     const [project]=await client.query("SELECT id FROM r.projects WHERE id=$1 AND NOT archived FOR UPDATE",[id]);
     const [published]=await client.query("SELECT id FROM r.versions WHERE project_id=$1 AND status='approved' LIMIT 1",[id]);
     requireCondition(project&&published,404,'Project not found.');
@@ -14,6 +15,9 @@ export async function reactToProject(user:User,id:string,kind:'star'|'like',acti
     const [counts]=await client.query("SELECT count(*) FILTER(WHERE kind='star')::int AS stars,count(*) FILTER(WHERE kind='like')::int AS likes FROM r.reactions rx JOIN r.users u ON u.id=rx.user_id WHERE project_id=$1 AND NOT u.suspended",[id]);
     return {kind,active,stars:counts.stars as number,likes:counts.likes as number};
   });
+  // Stars and likes order the public list.
+  invalidatePublicProjects();
+  return result;
 }
 
 // A modification is independently owned and moderated. Its original version stays pinned.

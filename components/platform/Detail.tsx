@@ -2,8 +2,9 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, ArrowUpRight, Bookmark, Download, Star, Heart, GitFork, CalendarDays, Clock3, Code2 } from 'lucide-react';
-import { Shell, Gate, Notice, Card, PageTitle, Loading, useData, useSession, send, api } from './shared';
+import { Shell, Gate, Notice, Card, PageTitle, DetailSkeleton, useData, useSession, send, api } from './shared';
 import { projectCost, type Project } from '@/lib/schema';
+import { imageUrl } from '@/lib/images';
 import { projectDuration } from '@/lib/project-display';
 import ProjectMedia from './ProjectMedia';
 import Discussion, { type Comment } from './Discussion';
@@ -17,7 +18,7 @@ function Content({id}:{id:string}){
  useEffect(()=>{setVersion(new URLSearchParams(window.location.search).get('version')||'');void send(`projects/${id}/view`,{}).catch(()=>{});},[id]);
  const {data,error,loading,reload,setData}=useData<DetailData>(`projects/${id}${version?`?version=${version}`:''}`);
  async function action(task:()=>Promise<void>){setBusy(true);setActionError('');try{await task();}catch(e){setActionError((e as Error).message);}finally{setBusy(false);}}
- if(loading&&!data)return <Loading/>;
+ if(loading&&!data)return <DetailSkeleton/>;
  if(error||!data)return <div className="page-wrap"><Notice error>{error||'Project not found.'}</Notice><Link href="/projects">Back to projects</Link></div>;
  const p=data.project,d=p.version.data,duration=projectDuration(d.startDate,d.endDate),published=p.version.status==='approved';
  const hardware=d.hardwareCosts.reduce((sum,row)=>sum+Math.round(row.unitCost*100)*row.quantity,0)/100;
@@ -43,7 +44,7 @@ function Content({id}:{id:string}){
       <div><Code2 size={19}/><span>Languages</span><strong>{d.stack.languages||'Not specified'}</strong></div>
     </div>
     <section className="detail-section"><h2>About the project</h2><p className="preserve-lines">{d.description||'The project story is still being written.'}</p>{d.features.length>0&&<><h3>Feature highlights</h3><ul className="feature-list">{d.features.map((feature,i)=><li key={i}>{feature}</li>)}</ul></>}</section>
-    <section className="detail-section"><h2>Meet the team</h2><p>The people behind {d.teamName}.</p><div className="team-grid">{d.team.map((member,i)=><article className="team-profile" key={i}>{member.photoId?<img src={`/api/files/${member.photoId}`} alt={`${member.name}, team member`} loading="lazy"/>:<span className="team-avatar-placeholder" aria-hidden="true">{member.name.slice(0,1)}</span>}<div><h3>{member.name}</h3><p>{member.contribution}</p><dl><div><dt>College</dt><dd>{member.college||'Not listed'}</dd></div><div><dt>Branch</dt><dd>{member.branch||'Not listed'}</dd></div><div><dt>Semester</dt><dd>{member.semester||'Not listed'}</dd></div></dl></div></article>)}</div></section>
+    <section className="detail-section"><h2>Meet the team</h2><p>The people behind {d.teamName}.</p><div className="team-grid">{d.team.map((member,i)=><article className="team-profile" key={i}>{member.photoId?<img src={imageUrl(member.photoId,480)} alt={`${member.name}, team member`} loading="lazy"/>:<span className="team-avatar-placeholder" aria-hidden="true">{member.name.slice(0,1)}</span>}<div><h3>{member.name}</h3><p>{member.contribution}</p><dl><div><dt>College</dt><dd>{member.college||'Not listed'}</dd></div><div><dt>Branch</dt><dd>{member.branch||'Not listed'}</dd></div><div><dt>Semester</dt><dd>{member.semester||'Not listed'}</dd></div></dl></div></article>)}</div></section>
     <section className="detail-section"><h2>Services used</h2><p>Hosting, APIs, databases, and other services that make it work.</p>{d.services.length?<div className="service-grid">{d.services.map((service,i)=><article className="service-card" key={i}><h3>{service.name}</h3><p>{service.purpose||'Supporting service'}</p>{service.url&&<a href={service.url} className="inline-link" target="_blank" rel="noopener noreferrer">Visit service <ArrowUpRight size={14}/></a>}</article>)}</div>:<p>No external services listed.</p>}</section>
     <section className="detail-section"><h2>The build, by the numbers</h2>
       <div className="cost-summary"><div><span>Hardware cost</span><strong>{d.currency} {hardware.toFixed(2)}</strong></div><div><span>Software & services cost</span><strong>{d.currency} {software.toFixed(2)}</strong></div></div>
@@ -67,4 +68,4 @@ function Content({id}:{id:string}){
   {data.related.length>0&&<section className="saved-section"><h2>Keep the curiosity going.</h2><div className="project-grid">{data.related.map(r=><Card project={r} key={r.id}/>)}</div></section>}
  </div>;
 }
-export default function Detail({id}:{id:string}){return <Shell><Gate><Content id={id}/></Gate></Shell>;}
+export default function Detail({id}:{id:string}){return <Shell><Gate fallback={<DetailSkeleton/>}><Content id={id}/></Gate></Shell>;}

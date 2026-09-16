@@ -12,13 +12,23 @@ A home for student projects. Show the build, share the process, and help the nex
 
 </div>
 
-![Repoggits homepage with its cream-and-blue theme and dimensional project workbench](docs/screenshots/home.png)
+![Project Vault cinematic product workspace](docs/screenshots/home.png)
 
 ## Built for the work behind the grade
 
 Repoggits brings software, hardware, and hybrid academic projects into one searchable collection. Students publish complete project stories; educators review submissions; other teams can learn from the source and create credited modifications.
 
-The interface combines warm graph paper, cobalt blue, orange accents, bundled fonts, and a Three.js workbench. It adapts to mobile and supports dark mode.
+The homepage now introduces **Project Vault** through a product-led engineering workspace. An original cinematic workstation image sits behind live HTML interfaces: code, architecture, a design canvas, build status, and an assembled product preview. Scroll progress brings the interface forward; the engineer provides context rather than a student-life storyline.
+
+The page includes an interactive sample dashboard, six fictional projects, searchable category filters, accessible project-preview dialogs, a six-step workflow, project-profile sections, stack badges, and preview-link sharing. Example data is labelled; entry links lead to the existing `/workspace`, `/projects`, and `/submit` routes. These homepage demonstrations do not create projects or call an AI service.
+
+Dark mode is the default for new homepage visitors. The light/dark control uses the existing `repoggits-theme` browser preference. Reduced motion, a pause control, keyboard navigation, and dedicated mobile layouts keep the page usable. Framer Motion handles reveals, scroll composition, pointer depth, and filter transitions. The engineer is an original generated still, not a rigged animated character; the surrounding product interfaces are animated independently. Images are delivered through Next.js image optimization.
+
+![Interactive Project Vault dashboard with fictional project examples](docs/screenshots/product-dashboard.png)
+
+![Project identity preview with technology and timeline sections](docs/screenshots/product-case-study.png)
+
+Homepage regression coverage is in `tests/product-home.spec.ts`; superseded design tests are preserved in `tests/retired`.
 
 | For students | For educators | For the institution |
 | --- | --- | --- |

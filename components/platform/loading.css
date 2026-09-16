@@ -1,0 +1,15 @@
+/* Loading placeholders and the "show more" control for paged lists, drawn from the existing theme tokens. */
+.skeleton-block{border-radius:5px;background:linear-gradient(90deg,var(--line) 25%,color-mix(in srgb,var(--line) 40%,var(--white)) 50%,var(--line) 75%);background-size:200% 100%;animation:skeleton-shimmer 1.4s ease-in-out infinite}
+@keyframes skeleton-shimmer{from{background-position:100% 0}to{background-position:-100% 0}}
+@media (prefers-reduced-motion:reduce){.skeleton-block{animation:none}}
+.skeleton-label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.skeleton-card{min-width:0}
+.skeleton-cover{height:250px;margin-bottom:22px}
+.skeleton-line{height:12px;margin-bottom:12px}
+.skeleton-line.short{width:40%}
+.skeleton-line.title{height:22px;width:75%;margin-block:14px 16px}
+.detail-skeleton .skeleton-heading{height:clamp(36px,4vw,56px);width:min(640px,90%);margin-block:26px 18px}
+.detail-skeleton .skeleton-media{height:clamp(240px,38vw,460px)}
+.detail-skeleton .detail-layout{margin-top:34px}
+.show-more{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:14px;margin-top:32px}
+.show-more span{font-size:12px;color:var(--muted)}

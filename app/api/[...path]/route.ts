@@ -5,9 +5,9 @@ import { db, transaction } from '@/lib/db';
 import { requireUser, canReview, audit, rateLimit } from '@/lib/auth';
 import { authRoute } from '@/lib/api-auth';
 import { upload, fileRoute } from '@/lib/api-files';
-import { bodyJson, originCheck, json, failure } from '@/lib/http';
+import { bodyJson, originCheck, json, failure, revalidatedJson, compressed } from '@/lib/http';
 import { requireCondition, HttpError } from '@/lib/errors';
-import { createProject, updateVersion, newVersion, reviewVersions, publicProjects, projectSelect, projectView, versionView, canEdit } from '@/lib/projects';
+import { createProject, updateVersion, newVersion, reviewVersions, publicProjects, invalidatePublicProjects, projectSelect, projectView, versionView, canEdit } from '@/lib/projects';
 import { roles, type ProjectData, type User } from '@/lib/schema';
 import { queueMail } from '@/lib/mail';
 import { reactToProject, modifyProject, projectLineage } from '@/lib/project-community';
@@ -15,6 +15,9 @@ import { websiteBackup } from '@/lib/site-backup';
 import { openText } from '@/lib/encryption';
 import {geminiInput} from '@/lib/gemini';
 import {aiActivity,aiSettingsSchema,setAiAccess,trackedProjectDraft} from '@/lib/ai-usage';
+import {activityRoute,recordApiRequest,recordServerError} from '@/lib/tracking';
+import {adminSection} from '@/lib/admin/router';
+import {PERMISSION_NAMES} from '@/lib/admin/permissions';
 let backupRunning=false;
 
 export const runtime='nodejs';
@@ -41,6 +44,7 @@ async function handler(request:NextRequest,context:Context) {
     return json({status:'ok',database:true});
   }
   if(!['GET','HEAD'].includes(method))originCheck(request);
+  if(resource==='activity'&&!id&&method==='POST')return await activityRoute(request);
   if(resource==='ai'&&id==='project-draft'&&path.length===2&&method==='POST'){
     const user=await requireUser(request);
     const input=geminiInput.parse(await bodyJson(request));
@@ -72,7 +76,7 @@ async function handler(request:NextRequest,context:Context) {
     // Browsing the collective requires an account; email verification is not required to look around.
     await requireUser(request,false);
     const projects=await publicProjects();const q=(request.nextUrl.searchParams.get('q')||'').toLowerCase();
-    return json({projects:projects.filter(p=>!q||`${p.version.data.title} ${p.version.data.teamName} ${p.version.data.tags.join(' ')}`.toLowerCase().includes(q))});
+    return revalidatedJson(request,{projects:projects.filter(p=>!q||`${p.version.data.title} ${p.version.data.teamName} ${p.version.data.tags.join(' ')}`.toLowerCase().includes(q))});
   }
   if(resource==='projects'&&!id&&method==='POST'){
     const user=await requireUser(request);await rateLimit(`project:${user.id}`,30,3600);
@@ -140,10 +144,15 @@ async function handler(request:NextRequest,context:Context) {
   }
   if(resource==='workspace'&&method==='GET'){
     const user=await requireUser(request,false);
-    const own=await db.query(`${projectSelect} WHERE (p.owner_id=$1 OR $3 AND NOT p.example AND EXISTS(SELECT 1 FROM r.versions av WHERE av.project_id=p.id AND av.status='approved' AND av.data->'team' @> $2::jsonb)) AND v.number=(SELECT max(v2.number) FROM r.versions v2 WHERE v2.project_id=p.id) ORDER BY v.updated_at DESC`,[user.id,JSON.stringify([{email:user.email}]),user.verified]);
-    const bookmarks=await db.query('SELECT project_id FROM r.bookmarks WHERE user_id=$1',[user.id]);const ids=new Set(bookmarks.map(b=>b.project_id));
-    const notifications=await db.query('SELECT id,message,project_id,read,created_at FROM r.notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100',[user.id]);
-    return json({user,projects:own.map(projectView),saved:(await publicProjects()).filter(p=>ids.has(p.id)),notifications});
+    // Independent reads, so they run together instead of one after another.
+    const [own,bookmarks,notifications,published]=await Promise.all([
+      db.query(`${projectSelect} WHERE (p.owner_id=$1 OR $3 AND NOT p.example AND EXISTS(SELECT 1 FROM r.versions av WHERE av.project_id=p.id AND av.status='approved' AND av.data->'team' @> $2::jsonb)) AND v.number=(SELECT max(v2.number) FROM r.versions v2 WHERE v2.project_id=p.id) ORDER BY v.updated_at DESC`,[user.id,JSON.stringify([{email:user.email}]),user.verified]),
+      db.query('SELECT project_id FROM r.bookmarks WHERE user_id=$1',[user.id]),
+      db.query('SELECT id,message,project_id,read,created_at FROM r.notifications WHERE user_id=$1 ORDER BY created_at DESC LIMIT 100',[user.id]),
+      publicProjects(),
+    ]);
+    const ids=new Set(bookmarks.map(b=>b.project_id));
+    return json({user,projects:own.map(projectView),saved:published.filter(p=>ids.has(p.id)),notifications});
   }
   if(resource==='notifications'&&method==='POST'){const user=await requireUser(request,false);await db.query('UPDATE r.notifications SET read=true WHERE user_id=$1',[user.id]);return json({ok:true});}
   if(resource==='admin'){
@@ -156,18 +165,20 @@ async function handler(request:NextRequest,context:Context) {
     }
     if(id==='projects'&&method==='PATCH'){
       const input=z.object({id:z.uuid(),featured:z.boolean().optional(),archived:z.boolean().optional()}).parse(await bodyJson(request));
-      await transaction(async client=>{const [v]=await client.query('SELECT * FROM r.versions WHERE project_id=$1 ORDER BY number DESC LIMIT 1',[input.id]);requireCondition(v&&canReview(user,v.data),404,'Project not found.');await client.query('UPDATE r.projects SET featured=COALESCE($1,featured),archived=COALESCE($2,archived) WHERE id=$3',[input.featured??null,input.archived??null,input.id]);await audit(client,user.id,'project.managed',input.id,input);});return json({ok:true});
+      await transaction(async client=>{const [v]=await client.query('SELECT * FROM r.versions WHERE project_id=$1 ORDER BY number DESC LIMIT 1',[input.id]);requireCondition(v&&canReview(user,v.data),404,'Project not found.');await client.query('UPDATE r.projects SET featured=COALESCE($1,featured),archived=COALESCE($2,archived) WHERE id=$3',[input.featured??null,input.archived??null,input.id]);await audit(client,user.id,'project.managed',input.id,input);});invalidatePublicProjects();return json({ok:true});
     }
     if(id==='users'&&method==='PATCH'){
       requireCondition(user.role==='superadmin',403,'Super Admin access required.');
-      const input=z.object({id:z.uuid(),role:z.enum(roles),scopes:z.array(z.string().regex(/^(department|subject):.{1,100}$/)).max(30),suspended:z.boolean()}).parse(await bodyJson(request));
+      const input=z.object({id:z.uuid(),role:z.enum(roles),scopes:z.array(z.string().refine(scope=>/^(department|subject):.{1,100}$/.test(scope)||PERMISSION_NAMES.some(name=>scope===`permission:${name}`),'Use department:…, subject:… or permission:… entries.')).max(45),suspended:z.boolean()}).parse(await bodyJson(request));
       await transaction(async client=>{
         await client.query("SELECT pg_advisory_xact_lock(hashtext('repoggits-admin-roles'))");
         const [target]=await client.query('SELECT id,role,suspended FROM r.users WHERE id=$1 FOR UPDATE',[input.id]);requireCondition(target,404,'User not found.');
         if(target.role==='superadmin'&&(input.role!=='superadmin'||input.suspended)){const [count]=await client.query("SELECT count(*)::int AS n FROM r.users WHERE role='superadmin' AND NOT suspended AND id<>$1",[input.id]);requireCondition(count.n>0,409,'Keep at least one active Super Admin.');}
         await client.query('UPDATE r.users SET role=$1,scopes=$2,suspended=$3 WHERE id=$4',[input.role,JSON.stringify(input.scopes),input.suspended,input.id]);
         await client.query('DELETE FROM r.sessions WHERE user_id=$1',[input.id]);await audit(client,user.id,'user.updated',input.id,input);
-      });return json({ok:true});
+      });
+      // A suspension changes the star and like counts shown in the public list.
+      invalidatePublicProjects();return json({ok:true});
     }
     if(id==='settings'&&method==='PATCH'){
       requireCondition(user.role==='superadmin',403,'Super Admin access required.');
@@ -193,15 +204,27 @@ async function handler(request:NextRequest,context:Context) {
       const csv=[['Project','Version','Title','Department','Status','Team','Views','Downloads'].map(cell).join(','),...data.projects.map(p=>[p.id,p.version.number,p.version.data.title,p.version.data.department,p.version.status,p.version.data.teamName,p.views,p.downloads].map(cell).join(','))].join('\r\n');
       return new Response(csv,{headers:{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="repoggits-report.csv"','Cache-Control':'no-store'}});
     }
+    // The admin panel's sections (lib/admin/router.ts); each one checks its own permission.
+    const section=adminSection(id);
+    if(section)return await section({request,user,method,path:path.slice(1),search:request.nextUrl.searchParams});
   }
   if(resource==='feed'&&method==='GET'){
     const escape=(value:string)=>value.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
     const origin=process.env.APP_ORIGIN||new URL(request.url).origin;
-    return new Response(`<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Repoggits projects</title><link>${escape(origin)}</link><description>New student projects</description>${(await publicProjects()).slice(0,30).map(p=>`<item><title>${escape(p.version.data.title)}</title><link>${escape(origin)}/projects/${p.id}</link><guid>${p.version.id}</guid><description>${escape(p.version.data.summary)}</description><pubDate>${new Date(p.version.createdAt).toUTCString()}</pubDate></item>`).join('')}</channel></rss>`,{headers:{'Content-Type':'application/rss+xml; charset=utf-8'}});
+    return new Response(`<?xml version="1.0" encoding="UTF-8"?><rss version="2.0"><channel><title>Repoggits projects</title><link>${escape(origin)}</link><description>New student projects</description>${(await publicProjects()).slice(0,30).map(p=>`<item><title>${escape(p.version.data.title)}</title><link>${escape(origin)}/projects/${p.id}</link><guid>${p.version.id}</guid><description>${escape(p.version.data.summary)}</description><pubDate>${new Date(p.version.createdAt).toUTCString()}</pubDate></item>`).join('')}</channel></rss>`,{headers:{'Content-Type':'application/rss+xml; charset=utf-8','Cache-Control':'public, max-age=300'}});
   }
   throw new HttpError(404,'Endpoint not found.');
- } catch(error) {return failure(error);}
+ } catch(error) {
+  const response=failure(error);
+  if(response.status>=500)recordServerError(request,error,response.status);
+  return response;
+ }
 }
-export const GET=handler;
-export const POST=handler;
-export const PATCH=handler;
+const respond=async(request:NextRequest,context:Context)=>{
+  const response=await handler(request,context);
+  recordApiRequest((await context.params).path[0],response.status);
+  return compressed(request,response);
+};
+export const GET=respond;
+export const POST=respond;
+export const PATCH=respond;

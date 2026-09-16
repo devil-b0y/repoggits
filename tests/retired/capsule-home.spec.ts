@@ -1,3 +1,4 @@
+// Historical coverage for the retired capsule homepage. See workshop-home.spec.ts.
 import {expect,test,type Page} from '@playwright/test';
 
 const chapterTitles=['Everything a project is, in one place.','Source you can actually read.','The wiring, not just the result.','Credit for everyone who made it.','Proof that it runs.'];

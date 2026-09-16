@@ -1,11 +1,10 @@
 'use client';
 import {useState} from 'react';
-import {Shell} from './shared';
 import {MotionStage} from './MotionKit';
-import WorkshopHome from './WorkshopHome';
+import ProductHome from './product/ProductHome';
 
 function HomeContent(){
   const [paused,setPaused]=useState(false);
-  return <MotionStage paused={paused}><WorkshopHome paused={paused} setPaused={setPaused}/></MotionStage>;
+  return <MotionStage paused={paused}><ProductHome paused={paused} setPaused={setPaused}/></MotionStage>;
 }
-export default function Home(){return <Shell><HomeContent/></Shell>;}
+export default function Home(){return <HomeContent/>;}
