@@ -1,0 +1,449 @@
+- generic [ref=f4e1]:
+  - generic [ref=f4e2]:
+    - link "Skip to product overview" [ref=f4e3] [cursor=pointer]:
+      - /url: "#product"
+    - banner [ref=f4e4]:
+      - link "project vault BY REPOGGITS" [ref=f4e5] [cursor=pointer]:
+        - /url: /
+        - generic [ref=f4e10]:
+          - text: project vault
+          - generic [ref=f4e11]: BY REPOGGITS
+      - navigation "Main navigation" [ref=f4e12]:
+        - link "Product" [ref=f4e13] [cursor=pointer]:
+          - /url: "#product"
+        - link "How it works" [ref=f4e14] [cursor=pointer]:
+          - /url: "#workflow"
+        - link "Discover" [ref=f4e15] [cursor=pointer]:
+          - /url: "#discover"
+      - generic [ref=f4e16]:
+        - button "Use light theme" [ref=f4e17] [cursor=pointer]
+        - link "Log in" [ref=f4e24] [cursor=pointer]:
+          - /url: /auth
+        - link "Enter vault" [ref=f4e25] [cursor=pointer]:
+          - /url: /workspace
+    - main [ref=f4e30]:
+      - region "Build something worth remembering." [ref=f4e31]:
+        - generic [ref=f4e32]:
+          - generic:
+            - generic:
+              - generic:
+                - img "Cinematic illustration of an engineer designing a project at a desktop workstation"
+              - generic:
+                - generic:
+                  - generic: project.ts
+                  - generic: ● ● ●
+                - generic:
+                  - generic: const
+                  - text: "project = { name:"
+                  - generic: "\"Your next idea\""
+                  - text: ", stack: ["
+                  - generic: "\"Python\""
+                  - text: ","
+                  - generic: "\"React\""
+                  - text: "], status:"
+                  - generic: "\"building\""
+                  - text: "};"
+                  - generic: await
+                  - text: vault.organize(project);
+                  - generic: ▏
+              - generic:
+                - generic:
+                  - generic: PROJECT VAULT
+                  - generic: DESIGN / 01
+                - generic:
+                  - generic:
+                    - generic: YOUR IDEAS, IN ONE PLACE.
+                    - strong: Make roomfor possibility.
+              - generic:
+                - generic: build complete
+                - generic: ready to share
+              - generic:
+                - generic:
+                  - generic: PROJECT VAULT
+                  - generic: WORKSPACE / ORGANIZED
+                - generic:
+                  - paragraph: EVERYTHING YOU BUILD. ONE PLACE.
+                  - heading "Your next big thing." [level=3]
+                  - generic:
+                    - generic:
+                      - strong: SOURCE
+                      - generic: Connected to your workspace
+                    - generic:
+                      - strong: DOCUMENTATION
+                      - generic: Connected to your workspace
+                    - generic:
+                      - strong: CONTRIBUTORS
+                      - generic: Connected to your workspace
+                  - generic:
+                    - generic: Your work, connected
+                    - generic: One place
+              - generic [aria-hidden]:
+                - generic: designer
+              - generic: DESIGN → BUILD → ORGANIZE
+          - generic:
+            - paragraph:
+              - generic: PROJECT VAULT // SYSTEM ONLINE
+            - heading "Build something worth remembering." [level=1]:
+              - generic: Build something
+              - generic: worth
+              - generic: remembering.
+            - paragraph: Project Vault is where engineering ideas become organized, discoverable, and shareable projects.
+            - generic:
+              - link "Enter Project Vault" [ref=f4e34] [cursor=pointer]:
+                - /url: /workspace
+              - link "Explore the vault" [ref=f4e39] [cursor=pointer]:
+                - /url: /projects
+            - generic:
+              - generic: YOUR IDEAS. YOUR PROCESS. YOUR PLACE.
+              - link "SCROLL TO EXPLORE ↓" [ref=f4e43] [cursor=pointer]:
+                - /url: "#product"
+      - generic [ref=f4e44]:
+        - generic [ref=f4e45]: MADE FOR WHAT YOU MAKE
+        - generic [ref=f4e46]: Software
+        - generic [ref=f4e47]: Hardware
+        - generic [ref=f4e48]: Artificial intelligence
+        - generic [ref=f4e49]: Connected systems
+        - generic [ref=f4e50]: Everything in between
+      - generic [ref=f4e51]:
+        - generic [ref=f4e52]:
+          - paragraph [ref=f4e53]:
+            - generic [ref=f4e54]: "01"
+            - generic [ref=f4e55]: A BETTER HOME FOR YOUR WORK
+          - heading "Your projects deserve more than a folder." [level=2] [ref=f4e56]:
+            - text: Your projects deservemore than
+            - generic [ref=f4e57]: a folder.
+          - paragraph [ref=f4e58]: All the pieces of your project.Finally telling the same story.
+        - generic [ref=f4e59]:
+          - generic [ref=f4e60]:
+            - generic [ref=f4e61]:
+              - generic [ref=f4e68]: project.zip
+              - generic [ref=f4e69]: ↗
+            - generic [ref=f4e70]:
+              - generic [ref=f4e77]: final_final_v2
+              - generic [ref=f4e78]: ↗
+            - generic [ref=f4e79]:
+              - generic [ref=f4e83]: README-old
+              - generic [ref=f4e84]: ↗
+            - generic [ref=f4e85]:
+              - generic [ref=f4e92]: presentation.pptx
+              - generic [ref=f4e93]: ↗
+            - generic [ref=f4e94]:
+              - generic [ref=f4e101]: screenshot.png
+              - generic [ref=f4e102]: ↗
+          - generic [ref=f4e106]:
+            - generic [ref=f4e107]: PROJECT VAULT
+            - heading "One project. The whole picture." [level=3] [ref=f4e115]: One project.The whole picture.
+            - generic [ref=f4e116]:
+              - generic [ref=f4e117]: Overview
+              - generic [ref=f4e121]: Technologies
+              - generic [ref=f4e125]: Documentation
+              - generic [ref=f4e129]: Screenshots
+              - generic [ref=f4e133]: Contributors
+              - generic [ref=f4e137]: Repository
+              - generic [ref=f4e141]: Progress
+              - generic [ref=f4e145]: Links
+              - generic [ref=f4e149]: Timeline
+      - generic [ref=f4e153]:
+        - generic [ref=f4e154]:
+          - generic [ref=f4e155]:
+            - paragraph [ref=f4e156]:
+              - generic [ref=f4e157]: "02"
+              - generic [ref=f4e158]: NOT JUST STORAGE. CONNECTION.
+            - heading "Every piece. One connected place." [level=2] [ref=f4e159]:
+              - text: Every piece.
+              - generic [ref=f4e160]: One connected place.
+          - paragraph [ref=f4e161]: Select a part of the vault.See how your work comes together.
+        - generic [ref=f4e162]:
+          - generic [ref=f4e163]:
+            - generic [ref=f4e166]:
+              - strong [ref=f4e171]: PROJECTVAULT
+              - generic [ref=f4e172]: EVERY PIECE. CONNECTED.
+            - group "Explore vault capabilities":
+              - button "Source code 01" [pressed] [ref=f4e173] [cursor=pointer]:
+                - generic [ref=f4e178]: Source code
+                - generic [ref=f4e179]: "01"
+              - button "Documentation 02" [ref=f4e180] [cursor=pointer]:
+                - generic [ref=f4e184]: Documentation
+                - generic [ref=f4e185]: "02"
+              - button "Your team 03" [ref=f4e186] [cursor=pointer]:
+                - generic [ref=f4e192]: Your team
+                - generic [ref=f4e193]: "03"
+              - button "Version history 04" [ref=f4e194] [cursor=pointer]:
+                - generic [ref=f4e199]: Version history
+                - generic [ref=f4e200]: "04"
+              - button "Photos & demos 05" [ref=f4e201] [cursor=pointer]:
+                - generic [ref=f4e206]: Photos & demos
+                - generic [ref=f4e207]: "05"
+              - button "One shared page 06" [ref=f4e208] [cursor=pointer]:
+                - generic [ref=f4e212]: One shared page
+                - generic [ref=f4e213]: "06"
+          - generic [ref=f4e215]:
+            - paragraph [ref=f4e216]:
+              - generic [ref=f4e217]: 01 / THE BUILD
+            - heading "Source code" [level=3] [ref=f4e218]
+            - paragraph [ref=f4e219]: Keep the source alongside the story. Attach a source ZIP and an optional repository link.
+            - link "Give your work a home" [ref=f4e220] [cursor=pointer]:
+              - /url: /submit
+      - generic [ref=f4e225]:
+        - generic [ref=f4e226]:
+          - paragraph [ref=f4e227]:
+            - generic [ref=f4e228]: "03"
+            - generic [ref=f4e229]: FROM THE FIRST SPARK
+          - heading "Good work is a process. Keep all of it." [level=2] [ref=f4e230]:
+            - text: Good work is a process.
+            - generic [ref=f4e231]: Keep all of it.
+        - group "Project workflow stages" [ref=f4e232]:
+          - button "01 IDEA" [pressed] [ref=f4e233] [cursor=pointer]:
+            - generic [ref=f4e234]: "01"
+            - generic [ref=f4e235]: IDEA
+          - button "02 DESIGN" [ref=f4e238] [cursor=pointer]:
+            - generic [ref=f4e239]: "02"
+            - generic [ref=f4e240]: DESIGN
+          - button "03 DEVELOP" [ref=f4e243] [cursor=pointer]:
+            - generic [ref=f4e244]: "03"
+            - generic [ref=f4e245]: DEVELOP
+          - button "04 DOCUMENT" [ref=f4e248] [cursor=pointer]:
+            - generic [ref=f4e249]: "04"
+            - generic [ref=f4e250]: DOCUMENT
+          - button "05 DEPLOY" [ref=f4e253] [cursor=pointer]:
+            - generic [ref=f4e254]: "05"
+            - generic [ref=f4e255]: DEPLOY
+          - button "06 VAULT" [ref=f4e258] [cursor=pointer]:
+            - generic [ref=f4e259]: "06"
+            - generic [ref=f4e260]: VAULT
+        - generic [ref=f4e264]:
+          - generic [ref=f4e265]: "01"
+          - generic [ref=f4e266]:
+            - heading "Start with a what if." [level=3] [ref=f4e267]
+            - paragraph [ref=f4e268]: Capture the problem. Find a possibility.
+            - code [ref=f4e269]: idea.capture("a smarter campus")
+      - generic [ref=f4e276]:
+        - paragraph [ref=f4e277]:
+          - generic [ref=f4e278]: "04"
+          - generic [ref=f4e279]: THE WORK BEHIND THE WORK
+        - heading "The code is only part of the story." [level=2] [ref=f4e280]:
+          - text: The code is only
+          - generic [ref=f4e281]: part of the story.
+        - generic [ref=f4e282]:
+          - generic [ref=f4e283]:
+            - generic [ref=f4e284]: "01"
+            - heading "The problem you saw." [level=3] [ref=f4e285]
+            - paragraph [ref=f4e286]: Explain what made the idea worth pursuing.
+          - generic [ref=f4e290]:
+            - generic [ref=f4e291]: "02"
+            - heading "The choices you made." [level=3] [ref=f4e292]
+            - paragraph [ref=f4e293]: Keep the stack, the costs, and the decisions together.
+          - generic [ref=f4e297]:
+            - generic [ref=f4e298]: "03"
+            - heading "The people who built it." [level=3] [ref=f4e299]
+            - paragraph [ref=f4e300]: Give every contribution the credit it deserves.
+          - generic [ref=f4e304]:
+            - generic [ref=f4e305]: "04"
+            - heading "The things you learned." [level=3] [ref=f4e306]
+            - paragraph [ref=f4e307]: Let the next version carry the story forward.
+      - generic [ref=f4e311]:
+        - generic [ref=f4e312]:
+          - paragraph [ref=f4e313]:
+            - generic [ref=f4e314]: "05"
+            - generic [ref=f4e315]: ENGINEERING, IN EVERY FLAVOR
+          - heading "Built around how developers actually build." [level=2] [ref=f4e316]:
+            - text: Built around howdevelopers
+            - generic [ref=f4e317]: actually build.
+          - paragraph [ref=f4e318]: Your stack. Your process. Your collaborators.All the context that makes a project yours.
+        - generic [ref=f4e319]:
+          - generic [ref=f4e320]: React
+          - generic [ref=f4e326]: Next.js
+          - generic [ref=f4e332]: Python
+          - generic [ref=f4e338]: C++
+          - generic [ref=f4e344]: Java
+          - generic [ref=f4e350]: IoT
+          - generic [ref=f4e356]: ESP32
+          - generic [ref=f4e362]: AI
+          - generic [ref=f4e368]: Machine Learning
+          - generic [ref=f4e374]: Blockchain
+          - generic [ref=f4e380]: Docker
+          - generic [ref=f4e386]: Git
+      - generic [ref=f4e392]:
+        - generic [ref=f4e393]:
+          - img "Cinematic illustration of an engineer designing a project at a desktop workstation" [ref=f4e395]
+          - generic [ref=f4e396]:
+            - generic [ref=f4e397]:
+              - generic [ref=f4e402]: project.ts
+              - generic [ref=f4e403]: ● ● ●
+            - generic [ref=f4e404]:
+              - generic [ref=f4e405]: const
+              - text: "project = { name:"
+              - generic [ref=f4e406]: "\"Your next idea\""
+              - text: ", stack: ["
+              - generic [ref=f4e407]: "\"Python\""
+              - text: ","
+              - generic [ref=f4e408]: "\"React\""
+              - text: "], status:"
+              - generic [ref=f4e409]: "\"building\""
+              - text: "};"
+              - generic [ref=f4e410]: await
+              - text: vault.organize(project);
+              - generic [ref=f4e411]: ▏
+          - generic [ref=f4e412]:
+            - generic [ref=f4e413]:
+              - generic [ref=f4e418]: PROJECT VAULT
+              - generic [ref=f4e419]: DESIGN / 01
+            - generic [ref=f4e425]:
+              - generic [ref=f4e426]: YOUR IDEAS, IN ONE PLACE.
+              - strong [ref=f4e427]: Make roomfor possibility.
+          - generic [ref=f4e432]:
+            - generic [ref=f4e435]: build complete
+            - generic [ref=f4e438]: ready to share
+          - generic:
+            - generic:
+              - generic: PROJECT VAULT
+              - generic: WORKSPACE / ORGANIZED
+            - generic:
+              - paragraph: EVERYTHING YOU BUILD. ONE PLACE.
+              - heading "Your next big thing." [level=3]
+              - generic:
+                - generic:
+                  - strong: SOURCE
+                  - generic: Connected to your workspace
+                - generic:
+                  - strong: DOCUMENTATION
+                  - generic: Connected to your workspace
+                - generic:
+                  - strong: CONTRIBUTORS
+                  - generic: Connected to your workspace
+              - generic:
+                - generic: Your work, connected
+                - generic: One place
+          - generic [aria-hidden]:
+            - generic: designer
+          - generic [ref=f4e439]: ONE CONNECTED WORKSPACE
+        - generic:
+          - paragraph:
+            - generic: "06"
+            - generic: EVERYTHING, CONNECTED
+          - heading "From chaos to clarity." [level=2]:
+            - text: From chaosto
+            - generic: clarity.
+          - paragraph: Build freely. Organize intelligently.Showcase confidently.
+          - generic:
+            - generic: Projects
+            - generic: Documentation
+            - generic: Team
+            - generic: Versions
+            - generic: Demo links
+      - generic [ref=f4e440]:
+        - generic [ref=f4e441]:
+          - generic [ref=f4e442]:
+            - paragraph [ref=f4e443]:
+              - generic [ref=f4e444]: "07"
+              - generic [ref=f4e445]: NO TWO IDEAS ARE THE SAME
+            - heading "Whatever you build. It belongs here." [level=2] [ref=f4e446]:
+              - text: Whatever you build.
+              - generic [ref=f4e447]: It belongs here.
+          - paragraph [ref=f4e448]: From the first line of codeto the last connection on a circuit.
+        - generic [ref=f4e449]:
+          - group "Explore engineering disciplines" [ref=f4e450]:
+            - button "01 Software" [pressed] [ref=f4e451] [cursor=pointer]:
+              - generic [ref=f4e452]: "01"
+              - generic [ref=f4e453]: Software
+            - button "02 Hardware" [ref=f4e457] [cursor=pointer]:
+              - generic [ref=f4e458]: "02"
+              - generic [ref=f4e459]: Hardware
+            - button "03 Hybrid" [ref=f4e463] [cursor=pointer]:
+              - generic [ref=f4e464]: "03"
+              - generic [ref=f4e465]: Hybrid
+          - generic [ref=f4e469]:
+            - img "Interactive aluminum laptop with a code editor" [ref=f4e566]:
+              - generic: 01 / SOFTWARE WORKSTATION
+            - generic [ref=f4e471]:
+              - paragraph [ref=f4e472]:
+                - generic [ref=f4e473]: EXPLORE / SOFTWARE
+              - heading "Ideas you can run." [level=3] [ref=f4e474]
+              - paragraph [ref=f4e475]: Applications, developer tools, and systems. Bring the stack, the source, and the thinking behind the interface.
+              - generic [ref=f4e476]:
+                - generic [ref=f4e477]: Interfaces
+                - generic [ref=f4e478]: APIs
+                - generic [ref=f4e479]: Databases
+                - generic [ref=f4e480]: Source code
+              - link "Discover student projects" [ref=f4e481] [cursor=pointer]:
+                - /url: /projects
+      - generic [ref=f4e486]:
+        - generic [ref=f4e487]:
+          - paragraph [ref=f4e488]:
+            - generic [ref=f4e489]: "08"
+            - generic [ref=f4e490]: LET YOUR WORK TRAVEL
+          - heading "One link. Your entire project." [level=2] [ref=f4e491]:
+            - text: One link.
+            - generic [ref=f4e492]: Your entire project.
+          - paragraph [ref=f4e493]: Share the work behind the code —not just a repository link.
+        - generic [ref=f4e494]:
+          - generic [ref=f4e508]: WORKSPACE → PROFILE → PUBLIC PAGE
+          - generic [ref=f4e509]:
+            - generic [ref=f4e510]: Project Vault / discover
+            - button "Copy vault link" [ref=f4e511] [cursor=pointer]
+          - paragraph [ref=f4e515]: One place for the complete picture.
+          - link "Discover student work ↑" [ref=f4e516] [cursor=pointer]:
+            - /url: /projects
+      - generic [ref=f4e518]:
+        - paragraph [ref=f4e523]:
+          - generic [ref=f4e524]: THIS IS ONLY THE BEGINNING
+        - heading "Your next project starts here." [level=2] [ref=f4e525]:
+          - text: Your next project
+          - generic [ref=f4e526]: starts here.
+        - generic [ref=f4e527]:
+          - link "Create your vault" [ref=f4e529] [cursor=pointer]:
+            - /url: /submit
+          - link "Explore projects" [ref=f4e534] [cursor=pointer]:
+            - /url: /projects
+        - paragraph [ref=f4e538]: PROJECT VAULT / BUILD · DOCUMENT · DISCOVER
+    - contentinfo [ref=f4e539]:
+      - link "project vault" [ref=f4e540] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f4e546]: A home for what you build. By repoggits.
+      - navigation "Footer navigation" [ref=f4e547]:
+        - link "Product" [ref=f4e548] [cursor=pointer]:
+          - /url: "#product"
+        - link "Explore" [ref=f4e550] [cursor=pointer]:
+          - /url: /projects
+        - link "Sign in" [ref=f4e552] [cursor=pointer]:
+          - /url: /auth
+        - link "Privacy" [ref=f4e554] [cursor=pointer]:
+          - /url: /privacy
+        - link "Cookies" [ref=f4e556] [cursor=pointer]:
+          - /url: /cookies
+        - button "Cookie settings" [ref=f4e558] [cursor=pointer]
+        - link "RSS" [ref=f4e559] [cursor=pointer]:
+          - /url: /api/feed
+    - button "Pause animation" [ref=f4e561] [cursor=pointer]:
+      - generic [ref=f4e565]: Motion
+  - alert [ref=f4e568]
+  - dialog [ref=f4e569]:
+    - generic [ref=f4e570]:
+      - button "Close cookie preferences" [active] [ref=f4e571] [cursor=pointer]
+      - generic [ref=f4e575]: COOKIE PREFERENCES
+      - heading "Manage your cookies" [level=2] [ref=f4e576]
+      - paragraph [ref=f4e577]: Choose which optional cookies repoggits can use. Necessary cookies keep the site working and can't be turned off. You can change these choices at any time from the Cookie Settings link in the footer.
+      - list [ref=f4e578]:
+        - listitem [ref=f4e579]:
+          - generic [ref=f4e583]:
+            - strong [ref=f4e584]: Necessary cookies
+            - paragraph [ref=f4e585]: Required for sign-in, security, and core functionality. Always active.
+          - generic [ref=f4e586]: Always on
+        - listitem [ref=f4e587]:
+          - generic [ref=f4e590]:
+            - strong [ref=f4e591]: Analytics cookies
+            - paragraph [ref=f4e592]: Help us understand website traffic and usage so we can improve the experience.
+          - switch "Analytics cookies" [ref=f4e593] [cursor=pointer]
+        - listitem [ref=f4e595]:
+          - generic [ref=f4e599]:
+            - strong [ref=f4e600]: Functional cookies
+            - paragraph [ref=f4e601]: Remember your preferences and improve functionality across visits.
+          - switch "Functional cookies" [ref=f4e602] [cursor=pointer]
+        - listitem [ref=f4e604]:
+          - generic [ref=f4e608]:
+            - strong [ref=f4e609]: Marketing cookies
+            - paragraph [ref=f4e610]: Used for personalized advertising and marketing.
+          - switch "Marketing cookies" [ref=f4e611] [cursor=pointer]
+      - generic [ref=f4e613]:
+        - button "Save preferences" [ref=f4e614] [cursor=pointer]
+        - button "Accept all" [ref=f4e615] [cursor=pointer]

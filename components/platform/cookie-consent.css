@@ -1,0 +1,29 @@
+@keyframes cookie-rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.cookie-banner{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);z-index:30;width:min(920px,calc(100% - 32px));background:var(--white);border:1px solid var(--line);border-radius:10px;box-shadow:0 20px 60px #11295730;padding:22px 26px;display:flex;align-items:center;justify-content:space-between;gap:24px;animation:cookie-rise .45s cubic-bezier(.22,1,.36,1)}
+.cookie-banner-copy{display:flex;align-items:flex-start;gap:14px;min-width:0}
+.cookie-banner-copy>svg{flex-shrink:0;color:var(--blue);margin-top:2px}
+.cookie-banner-copy strong{display:block;font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:500;letter-spacing:-.3px;margin-bottom:6px}
+.cookie-banner-copy p{font-size:12px;line-height:1.7;color:var(--muted)}
+.cookie-banner-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.cookie-banner-actions .button{min-height:40px;padding:0 16px}
+.cookie-dialog{width:min(560px,calc(100% - 30px))}
+.cookie-dialog-intro{margin:14px 0 22px;color:var(--muted);line-height:1.7}
+.cookie-categories{list-style:none;margin:0;padding:0}
+.cookie-category{display:flex;align-items:flex-start;gap:14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.cookie-category:last-child{border-bottom:0}
+.cookie-category>svg{flex-shrink:0;color:var(--blue);margin-top:2px}
+.cookie-category>div{flex:1;min-width:0}
+.cookie-category strong{display:block;font-size:13px;font-weight:600;margin-bottom:4px}
+.cookie-category p{font-size:12px;line-height:1.6;color:var(--muted)}
+.cookie-locked{flex-shrink:0;font-size:10px;letter-spacing:.6px;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:6px 9px;align-self:center}
+.cookie-switch{flex-shrink:0;align-self:center;width:42px;height:24px;border-radius:999px;background:var(--line);padding:3px;display:flex;align-items:center}
+.cookie-switch.on{background:var(--blue)}
+.cookie-switch-knob{width:18px;height:18px;border-radius:50%;background:var(--white);box-shadow:0 1px 3px #00000030;transition:transform .2s}
+.cookie-switch.on .cookie-switch-knob{transform:translateX(18px)}
+.cookie-dialog-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px}
+@media(max-width:760px){.cookie-banner{flex-direction:column;align-items:stretch;bottom:0;left:0;transform:none;width:100%;border-radius:14px 14px 0 0;padding:20px}.cookie-banner-actions{flex-wrap:wrap}.cookie-banner-actions .button{flex:1}}
+/* Shell and ProductHome share the repoggits-theme flag; these mirror .platform.dark's palette so the
+   banner and dialog match whichever page they float over instead of always using the light "paper" look. */
+.cookie-banner.cookie-dark,.cookie-dialog.cookie-dark{--paper:#172333;--white:#1e2d41;--ink:#e3eaf5;--blue:#9ab9ff;--muted:#b2bfd2;--line:#38485d}
+.cookie-dark .button.blue{background:#365cb1;color:#fff}
+.cookie-dark .button.outline{background:transparent;border-color:#6f83a1}

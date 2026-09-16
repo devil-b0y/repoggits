@@ -1,0 +1,62 @@
+- generic [ref=f8e2]:
+  - link "Skip to content" [ref=f8e3] [cursor=pointer]:
+    - /url: "#content"
+  - generic [ref=f8e4]: A PLACE FOR IDEAS TO GO FURTHER ↗
+  - banner [ref=f8e5]:
+    - link "Repoggits home" [ref=f8e6] [cursor=pointer]:
+      - /url: /
+      - text: repoggits
+      - superscript [ref=f8e11]: ®
+    - navigation "Main navigation" [ref=f8e12]:
+      - link "Explore projects" [ref=f8e13] [cursor=pointer]:
+        - /url: /projects
+      - link "My workspace" [ref=f8e14] [cursor=pointer]:
+        - /url: /workspace
+      - link "Sign in" [ref=f8e15] [cursor=pointer]:
+        - /url: /auth
+    - generic [ref=f8e16]:
+      - button "Use dark theme" [ref=f8e17] [cursor=pointer]
+      - link "Share your project" [ref=f8e20] [cursor=pointer]:
+        - /url: /submit
+        - generic [ref=f8e21]: Share project
+  - main [ref=f8e25]:
+    - generic [ref=f8e26]:
+      - generic [ref=f8e27]:
+        - generic [ref=f8e28]:
+          - generic [ref=f8e29]: LEGAL
+          - heading "Cookie Policy" [level=1] [ref=f8e30]
+          - paragraph [ref=f8e31]: What cookies repoggits uses and how to control them.
+        - button "Manage cookie preferences" [ref=f8e32] [cursor=pointer]
+      - generic [ref=f8e33]:
+        - heading "What are cookies" [level=2] [ref=f8e34]
+        - paragraph [ref=f8e35]: Cookies are small pieces of data stored in your browser. We use them, and similar local storage, to run the site and, with your consent, to understand usage and remember preferences.
+      - generic [ref=f8e36]:
+        - heading "Necessary cookies" [level=3] [ref=f8e37]
+        - paragraph [ref=f8e38]: Keep you signed in, remember security settings, and let core features like submitting a project work. These cannot be turned off.
+      - generic [ref=f8e39]:
+        - heading "Analytics cookies" [level=3] [ref=f8e40]
+        - paragraph [ref=f8e41]: Help us understand which pages and features are used, so we can improve the site.
+      - generic [ref=f8e42]:
+        - heading "Functional cookies" [level=3] [ref=f8e43]
+        - paragraph [ref=f8e44]: Remember preferences such as your chosen theme, so you don’t have to set them again.
+      - generic [ref=f8e45]:
+        - heading "Marketing cookies" [level=3] [ref=f8e46]
+        - paragraph [ref=f8e47]: Used for personalized advertising and marketing about repoggits and related projects.
+      - generic [ref=f8e48]:
+        - heading "Managing your choices" [level=2] [ref=f8e49]
+        - paragraph [ref=f8e50]: Use the “Manage cookie preferences” button above, or the Cookie Settings link in the footer of any page, to accept, reject, or customize optional cookies at any time.
+  - contentinfo [ref=f8e51]:
+    - generic [ref=f8e52]:
+      - link "repoggits" [ref=f8e53] [cursor=pointer]:
+        - /url: /
+      - generic [ref=f8e58]: A little shared knowledge goes a long way.
+    - generic [ref=f8e59]:
+      - generic [ref=f8e60]: BUILT WITH CURIOSITY. SHARED WITH EVERYONE.
+      - generic [ref=f8e61]:
+        - link "Privacy policy" [ref=f8e62] [cursor=pointer]:
+          - /url: /privacy
+        - link "Cookie policy" [ref=f8e63] [cursor=pointer]:
+          - /url: /cookies
+        - button "Cookie settings" [ref=f8e64] [cursor=pointer]
+        - link "Project RSS feed" [ref=f8e65] [cursor=pointer]:
+          - /url: /api/feed
