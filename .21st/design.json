@@ -62,6 +62,11 @@
     {
       "decision": "Use realistic original laptop/ESP32 Three.js geometry instead of abstract discipline shapes. Text block reveals use Framer Motion animate(), retain semantic DOM, and respect pause/reduced-motion.",
       "source": "User 3D object and Framer Motion request"
+    },
+    {
+      "date": "2026-09-17",
+      "scope": "Project detail page",
+      "decision": "Preserve the Project Demo heading, gallery, thumbnails, video controls and layout. Use existing warm-paper/blue and dark-navy tokens for an editorial case study with circular local technology logos, team portrait rings, section icons and clear project actions. Keep unknown brands as category icons, without inventing official logos."
     }
   ],
   "evidence": [

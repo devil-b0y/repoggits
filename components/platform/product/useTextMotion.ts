@@ -17,13 +17,18 @@ export function useTextMotion(root:RefObject<HTMLDivElement|null>,still:boolean)
     const heading=text.closest('h1,h2,h3,h4'),hero=text.closest('#ph-title'),nav=text.closest('.ph-nav');
     const group=text.closest('h1,h2,h3,h4,p,a,button,pre')||text.parentElement!;
     group.setAttribute('data-text-motion','framer');
-    const index=Array.from(group.querySelectorAll('pv-text')).indexOf(text);
     let delay=heading?.04:group.matches('p')?.12:.18;
     if(nav)delay=.03+Array.from(nav.querySelectorAll('pv-text')).indexOf(text)*.035;
-    else if(hero)delay=.22+index*.13;
+    else if(hero){
+     const masks=Array.from(hero.querySelectorAll<HTMLElement>('pv-mask'));
+     const tops=[...new Set(masks.map(mask=>Math.round(mask.getBoundingClientRect().top)))];
+     const line=tops.indexOf(Math.round(text.parentElement!.getBoundingClientRect().top));
+     text.dataset.textLine=String(line);
+     delay=.22+line*.13;
+    }
     else if(text.closest('.ph-status'))delay=.15;
-    else if(text.closest('.ph-hero-sub'))delay=.72;
-    else if(text.closest('.ph-hero-copy .ph-actions'))delay=.86;
+    else if(text.closest('.ph-hero-sub'))delay=1.05;
+    else if(text.closest('.ph-hero-copy .ph-actions'))delay=1.18;
     const animation=animate(text,{
      opacity:[0,1],top:[hero?'0px':heading?'10px':'5px','0px'],
      filter:[hero?'blur(3px)':'blur(1.5px)','blur(0px)'],

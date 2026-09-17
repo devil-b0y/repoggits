@@ -1,0 +1,116 @@
+/* Project case study. Deliberately does not target ProjectMedia or its heading. */
+.detail-page{--pd-soft:color-mix(in srgb,var(--blue) 6%,var(--white));--pd-accent-line:color-mix(in srgb,var(--blue) 22%,var(--line))}
+.detail-page>.page-title{margin-top:30px;margin-bottom:26px}
+.detail-page>.page-title h1{font-size:clamp(36px,4.8vw,64px);max-width:1000px;letter-spacing:-.055em;line-height:1.08;text-wrap:balance}
+.detail-page>.page-title p{font-size:16px;max-width:740px;line-height:1.8}
+.detail-page>.detail-meta{gap:12px 20px;margin-bottom:24px}
+.detail-page .detail-meta>*{display:inline-flex;align-items:center;gap:7px}
+.detail-page .detail-meta>*:not(:last-child)::after{display:none}
+.detail-page .pd-team-link{font-weight:600;color:var(--blue)}
+.detail-page .project-reactions{padding:18px 0 24px;margin-bottom:24px;border-bottom:1px solid var(--line)}
+.detail-page .reaction-actions .button{border-radius:12px;gap:10px;min-width:105px;background:var(--white);transition:background .2s,border-color .2s}
+.detail-page .reaction-actions .button[aria-pressed=true]{background:var(--pd-soft);border-color:var(--blue);color:var(--blue)}
+.detail-page .pd-kicker{font:500 9px/1.6 'DM Sans',sans-serif;letter-spacing:1.7px;color:var(--muted);text-transform:uppercase}
+.detail-page .pd-section-heading{display:flex;align-items:flex-start;gap:17px;margin-bottom:26px}
+.detail-page .pd-section-icon{width:48px;height:48px;display:grid;place-items:center;flex:0 0 auto;border:1px solid var(--pd-accent-line);border-radius:15px;background:var(--pd-soft);color:var(--blue)}
+.detail-page .pd-section-heading h2{margin:5px 0 0;font-size:27px;letter-spacing:-.8px;line-height:1.25}
+.detail-page .pd-section-heading p{font-size:13px;line-height:1.7;color:var(--muted);margin:9px 0 0}
+.detail-page .detail-section{padding:40px 0}
+.detail-page .pd-about>.preserve-lines{font-size:15px;line-height:1.95;padding-left:23px;border-left:2px solid var(--pd-accent-line);max-width:74ch}
+.detail-page .pd-facts{gap:14px;margin-top:22px;margin-bottom:30px}
+.detail-page .pd-facts>div{position:relative;padding:22px;border:1px solid var(--pd-accent-line);border-radius:16px;background:var(--white);gap:10px;overflow:hidden}
+.detail-page .pd-facts>div>svg{color:var(--blue);width:22px;height:22px;margin-bottom:4px}
+.detail-page .pd-facts>div>span{font-size:12px;color:var(--muted)}
+.detail-page .pd-facts>div>strong{font:500 21px 'Space Grotesk',sans-serif;letter-spacing:-.6px;color:var(--ink)}
+.detail-page .pd-language-fact{grid-column:1/-1}
+.detail-page .pd-language-grid{display:flex;gap:12px;flex-wrap:wrap;margin-top:4px}
+.detail-page .pd-logo-orbit{width:44px;height:44px;flex:0 0 44px;border-radius:50%;background:#f8fafc;border:1px solid #dfe5ef;display:grid;place-items:center;color:#3059b5;box-shadow:0 3px 8px #0c234b09,inset 0 0 0 3px #fff;overflow:hidden}
+.detail-page .pd-logo-orbit img{width:26px;height:26px;object-fit:contain;display:block}
+.detail-page .pd-tech-token{display:inline-flex;align-items:center;gap:10px;min-width:0;max-width:100%;font-size:12px;line-height:1.5;color:var(--ink)}
+.detail-page .pd-tech-token>span:last-child{overflow-wrap:anywhere;min-width:0}
+.detail-page .pd-language-grid .pd-tech-token{padding:7px 17px 7px 7px;border:1px solid var(--line);border-radius:40px;background:var(--paper);font-size:13px;font-weight:500}
+.detail-page .key-features{margin-top:12px;padding:30px;border:1px solid var(--pd-accent-line);border-radius:20px;background:var(--pd-soft)}
+.detail-page .key-features-list{gap:16px 25px;margin:0;padding:0;list-style:none}
+.detail-page .key-features-list li{display:flex;align-items:flex-start;gap:12px;font-size:13px;line-height:1.75;padding:0;border:0;background:transparent}
+.detail-page .pd-feature-check{display:grid;place-items:center;flex:0 0 29px;width:29px;height:29px;border-radius:50%;background:var(--white);color:var(--blue);border:1px solid var(--pd-accent-line)}
+.detail-page .pd-team-banner{display:flex;align-items:center;gap:15px;padding:20px 22px;background:var(--pd-soft);border:1px solid var(--pd-accent-line);border-radius:18px;margin:0 0 18px}
+.detail-page .pd-team-emblem{width:54px;height:54px;display:grid;place-items:center;background:var(--blue);color:var(--paper);border-radius:16px;flex:0 0 auto}
+.detail-page .pd-team-banner h3{font-size:22px;margin:3px 0 0;overflow-wrap:anywhere}
+.detail-page .pd-team-banner>div{min-width:0}
+.detail-page .pd-team-count{font-size:11px;line-height:1.5;margin-left:auto;flex-shrink:0;padding:7px 12px;border:1px solid var(--pd-accent-line);border-radius:30px;color:var(--muted);background:var(--white)}
+.detail-page .team-grid{gap:18px;margin-top:0}
+.detail-page .pd-team-card{padding:24px;background:var(--white);border:1px solid var(--pd-accent-line);border-radius:20px;overflow:hidden;transition:transform .25s,border-color .25s,box-shadow .25s}
+.detail-page .pd-team-card:hover{transform:translateY(-3px);border-color:var(--blue);box-shadow:0 15px 30px #1023410b}
+.detail-page .pd-member-top{display:flex;gap:15px;align-items:center;justify-content:space-between;margin-bottom:23px}
+.detail-page .pd-member-top .pd-kicker{font-size:8px;letter-spacing:1.2px;max-width:160px}
+.detail-page .pd-member-number{font:22px 'Space Grotesk',sans-serif;color:var(--blue);opacity:.7}
+.detail-page .pd-member-identity{display:flex;flex-direction:column;align-items:flex-start;gap:18px}
+.detail-page .pd-avatar-ring{position:relative;padding:5px;border-radius:50%;border:1px solid var(--pd-accent-line);width:94px;height:94px;background:var(--pd-soft)}
+.detail-page .pd-avatar-ring>img,.detail-page .pd-member-initials{width:82px;height:82px;border-radius:50%;object-fit:cover;display:grid;place-items:center;background:var(--paper);font:500 28px 'Space Grotesk',sans-serif;color:var(--blue)}
+.detail-page .pd-avatar-badge{position:absolute;right:-3px;bottom:2px;width:29px;height:29px;border-radius:50%;display:grid;place-items:center;background:var(--blue);color:var(--paper);border:3px solid var(--white)}
+.detail-page .pd-member-identity h3{margin:0;font-size:23px;line-height:1.25;letter-spacing:-.6px;overflow-wrap:anywhere}
+.detail-page .pd-member-role{font-size:12px;color:var(--muted);margin:6px 0 0;line-height:1.6;overflow-wrap:anywhere}
+.detail-page .pd-member-details{margin:22px 0 0;padding-top:12px;border-top:1px solid var(--line)}
+.detail-page .pd-member-details>div{display:grid;grid-template-columns:95px minmax(0,1fr);gap:10px;padding:10px 0;font-size:12px;line-height:1.5;border:0}
+.detail-page .pd-member-details dt{display:flex;gap:8px;align-items:center;color:var(--muted)}
+.detail-page .pd-member-details dt svg{flex-shrink:0;color:var(--blue)}
+.detail-page .pd-member-details dd{margin:0;text-align:right;overflow-wrap:anywhere}
+.detail-page .service-grid{gap:16px}
+.detail-page .service-card{padding:22px;border-radius:17px;border-color:var(--pd-accent-line)}
+.detail-page .pd-service-heading{display:flex;align-items:center;gap:13px;margin-bottom:17px}
+.detail-page .pd-service-heading h3{margin:0;font-size:20px}
+.detail-page .service-card p{margin:0;color:var(--muted)}
+.detail-page .service-card .inline-link{min-height:36px}
+.detail-page .cost-summary>div{border-radius:17px;padding:23px;border-color:var(--pd-accent-line)}
+.detail-page .cost-summary .pd-cost-icon{color:var(--blue);margin-bottom:8px}
+.detail-page .cost-summary strong{font-size:28px;letter-spacing:-1px}
+.detail-page .cost-total{padding:20px 22px;border:1px solid var(--pd-accent-line);border-radius:13px;background:var(--pd-soft)}
+.detail-page .cost-total strong{color:var(--blue);font-size:21px}
+.detail-page .table-scroll{border:1px solid var(--line);border-radius:13px;margin-top:20px}
+.detail-page .table-scroll table{margin:0}
+.detail-page .table-scroll th{background:var(--pd-soft);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+.detail-page .table-scroll td{font-size:13px;padding:16px}
+.detail-page .project-sidebar>.panel{border-radius:20px;border-color:var(--pd-accent-line);padding:25px;background:var(--white);box-shadow:0 12px 36px #12234906}
+.detail-page .pd-launch-heading{display:flex;align-items:center;gap:12px;margin-bottom:20px}
+.detail-page .pd-launch h2{font-size:27px;letter-spacing:-.9px;margin-bottom:23px}
+.detail-page .sidebar-actions{gap:10px}
+.detail-page .sidebar-actions .button{border-radius:11px;min-height:49px;gap:12px}
+.detail-page .sidebar-actions .inline-link{font-size:11px;line-height:1.7;margin-top:6px}
+.detail-page .sidebar-group{padding-top:27px;margin-top:27px}
+.detail-page .pd-sidebar-heading{display:flex;align-items:center;gap:10px;margin-bottom:22px;color:var(--blue)}
+.detail-page .pd-sidebar-heading h3,.detail-page .pd-sidebar-heading h2{font-size:20px;margin:0;color:var(--ink)}
+.detail-page .pd-sidebar-heading>span{margin-left:auto;font:11px monospace;padding:4px 8px;background:var(--pd-soft);border:1px solid var(--line);border-radius:7px}
+.detail-page .tech-badges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px;margin:0 0 24px}
+.detail-page .tech-badges .pd-tech-token{flex-direction:column;align-items:center;text-align:center;padding:15px 8px;background:var(--pd-soft);border:1px solid var(--line);border-radius:14px;gap:10px;transition:transform .2s,border-color .2s}
+.detail-page .tech-badges .pd-tech-token:hover{transform:translateY(-2px);border-color:var(--blue)}
+.detail-page .tech-badges .pd-logo-orbit{width:49px;height:49px;flex-basis:49px}
+.detail-page .pd-stack-details{margin:0}
+.detail-page .pd-stack-details>div{display:block;padding:17px 0;border-top:1px solid var(--line);border-bottom:0}
+.detail-page .pd-stack-details dt{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin-bottom:9px}
+.detail-page .pd-stack-details dt svg{color:var(--blue)}
+.detail-page .pd-stack-details dd{margin:0;text-align:left;font-size:12px;line-height:1.8}
+.detail-page .pd-stack-tokens{display:flex;flex-wrap:wrap;gap:9px 14px}
+.detail-page .pd-stack-tokens .pd-logo-orbit{width:27px;height:27px;flex-basis:27px;box-shadow:none}
+.detail-page .pd-stack-tokens img{width:17px;height:17px}
+.detail-page .pd-stack-tokens .pd-tech-token{font-size:11px;gap:6px}
+.detail-page .history details{padding:17px 0;border-top:1px solid var(--line)}
+.detail-page .history summary{font-size:13px;line-height:1.7;cursor:pointer}
+.detail-page .history details p{font-size:12px;line-height:1.8;color:var(--muted)}
+.detail-page .history .status-tag{font-size:8px;margin-left:8px}
+.detail-page .modification-list>a{border-radius:14px;padding:20px}
+.detail-page .modification-list>a>svg{color:var(--blue);flex-shrink:0}
+.detail-page .discussion textarea{border-radius:13px;background:var(--white)}
+.detail-page .discussion .comment{padding:24px 0}
+.detail-page .discussion .comment-avatar{width:43px;height:43px;border:3px solid var(--white);outline:1px solid var(--pd-accent-line)}
+@media(max-width:760px){
+ .detail-page>.page-title h1{font-size:38px;letter-spacing:-1.6px}.detail-page>.page-title p{font-size:14px}
+ .detail-page .pd-section-heading{gap:12px}.detail-page .pd-section-heading h2{font-size:24px}.detail-page .pd-section-icon{width:42px;height:42px;border-radius:12px}
+ .detail-page .key-features{padding:22px 18px}.detail-page .pd-facts>div{padding:17px}.detail-page .pd-facts>div>strong{font-size:18px}
+ .detail-page .pd-logo-orbit{width:36px;height:36px;flex-basis:36px}.detail-page .pd-logo-orbit img{width:23px;height:23px}
+ .detail-page .pd-language-grid{gap:8px}.detail-page .pd-language-grid .pd-tech-token{font-size:12px;padding-right:12px}
+ .detail-page .pd-team-banner{padding:17px;gap:12px;flex-wrap:wrap}.detail-page .pd-team-banner h3{font-size:20px}.detail-page .pd-team-count{margin-left:0}
+ .detail-page .pd-member-identity{flex-direction:row;align-items:center}.detail-page .pd-member-identity>div:last-child{min-width:0}.detail-page .pd-avatar-ring{flex-shrink:0}
+ .detail-page .pd-team-card{padding:20px}.detail-page .pd-member-identity h3{font-size:21px}.detail-page .cost-summary>div{padding:18px}.detail-page .cost-summary strong{font-size:22px}
+ .detail-page .cost-total{font-size:14px;padding:18px}.detail-page .cost-total strong{font-size:18px}
+}
+@media(prefers-reduced-motion:reduce){.detail-page .pd-team-card,.detail-page .tech-badges .pd-tech-token{transition:none}.detail-page .pd-team-card:hover,.detail-page .tech-badges .pd-tech-token:hover{transform:none}}

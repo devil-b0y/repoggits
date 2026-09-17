@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import ButtonMotion from '@/components/platform/ButtonMotion';
 import CookieConsent from '@/components/platform/CookieConsent';
 import './globals.css';
-export const metadata: Metadata = { title: 'Repoggits — Good ideas deserve to be built on.', description: 'A shared space for student projects. Explore software, hardware, and the ideas in between.' };
+export const metadata: Metadata = { title: 'Reppo GGITS — Good ideas deserve to be built on.', description: 'A shared space for student projects. Explore software, hardware, and the ideas in between.' };
 // The @font-face rules live in globals.css, which Next hashes and loads as part of the first
 // paint, so the browser no longer fetches a second stylesheet before it can even discover the
 // fonts. These two cuts carry the body copy and every above-the-fold heading, so they are

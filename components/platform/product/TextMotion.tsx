@@ -1,7 +1,14 @@
 'use client';
 import {Children,cloneElement,createElement,isValidElement,type ReactElement,type ReactNode} from 'react';
 /** React owns every text node. Neutral tags avoid existing span/card selectors. */
-export function TextRun({children,mask=false}:{children:ReactNode;mask?:boolean}){const text=createElement('pv-text',{'data-pv-text':''},children);return mask?createElement('pv-mask',{},text):text;}
+export function TextRun({children,mask=false}:{children:ReactNode;mask?:boolean}){
+ if(!mask)return createElement('pv-text',{'data-pv-text':''},children);
+ // Preserve normal whitespace and wrapping. Words on the same visual line share
+ // one timing cue; narrow screens can reveal their extra line independently.
+ return String(children).split(/(\s+)/).map((part,index)=>part.trim()
+  ?createElement('pv-mask',{key:index},createElement('pv-text',{'data-pv-text':''},part))
+  :part);
+}
 export function textMotionTree(node:ReactNode,mask=false):ReactNode{
  if(typeof node==='string'||typeof node==='number')return String(node).trim()?<TextRun mask={mask}>{node}</TextRun>:node;
  if(Array.isArray(node)){

@@ -11,8 +11,9 @@ test('engineering objects have a usable non-WebGL fallback',async({page})=>{
 });
 test('product entry links preserve the existing application and login',async({page})=>{
  await page.route('**/api/auth/me',r=>r.fulfill({json:{user:null}}));await page.goto('/');
+ await expect(page).toHaveTitle(/Reppo GGITS/);await expect(page.locator('.ph-home')).not.toContainText('Project Vault');await expect(page.locator('.ph-nav .ph-brand')).toContainText('reppo ggits');
  await expect(page.getByRole('heading',{level:1})).toHaveText('Build somethingworth remembering.');
- await expect(page.getByRole('link',{name:'Enter Project Vault',exact:true})).toHaveAttribute('href','/workspace');
+ await expect(page.getByRole('link',{name:'Enter Reppo GGITS',exact:true})).toHaveAttribute('href','/workspace');
  await expect(page.getByRole('link',{name:'Create your vault',exact:true})).toHaveAttribute('href','/submit');
  await page.getByRole('link',{name:'Log in',exact:true}).last().click();await expect(page).toHaveURL(/\/auth$/);await expect(page.getByLabel('Email address',{exact:true})).toBeVisible();
 });
@@ -45,7 +46,7 @@ test('scroll assembly and pause preserve usable content without console errors',
 
 test('text director targets only text and preserves headline masks and gradient',async({page})=>{
  await page.goto('/');
- await expect(page.locator('#ph-title pv-mask')).toHaveCount(3);
+ await expect(page.locator('#ph-title pv-mask')).toHaveCount(4);
  await expect(page.locator('#ph-title pv-text').last()).toHaveCSS('opacity','1');
  await expect(page.locator('#ph-title span pv-text')).toHaveCSS('background-clip','text');
  expect(await page.locator('#ph-title span pv-text').evaluate(el=>getComputedStyle(el).backgroundImage)).toContain('linear-gradient');
@@ -74,4 +75,11 @@ test('pausing and reduced motion immediately resolve text and dynamic updates',a
  await page.getByRole('group',{name:'Explore vault capabilities'}).getByRole('button',{name:/Your team/}).click();
  await expect(page.locator('.pf-feature-copy h3')).toHaveText('Your team');expect(await check()).toBeTruthy();
  await page.emulateMedia({reducedMotion:'reduce'});await page.reload();await expect(page.locator('.ph-home')).toHaveAttribute('data-motion','still');expect(await check()).toBeTruthy();expect(errors).toEqual([]);
+});
+
+for(const [width,lines] of [[320,['0','1','2','3']],[1440,['0','0','1','2']]] as const)test(`headline follows visual lines at ${width}px`,async({page})=>{
+ await page.setViewportSize({width,height:900});await page.goto('/');
+ await expect(page.locator('#ph-title pv-text').last()).toHaveCSS('opacity','1');
+ expect(await page.locator('#ph-title pv-text').evaluateAll(els=>els.map(el=>el.getAttribute('data-text-line')))).toEqual(lines);
+ expect(await page.locator('#ph-title').evaluate(el=>el.scrollWidth<=el.clientWidth)).toBeTruthy();
 });
