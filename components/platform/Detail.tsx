@@ -8,9 +8,11 @@ import { imageUrl } from '@/lib/images';
 import { projectDuration } from '@/lib/project-display';
 import ProjectMedia from './ProjectMedia';
 import Discussion, { type Comment } from './Discussion';
+import languageCatalogue from '@/lib/programming-languages.json';
 
 type DetailData={project:Project;editable:boolean;saved:boolean;starred:boolean;liked:boolean;original:{id:string;version_id:string;number:number;title:string;team_name:string}|null;modifications:{id:string;title:string;team_name:string}[];versions:{id:string;number:number;status:string;changelog:string;createdAt:string}[];comments:Comment[];reviews:{action:string;reason:string;name:string;created_at:string}[];related:Project[]};
 const displayDate=(date:string)=>new Date(`${date}T00:00:00Z`).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'});
+const findLanguageLogo=(name:string)=>languageCatalogue.find(item=>item.name.toLowerCase()===name.toLowerCase()||item.aliases.some(alias=>alias.toLowerCase()===name.toLowerCase()))?.icon;
 
 function Content({id}:{id:string}){
  const [version,setVersion]=useState(''),[actionError,setActionError]=useState(''),[busy,setBusy]=useState(false);
@@ -41,7 +43,7 @@ function Content({id}:{id:string}){
     <div className="build-facts">
       <div><CalendarDays size={19}/><span>Completed</span><strong>{d.endDate?displayDate(d.endDate):'In progress'}</strong></div>
       <div><Clock3 size={19}/><span>Development time</span><strong>{duration||'Not specified'}</strong></div>
-      <div><Code2 size={19}/><span>Languages</span><strong>{d.stack.languages||'Not specified'}</strong></div>
+      <div><Code2 size={19}/><span>Languages</span>{d.stack.languages?<strong className="language-tags">{d.stack.languages.split(',').map(name=>name.trim()).filter(Boolean).map((name,i)=>{const logo=findLanguageLogo(name);return <span className="language-tag" key={`${name}-${i}`}>{logo&&<span className="language-tag-icon"><img src={logo} alt="" width={13} height={13} loading="lazy"/></span>}<span>{name}</span></span>;})}</strong>:<strong>Not specified</strong>}</div>
     </div>
     <section className="detail-section"><h2>About the project</h2><p className="preserve-lines">{d.description||'The project story is still being written.'}</p>{d.features.length>0&&<><h3>Feature highlights</h3><ul className="feature-list">{d.features.map((feature,i)=><li key={i}>{feature}</li>)}</ul></>}</section>
     <section className="detail-section"><h2>Meet the team</h2><p>The people behind {d.teamName}.</p><div className="team-grid">{d.team.map((member,i)=><article className="team-profile" key={i}>{member.photoId?<img src={imageUrl(member.photoId,480)} alt={`${member.name}, team member`} loading="lazy"/>:<span className="team-avatar-placeholder" aria-hidden="true">{member.name.slice(0,1)}</span>}<div><h3>{member.name}</h3><p>{member.contribution}</p><dl><div><dt>College</dt><dd>{member.college||'Not listed'}</dd></div><div><dt>Branch</dt><dd>{member.branch||'Not listed'}</dd></div><div><dt>Semester</dt><dd>{member.semester||'Not listed'}</dd></div></dl></div></article>)}</div></section>
