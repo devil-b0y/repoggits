@@ -19,6 +19,18 @@ footer .footer-cookie-settings:hover{color:var(--blue)}
 .workspace-page .version-label,.workspace-page .notification small{font-size:12px}
 .workspace-page .status-tag{font-size:11px}
 
+/* Saved inspiration: the project card shape, without the cover and counters, so a row of them stays short */
+.workspace-page .saved-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(255px,1fr));gap:16px}
+.workspace-page .saved-card{padding:20px;display:flex;flex-direction:column}
+.workspace-page .saved-card h3{margin:0;font-size:18px}
+.workspace-page .saved-card .project-meta-line{margin-top:6px}
+.workspace-page .saved-summary{margin:10px 0 0;font-size:13px;line-height:1.6;color:var(--muted);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden}
+.workspace-page .saved-card .row-actions{margin-top:auto;padding-top:16px;gap:12px}
+/* One quiet row rather than a tall empty block, which is what .empty-state would give here. */
+.workspace-page .saved-empty{display:flex;align-items:center;flex-wrap:wrap;gap:12px;padding:18px 20px}
+.workspace-page .saved-empty svg{color:var(--muted);flex-shrink:0}
+.workspace-page .saved-empty p{margin:0;flex:1;min-width:210px}
+
 /* Workspace updates: an activity line per event. Icons stay in the text colour, so no card is tinted. */
 .workspace-page .update-line{display:flex;align-items:flex-start;gap:9px;margin:0 0 6px}
 .workspace-page .update-line svg{margin-top:3px;flex-shrink:0;color:var(--muted)}
@@ -63,7 +75,7 @@ footer .footer-cookie-settings:hover{color:var(--blue)}
 .workspace-page .workspace-layout{gap:48px}
 .workspace-page .workspace-layout h2{margin-bottom:24px}
 .workspace-page .workspace-project{margin-bottom:24px}
-.workspace-page .saved-section{margin-top:64px}
+.workspace-page .saved-section{margin-top:48px}
 @media(max-width:1000px){.workspace-page .workspace-layout{gap:32px}}
 /* Stacked here, so the layout gap is the space between the projects and the updates. */
 @media(max-width:760px){.workspace-page{padding-top:44px}.workspace-page .page-title{margin-bottom:34px}.workspace-page .workspace-layout{gap:40px}.workspace-page .saved-section{margin-top:48px}}

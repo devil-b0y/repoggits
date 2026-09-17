@@ -28,6 +28,16 @@ const notifications=[
   {id:'n3',message:'Aurora campus map · version 1: pending (1/2 approvals).',project_id:'',read:true,created_at:ago(24*3600_000)},
   {id:'n4',message:'What it used to be called · version 1: rejected.',project_id:'',read:true,created_at:ago(3*24*3600_000)},
 ];
+const saved:Project[]=([['Lumen study lamp','Bright Sparks','A desk lamp that follows the light in the room.'],
+  ['Tide water monitor','River Watch','Sensors that warn before the bank floods.']] as const).map(([title,teamName,summary])=>({
+  id:randomUUID(),ownerId:randomUUID(),featured:false,archived:false,example:false,views:0,downloads:0,stars:0,likes:0,parentProjectId:null,parentVersionId:null,
+  version:{id:randomUUID(),projectId:'',number:1,status:'approved' as const,data:{...emptyProject,title,summary,teamName},changelog:'',createdAt:ago(0),updatedAt:ago(0),requiredApprovals:1,approvals:1},
+}));
+async function withSaved(page:Page) {
+  await page.route('**/api/workspace',route=>route.fulfill({json:{user,projects,saved,notifications:[]}}));
+  await page.reload();
+  await expect(page.locator('.saved-card')).toHaveCount(saved.length);
+}
 async function withUpdates(page:Page) {
   notifications[0].project_id=projects[3].id;notifications[1].project_id=projects[2].id;
   notifications[2].project_id=projects[1].id;notifications[3].project_id=projects[4].id;
@@ -214,6 +224,43 @@ test('the resume panel is absent when nothing is left to pick up',async({page})=
   await page.reload();
   await expect(page.getByText('A blank page is a good beginning.')).toBeVisible();
   await expect(page.locator('.resume-panel')).toHaveCount(0);
+});
+
+test('saved projects show as compact cards with their creator and both actions',async({page})=>{
+  await withSaved(page);
+  const card=page.locator('.saved-card').filter({hasText:'Lumen study lamp'});
+  await expect(card).toContainText('Bright Sparks');
+  await expect(card).toContainText('A desk lamp that follows the light in the room.');
+  await expect(card.getByRole('link',{name:/View project/})).toHaveAttribute('href',`/projects/${saved[0].id}`);
+  await expect(card.getByRole('button',{name:'Remove from saved'})).toBeVisible();
+  // Compact: shorter than a project card, and it does not pull in a cover image.
+  const [savedBox,projectBox]=await Promise.all([card.boundingBox(),page.locator('.workspace-project').first().boundingBox()]);
+  expect(savedBox!.height).toBeLessThan(projectBox!.height);
+  await expect(card.locator('img')).toHaveCount(0);
+});
+
+test('removing a saved project asks the bookmark endpoint to drop it',async({page})=>{
+  await withSaved(page);
+  let sent:{url:string;body:{saved?:boolean}}|null=null;
+  await page.route('**/api/projects/*/bookmark',async route=>{
+    sent={url:route.request().url(),body:route.request().postDataJSON()};
+    await route.fulfill({json:{saved:false}});
+  });
+  await page.locator('.saved-card').filter({hasText:'Tide water monitor'}).getByRole('button',{name:'Remove from saved'}).click();
+  await expect.poll(()=>sent?.body.saved).toBe(false);
+  expect(sent!.url).toContain(`/api/projects/${saved[1].id}/bookmark`);
+});
+
+test('the saved empty state keeps its wording and stays a single quiet row',async({page})=>{
+  await expect(page.getByText('Save a published project from its detail page to keep it here.')).toBeVisible();
+  await expect(page.locator('.saved-card')).toHaveCount(0);
+  const empty=page.locator('.saved-empty');
+  // Minimal: no illustration, one small icon, and short enough not to leave a hole in the page.
+  await expect(empty.locator('img')).toHaveCount(0);
+  const box=(await empty.boundingBox())!;
+  expect(box.height).toBeLessThan(110);
+  const icon=(await empty.locator('svg').first().boundingBox())!;
+  expect(icon.height).toBeLessThanOrEqual(24);
 });
 
 test('the updates panel keeps its empty message until something has happened',async({page})=>{
