@@ -1,7 +1,7 @@
 // The application schema in MySQL/MariaDB DDL, hand-written to match lib/db.ts's applySchema() table for table —
 // not derived from the PostgreSQL DDL string mechanically, because that DDL is one multi-statement block with a
 // PL/pgSQL DO $$ ... $$ body and an advisory lock, and regex-translating arbitrary DDL is far riskier than transcribing
-// a schema with 21 known tables once. This only ever runs against a brand-new or already-migrated target, so every
+// a schema with 22 known tables once. This only ever runs against a brand-new or already-migrated target, so every
 // table is written in its FINAL shape — there is no need to replay Postgres's incremental ALTER history.
 //
 // Type choices, and why:
@@ -124,6 +124,13 @@ export const TABLES:readonly string[]=[
     KEY reactions_project_idx (project_id,kind),
     CONSTRAINT reactions_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
     CONSTRAINT reactions_project_fk FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+  `),
+  T('comment_votes',`
+    user_id ${uuid} NOT NULL, comment_id ${uuid} NOT NULL, created_at ${now},
+    PRIMARY KEY(user_id,comment_id),
+    KEY comment_votes_comment_idx (comment_id),
+    CONSTRAINT comment_votes_user_fk FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT comment_votes_comment_fk FOREIGN KEY (comment_id) REFERENCES comments(id) ON DELETE CASCADE
   `),
   T('bookmarks',`
     user_id ${uuid} NOT NULL, project_id ${uuid} NOT NULL, PRIMARY KEY(user_id,project_id),

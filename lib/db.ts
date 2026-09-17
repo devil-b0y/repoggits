@@ -154,6 +154,8 @@ export async function applySchema(client:ClientBase, schema=schemaName()) {
         CREATE INDEX IF NOT EXISTS projects_parent_idx ON r.projects(parent_project_id);
         CREATE TABLE IF NOT EXISTS r.reactions (user_id uuid NOT NULL REFERENCES r.users(id) ON DELETE CASCADE,project_id uuid NOT NULL REFERENCES r.projects(id) ON DELETE CASCADE,kind text NOT NULL CHECK(kind IN ('star','like')),created_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(user_id,project_id,kind));
         CREATE INDEX IF NOT EXISTS reactions_project_idx ON r.reactions(project_id,kind);
+        CREATE TABLE IF NOT EXISTS r.comment_votes (user_id uuid NOT NULL REFERENCES r.users(id) ON DELETE CASCADE,comment_id uuid NOT NULL REFERENCES r.comments(id) ON DELETE CASCADE,created_at timestamptz NOT NULL DEFAULT now(),PRIMARY KEY(user_id,comment_id));
+        CREATE INDEX IF NOT EXISTS comment_votes_comment_idx ON r.comment_votes(comment_id);
         CREATE TABLE IF NOT EXISTS r.files (id uuid PRIMARY KEY,owner_id uuid NOT NULL REFERENCES r.users(id),filename text NOT NULL,mime text NOT NULL,size integer NOT NULL,content bytea NOT NULL,scan_status text NOT NULL CHECK(scan_status='clean'),created_at timestamptz NOT NULL DEFAULT now());
         DO $$ BEGIN
           IF NOT EXISTS(SELECT 1 FROM pg_constraint WHERE conrelid='r.files'::regclass AND conname='files_scan_status_check' AND pg_get_constraintdef(oid) LIKE '%validated_internal%') THEN

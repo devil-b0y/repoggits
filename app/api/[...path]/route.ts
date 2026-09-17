@@ -96,7 +96,7 @@ async function handler(request:NextRequest,context:Context) {
     requireCondition(active,404,'Version not found.');
     const result=projectView(active);
     const [comments,reviews,bookmarks,publicList,reactions,lineage]=await Promise.all([
-      db.query('WITH roots AS (SELECT id FROM r.comments WHERE project_id=$1 AND parent_id IS NULL ORDER BY created_at DESC LIMIT 100) SELECT c.id,c.body,c.parent_id,c.created_at,u.name FROM r.comments c JOIN r.users u ON u.id=c.user_id WHERE c.project_id=$1 AND (c.id IN (SELECT id FROM roots) OR c.parent_id IN (SELECT id FROM roots)) ORDER BY c.created_at ASC LIMIT 5000',[id]),
+      db.query('WITH roots AS (SELECT id FROM r.comments WHERE project_id=$1 AND parent_id IS NULL ORDER BY created_at DESC LIMIT 100) SELECT c.id,c.body,c.parent_id,c.created_at,u.name,u.profile->>\'avatarId\' AS avatar_id,(SELECT COUNT(*) FROM r.comment_votes cv WHERE cv.comment_id=c.id) AS votes,(SELECT COUNT(*) FROM r.comment_votes cv WHERE cv.comment_id=c.id AND cv.user_id=$2) AS voted FROM r.comments c JOIN r.users u ON u.id=c.user_id WHERE c.project_id=$1 AND (c.id IN (SELECT id FROM roots) OR c.parent_id IN (SELECT id FROM roots)) ORDER BY c.created_at ASC LIMIT 5000',[id,user.id]),
       editable||canReview(user,active.data)?db.query('SELECT rv.action,rv.reason,rv.created_at,u.name FROM r.reviews rv JOIN r.users u ON u.id=rv.admin_id WHERE version_id=$1 ORDER BY rv.created_at',[active.id]):Promise.resolve([]),
       db.query('SELECT user_id FROM r.bookmarks WHERE user_id=$1 AND project_id=$2',[user.id,id]),
       publicProjects(),
@@ -136,7 +136,17 @@ async function handler(request:NextRequest,context:Context) {
     const [project]=await db.query("SELECT p.id FROM r.projects p JOIN r.versions v ON v.project_id=p.id WHERE p.id=$1 AND NOT p.archived AND v.status='approved' LIMIT 1",[uuid(id)]);requireCondition(project,404,'Project not found.');
     let rootId:string|null=null;
     if(parentId){const [parent]=await db.query('SELECT id,parent_id FROM r.comments WHERE id=$1 AND project_id=$2',[parentId,id]);requireCondition(parent,404,'Discussion thread not found.');rootId=parent.parent_id||parent.id;}
-    const commentId=randomUUID();const [comment]=await db.query('INSERT INTO r.comments(id,project_id,user_id,body,parent_id) VALUES($1,$2,$3,$4,$5) RETURNING id,body,parent_id,created_at',[commentId,id,user.id,body,rootId]);return json({id:commentId,parentId:rootId,comment:{...comment,name:user.name}},201);
+    const commentId=randomUUID();const [comment]=await db.query('INSERT INTO r.comments(id,project_id,user_id,body,parent_id) VALUES($1,$2,$3,$4,$5) RETURNING id,body,parent_id,created_at',[commentId,id,user.id,body,rootId]);return json({id:commentId,parentId:rootId,comment:{...comment,name:user.name,avatar_id:user.profile.avatarId||null}},201);
+  }
+  if(resource==='comments'&&id&&sub==='vote'&&method==='POST'){
+    const user=await requireUser(request);await rateLimit(`commentvote:${user.id}`,200,3600);
+    const {active}=z.object({active:z.boolean()}).parse(await bodyJson(request));
+    const [comment]=await db.query("SELECT c.id FROM r.comments c JOIN r.projects p ON p.id=c.project_id JOIN r.versions v ON v.project_id=p.id WHERE c.id=$1 AND NOT p.archived AND v.status='approved' LIMIT 1",[uuid(id)]);
+    requireCondition(comment,404,'Discussion not found.');
+    if(active)await db.query('INSERT INTO r.comment_votes(user_id,comment_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[user.id,id]);
+    else await db.query('DELETE FROM r.comment_votes WHERE user_id=$1 AND comment_id=$2',[user.id,id]);
+    const [count]=await db.query('SELECT COUNT(*) AS votes FROM r.comment_votes WHERE comment_id=$1',[id]);
+    return json({active,votes:Number(count.votes)});
   }
   if(resource==='versions'&&id&&method==='PATCH'){
     const user=await requireUser(request);const input=z.object({data:z.unknown(),submit:z.boolean().default(false),changelog:z.string().trim().max(5000)}).parse(await bodyJson(request));

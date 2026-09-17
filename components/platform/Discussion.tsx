@@ -1,21 +1,30 @@
 'use client';
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { MessageCircle, Reply } from 'lucide-react';
+import { MessageCircle, Reply, ThumbsUp } from 'lucide-react';
 import { Notice, send, useSession } from './shared';
 
-export type Comment={id:string;body:string;parent_id:string|null;created_at:string;name:string};
+export type Comment={id:string;body:string;parent_id:string|null;created_at:string;name:string;avatar_id?:string|null;votes?:number|string;voted?:number|string};
+const stamp=(value:string)=>new Date(value).toLocaleString(undefined,{year:'numeric',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
 export default function Discussion({projectId,comments,onComment,published}:{projectId:string;comments:Comment[];onComment:(comment:Comment)=>void;published:boolean}) {
   const {user,emailVerificationRequired}=useSession();
   const [replyTo,setReplyTo]=useState<Comment|null>(null),[body,setBody]=useState(''),[busy,setBusy]=useState(false),[error,setError]=useState('');
+  // Votes arrive with each comment row; this only holds the ones this visitor has changed since the page loaded.
+  const [votes,setVotes]=useState<Record<string,{votes:number;voted:boolean}>>({});
+  const voteState=(comment:Comment)=>votes[comment.id]??{votes:Number(comment.votes||0),voted:Number(comment.voted||0)>0};
+  async function vote(comment:Comment){
+    const current=voteState(comment);setError('');
+    try{const result=await send<{active:boolean;votes:number}>(`comments/${comment.id}/vote`,{active:!current.voted});setVotes(all=>({...all,[comment.id]:{votes:result.votes,voted:result.active}}));}
+    catch(e){setError((e as Error).message);}
+  }
   async function post(event:FormEvent<HTMLFormElement>){event.preventDefault();setBusy(true);setError('');try{const result=await send<{comment:Comment}>(`projects/${projectId}/comments`,{body,parentId:replyTo?.id});onComment(result.comment);setBody('');setReplyTo(null);}catch(e){setError((e as Error).message);}finally{setBusy(false);}}
   const allowed=user&&(!emailVerificationRequired||user.verified);
   function chooseReply(comment:Comment){setReplyTo(comment);document.getElementById('discussion-message')?.focus();}
-  function commentView(comment:Comment){return <><div className="comment-author"><strong>{comment.name}</strong><time dateTime={comment.created_at}>{new Date(comment.created_at).toLocaleDateString()}</time></div><p>{comment.body}</p>{allowed&&published&&<button className="text-button" onClick={()=>chooseReply(comment)}><Reply size={15}/> Reply to {comment.name}</button>}</>;}
+  function commentView(comment:Comment){return <><div className="comment-author"><span className="comment-identity"><span className="comment-avatar">{comment.avatar_id?<img src={`/api/files/${comment.avatar_id}`} alt="" loading="lazy"/>:<span aria-hidden="true">{comment.name.slice(0,1)}</span>}</span><strong>{comment.name}</strong></span><time dateTime={comment.created_at}>{stamp(comment.created_at)}</time></div><p>{comment.body}</p><div className="comment-actions">{allowed&&published&&<button className="text-button" onClick={()=>chooseReply(comment)}><Reply size={15}/> Reply to {comment.name}</button>}<button className="text-button comment-vote" aria-pressed={voteState(comment).voted} aria-label={`${voteState(comment).voted?'Remove upvote from':'Upvote'} ${comment.name}'s message`} disabled={!allowed||!published} onClick={()=>void vote(comment)}><ThumbsUp size={15} fill={voteState(comment).voted?'currentColor':'none'}/> {voteState(comment).votes}</button></div></>;}
   return <section className="detail-section discussion" id="discussion"><h2><MessageCircle size={23}/> Project discussion</h2><p>Ask a question, share an improvement, or help the next team.</p>
     {error&&<Notice error>{error}</Notice>}
     {published?(allowed?<form onSubmit={post}>{replyTo&&<div className="reply-context">Replying to {replyTo.name}<button type="button" className="text-button" onClick={()=>setReplyTo(null)}>Cancel reply</button></div>}<label htmlFor="discussion-message">{replyTo?'Your reply':'Start a discussion'}</label><textarea id="discussion-message" rows={3} required minLength={2} maxLength={2000} value={body} onChange={e=>setBody(e.target.value)}/><button className="button blue" disabled={busy}>{busy?'Posting…':replyTo?'Post reply':'Post question'}</button></form>:<p><Link className="inline-link" href="/auth">{emailVerificationRequired?'Sign in with a verified account':'Sign in'}</Link> to join the conversation.</p>):<p>Discussion opens when this project is approved.</p>}
-    {comments.filter(c=>!c.parent_id).reverse().map(root=><article className="discussion-thread" key={root.id}><div className="comment">{commentView(root)}</div>{comments.filter(c=>c.parent_id===root.id).map(reply=><div className="comment thread-reply" key={reply.id}>{commentView(reply)}</div>)}</article>)}
+    {comments.filter(c=>!c.parent_id).reverse().map(root=>{const replies=comments.filter(c=>c.parent_id===root.id);return <article className="discussion-thread" key={root.id}><div className="comment">{commentView(root)}</div>{!!replies.length&&<p className="thread-count">{replies.length} {replies.length===1?'reply':'replies'}</p>}{replies.map(reply=><div className="comment thread-reply" key={reply.id}>{commentView(reply)}</div>)}</article>;})}
     {!comments.length&&<p>No discussions yet. Bring the first question.</p>}
   </section>;
 }
