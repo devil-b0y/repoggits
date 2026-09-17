@@ -493,7 +493,7 @@ test('project thumbnail opens video and galleries, team details and discussion w
   await expect(page.locator('.media-photo')).toHaveAttribute('src','/api/files/'+showcaseData.galleryIds[0]);
   await expect(page.locator('.team-profile')).toContainText('GGITS');await expect(page.locator('.team-profile')).toContainText('Computer Science');await expect(page.getByAltText('Student Maker, team member')).toBeVisible();
   await expect(page.locator('.build-facts')).toContainText('14 days');await expect(page.locator('.build-facts')).toContainText('TypeScript, C++');
-  await expect(page.locator('.feature-list li')).toHaveCount(2);await expect(page.locator('.service-card')).toContainText('Neon');
+  await expect(page.locator('.key-features-list li')).toHaveCount(2);await expect(page.locator('.service-card')).toContainText('Neon');
   await expect(page.locator('.cost-summary')).toContainText('500.00');await expect(page.locator('.cost-summary')).toContainText('100.00');
   await expect(page.getByRole('button',{name:'Download source',exact:true})).toBeVisible();
   await expect(page.getByRole('link',{name:'GitHub repository',exact:true})).toHaveCount(0);
