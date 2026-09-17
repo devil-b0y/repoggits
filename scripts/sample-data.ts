@@ -46,7 +46,7 @@ export async function seedSample(options:{refresh?:boolean}={}){
     ],
     tags:['JavaScript','HTML','CSS','Student productivity','LocalStorage'],
     stack:{frontend:'Semantic HTML, responsive CSS Grid and Flexbox',backend:'No backend — this prototype runs in the browser',database:'Browser localStorage (device-local, no cloud sync)',languages:'JavaScript, HTML, CSS',frameworks:'None — vanilla JavaScript',tools:'Playwright, Chrome DevTools'},
-    services:[{name:'Web Storage API',purpose:'Saves tasks in this browser across page reloads',url:'https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API'},{name:'Static web hosting',purpose:'Optional deployment target; the supplied demo is served locally by Repoggits',url:''}],
+    services:[{name:'Web Storage API',purpose:'Saves tasks locally in the browser across page reloads.',url:'https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API'},{name:'Static web hosting',purpose:'Can be deployed as a static web application.',url:''}],
     startDate:'2026-08-01',endDate:'2026-08-22',purchaseDate:'',
     coverId:fileId(1),galleryIds:[fileId(2),fileId(3),fileId(4),fileId(5)],sourceId:fileId(8),
     liveUrl:`${origin}/samples/campusflow/index.html`,videoUrl:`${origin}/samples/campusflow/demo.webm`,github:'',
