@@ -136,6 +136,27 @@ test('the workspace and review desk ask for their own data without waiting for t
   } finally {release();}
 });
 
+test('the review desk returns every section whether the reads run together or the log is scoped to one reviewer',async({playwright})=>{
+  // A Super Admin's log and people list load alongside the project rows; a Teacher-Admin's log still
+  // waits for those rows so it can be limited to what they may review. Both branches are checked here.
+  const wide=await (await admin.get('/api/admin')).json();
+  expect(Object.keys(wide).sort()).toEqual(['audit','projects','queue','users']);
+  expect(Array.isArray(wide.queue)&&Array.isArray(wide.projects)&&Array.isArray(wide.audit)).toBe(true);
+  expect(wide.users.length).toBeGreaterThan(0);
+  const id=randomUUID(),email=`speed-teacher-${randomUUID()}@example.test`;
+  await db.query('INSERT INTO r.users(id,email,password_hash,name,role,verified,scopes,profile) VALUES($1,$2,$3,$4,$5,true,$6,$7)',
+    [id,email,await hashPassword(password),'Speed teacher','teacher',JSON.stringify(['subject:Final Year Project']),JSON.stringify({name:'Speed teacher'})]);
+  const teacher=await playwright.request.newContext({baseURL:origin,extraHTTPHeaders:{origin}});
+  try {
+    expect((await teacher.post('/api/auth/login',{data:{email,password}})).status()).toBe(200);
+    const scoped=await (await teacher.get('/api/admin')).json();
+    expect(scoped.users).toEqual([]);
+    expect(Array.isArray(scoped.audit)).toBe(true);
+    // Only work in the reviewer's own subject comes back, log included.
+    for(const project of scoped.projects) expect(project.version.data.subject).toBe('Final Year Project');
+  } finally {await teacher.dispose();}
+});
+
 test('draft recovery keeps what was typed even when the page closes before the save pause',async({page})=>{
   await page.context().addCookies((await student.storageState()).cookies);
   await page.goto('/submit');

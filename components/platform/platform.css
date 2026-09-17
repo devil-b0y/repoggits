@@ -10,3 +10,30 @@ footer .footer-cookie-settings:hover{color:var(--blue)}
 @media(max-width:760px){.lineage-banner{align-items:flex-start;gap:14px;padding:20px 18px}.lineage-banner svg{width:42px;height:42px;padding:10px}.lineage-banner strong{font-size:19px}.lineage-banner p{font-size:15px}.project-media{grid-template-columns:minmax(0,1fr)}.media-thumbnails{flex-direction:row;overflow-x:auto;padding:14px 2px}.media-thumbnails button{width:auto}.media-stage{aspect-ratio:4/3}.media-play{padding:14px 18px;font-size:12px}.build-facts{gap:8px}.build-facts>div{padding:12px}.build-facts strong{font-size:12px}.language-tag-icon{width:19px;height:19px}.language-tag-icon img{width:11px;height:11px}.timeline-track{flex-direction:column;align-items:flex-start;gap:10px}.timeline-point{flex-direction:row;align-items:center;gap:8px}.timeline-point.end{align-items:center;text-align:left}.timeline-line{flex:0 0 auto;width:1px;height:22px;min-width:0;margin:0 0 0 4px}.team-grid,.service-grid,.key-features-list{grid-template-columns:1fr}.team-profile{padding:17px}.team-profile-head{gap:12px}.team-profile-head img,.team-avatar-placeholder{width:64px;height:64px}.project-reactions{gap:9px}.project-reactions .button{padding:0 16px}.project-reactions .muted{width:100%}.cost-summary{gap:10px}.cost-summary>div{padding:14px}.cost-summary strong{font-size:19px}.team-editor-card,.service-editor-card{padding:16px}.discussion .thread-reply{margin-left:12px;padding-left:14px}.comment-author{flex-wrap:wrap;gap:8px}}
 
 @media (prefers-reduced-motion:reduce){.project-reactions button svg{transition:none;scale:1}}
+
+/* Workspace readability: secondary text one step darker and small print larger, headings unchanged */
+/* Light mode only: dark mode's secondary text already clears 7:1, where darkening would cost contrast. */
+.platform:not(.dark) .workspace-page{--muted:#4d5871}
+.workspace-page .workspace-project>p,.workspace-page .notification p{font-size:14px;line-height:1.7}
+.workspace-page .muted{font-size:14px;line-height:1.65}
+.workspace-page .version-label,.workspace-page .notification small{font-size:12px}
+.workspace-page .status-tag{font-size:11px}
+
+/* Workspace controls: the gallery toolbar, filter tabs and search reused as-is; only the sort needs placing */
+.workspace-page .workspace-toolbar-end{display:flex;align-items:center;gap:16px}
+.workspace-page .workspace-sort{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);white-space:nowrap}
+.workspace-page .workspace-sort select{padding:7px 9px;font-size:11px;color:var(--ink);border:1px solid var(--line);background:var(--white);border-radius:4px}
+@media(max-width:760px){.workspace-page .workspace-toolbar-end{flex-direction:column;align-items:stretch;gap:12px}.workspace-page .workspace-sort{justify-content:space-between}.workspace-page .workspace-sort select{flex:1;margin-left:10px;font-size:16px;min-height:44px}}
+/* Only above the phone layout: there these already read at 13px, and its 16px inputs stop iOS zooming on focus. */
+@media(min-width:761px){.workspace-page .workspace-toolbar .filter-tabs button,.workspace-page .workspace-toolbar .search input,.workspace-page .workspace-sort select{font-size:13px}.workspace-page .workspace-sort{font-size:12px}}
+
+/* Workspace spacing: more room between the nav, the title, the two columns and saved work */
+.workspace-page{padding-top:72px}
+.workspace-page .page-title{margin-bottom:52px}
+.workspace-page .workspace-layout{gap:48px}
+.workspace-page .workspace-layout h2{margin-bottom:24px}
+.workspace-page .workspace-project{margin-bottom:24px}
+.workspace-page .saved-section{margin-top:64px}
+@media(max-width:1000px){.workspace-page .workspace-layout{gap:32px}}
+/* Stacked here, so the layout gap is the space between the projects and the updates. */
+@media(max-width:760px){.workspace-page{padding-top:44px}.workspace-page .page-title{margin-bottom:34px}.workspace-page .workspace-layout{gap:40px}.workspace-page .saved-section{margin-top:48px}}
