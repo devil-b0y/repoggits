@@ -19,10 +19,22 @@ footer .footer-cookie-settings:hover{color:var(--blue)}
 .workspace-page .version-label,.workspace-page .notification small{font-size:12px}
 .workspace-page .status-tag{font-size:11px}
 
+/* Workspace updates: an activity line per event. Icons stay in the text colour, so no card is tinted. */
+.workspace-page .update-line{display:flex;align-items:flex-start;gap:9px;margin:0 0 6px}
+.workspace-page .update-line svg{margin-top:3px;flex-shrink:0;color:var(--muted)}
+.workspace-page .update-line strong{font-weight:550}
+.workspace-page .notification p.update-detail{margin:0 0 6px 24px;font-size:12px;line-height:1.5;color:var(--muted)}
+
 /* Workspace cards: a quiet metadata line and a menu that only shows on hover, focus or while open */
 .workspace-page .workspace-project-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.workspace-page .project-meta-line{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:10px 0 0;font-size:12px;line-height:1.5;color:var(--muted)}
 /* Beats the card's own paragraph size above, so the metadata stays quieter than the description. */
-.workspace-page .workspace-project>p.project-meta-line{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:10px 0 0;font-size:12px;line-height:1.5;color:var(--muted)}
+.workspace-page .workspace-project>p.project-meta-line{font-size:12px;line-height:1.5}
+/* Picking up a draft: the same panel as a project card, laid out in one compact row. */
+.workspace-page .resume-panel{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:18px 20px;margin-bottom:26px}
+.workspace-page .resume-panel .eyebrow{color:var(--muted)}
+.workspace-page .resume-panel h3{margin:9px 0 0;font-size:19px}
+.workspace-page .resume-panel .project-meta-line{margin-top:5px}
 .workspace-page .project-meta-line span:not(:first-child)::before{content:'·';margin-right:9px;opacity:.65}
 .workspace-page .card-menu{position:relative}
 .workspace-page .card-menu>.icon-button{opacity:0;transition:opacity .2s ease}

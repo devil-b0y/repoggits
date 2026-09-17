@@ -20,6 +20,21 @@ const projects:Project[]=fixtures.map(([title,status,summary],i)=>{
     version:{id:randomUUID(),projectId:'',number:1,status,data:{...emptyProject,title,summary,teamName:'Controls team'},changelog:'',createdAt:edited,updatedAt:edited,requiredApprovals:1,approvals:0}};
 });
 const titles=(page:Page)=>page.locator('.workspace-project h3');
+const ago=(ms:number)=>new Date(Date.now()-ms).toISOString();
+// Written exactly as the review flow writes them, including the one for a project since renamed.
+const notifications=[
+  {id:'n1',message:'Cobalt route planner · version 1: changes requested. Please add a test plan.',project_id:'',read:false,created_at:ago(30*60_000)},
+  {id:'n2',message:'Beacon lab tracker · version 1: approved.',project_id:'',read:true,created_at:ago(2*3600_000)},
+  {id:'n3',message:'Aurora campus map · version 1: pending (1/2 approvals).',project_id:'',read:true,created_at:ago(24*3600_000)},
+  {id:'n4',message:'What it used to be called · version 1: rejected.',project_id:'',read:true,created_at:ago(3*24*3600_000)},
+];
+async function withUpdates(page:Page) {
+  notifications[0].project_id=projects[3].id;notifications[1].project_id=projects[2].id;
+  notifications[2].project_id=projects[1].id;notifications[3].project_id=projects[4].id;
+  await page.route('**/api/workspace',route=>route.fulfill({json:{user,projects,saved:[],notifications}}));
+  await page.reload();
+  await expect(page.locator('.notification')).toHaveCount(notifications.length);
+}
 
 test.beforeEach(async({page})=>{
   await page.route('**/api/auth/me',route=>route.fulfill({json:{user,uploadsAvailable:true,emailVerificationRequired:false}}));
@@ -170,6 +185,78 @@ test('the existing view and edit actions are untouched',async({page})=>{
   await expect(draft.locator('.status-tag')).toHaveText('draft');
   await expect(draft.locator('.version-label')).toHaveText('Version 1');
   await expect(draft.locator('h3')).toHaveText('Zephyr sensor grid');
+});
+
+test('the resume panel points at the newest draft and stays smaller than a project card',async({page})=>{
+  const resume=page.locator('.resume-panel');
+  await expect(resume).toHaveCount(1);
+  await expect(resume).toContainText('CONTINUE WHERE YOU LEFT OFF');
+  // Zephyr is the newest editable one; Aurora is newer overall but is already in review.
+  await expect(resume.locator('h3')).toHaveText('Zephyr sensor grid');
+  await expect(resume).toContainText('Version 1');
+  await expect(resume).toContainText('Last edited 1 minute ago');
+  await expect(resume.getByRole('link',{name:/Continue editing/})).toHaveAttribute('href',`/submit?project=${projects[0].id}&version=${projects[0].version.id}`);
+  // It sits above the projects heading, and is the shorter of the two.
+  const [top,heading,card]=await Promise.all([resume.boundingBox(),page.locator('.workspace-layout h2').first().boundingBox(),page.locator('.workspace-project').first().boundingBox()]);
+  expect(top!.y).toBeLessThan(heading!.y);
+  expect(top!.height).toBeLessThan(card!.height);
+});
+
+test('the resume panel is absent when nothing is left to pick up',async({page})=>{
+  // Every project already published: there is no draft to continue.
+  const published=projects.map(p=>({...p,version:{...p.version,status:'approved' as const}}));
+  await page.route('**/api/workspace',route=>route.fulfill({json:{user,projects:published,saved:[],notifications:[]}}));
+  await page.reload();
+  await expect(titles(page)).toHaveCount(published.length);
+  await expect(page.locator('.resume-panel')).toHaveCount(0);
+  // And absent again when there are no projects at all.
+  await page.route('**/api/workspace',route=>route.fulfill({json:{user,projects:[],saved:[],notifications:[]}}));
+  await page.reload();
+  await expect(page.getByText('A blank page is a good beginning.')).toBeVisible();
+  await expect(page.locator('.resume-panel')).toHaveCount(0);
+});
+
+test('the updates panel keeps its empty message until something has happened',async({page})=>{
+  await expect(page.getByText('Your review updates will arrive here.')).toBeVisible();
+  await expect(page.locator('.notification')).toHaveCount(0);
+  // The heading and its bell stay either way.
+  await expect(page.locator('.aside-heading h2')).toContainText('Updates');
+  await expect(page.locator('.aside-heading h2 svg')).toBeVisible();
+});
+
+test('updates read as an activity feed with an event, a project and a relative time',async({page})=>{
+  await withUpdates(page);
+  await expect(page.getByText('Your review updates will arrive here.')).toHaveCount(0);
+  const entry=(n:number)=>page.locator('.notification').nth(n);
+  await expect(entry(0)).toContainText('Changes requested on Cobalt route planner');
+  await expect(entry(0)).toContainText('Please add a test plan.');
+  await expect(entry(0)).toContainText('30 minutes ago');
+  await expect(entry(1)).toContainText('Project published on Beacon lab tracker');
+  await expect(entry(1)).toContainText('2 hours ago');
+  // A part-way review reports its progress rather than the raw message.
+  await expect(entry(2)).toContainText('Review received on Aurora campus map');
+  await expect(entry(2)).toContainText('1 of 2 approvals');
+  await expect(entry(2)).toContainText('1 day ago');
+  // The project is named from the project itself, so a rename does not leave an update stale.
+  await expect(entry(3)).toContainText('Not approved on Delta archive');
+  await expect(entry(3)).not.toContainText('What it used to be called');
+  for(let i=0;i<4;i++)await expect(entry(i).locator('.update-line svg')).toBeVisible();
+  // Each entry still opens its project.
+  await expect(entry(1)).toHaveAttribute('href',`/projects/${projects[2].id}`);
+});
+
+test('updates stay plain rather than becoming coloured cards',async({page})=>{
+  await withUpdates(page);
+  const look=await page.evaluate(()=>{
+    const entry=document.querySelector('.notification')!;
+    const panel=document.querySelector('.workspace-project')!;
+    const icon=entry.querySelector('.update-line svg')!;
+    return {background:getComputedStyle(entry).backgroundColor,panelBackground:getComputedStyle(panel).backgroundColor,
+      iconColor:getComputedStyle(icon).color,detailColor:getComputedStyle(entry.querySelector('.update-detail')!).color};
+  });
+  // Same surface as every other panel, and the icon carries no colour of its own.
+  expect(look.background).toBe(look.panelBackground);
+  expect(look.iconColor).toBe(look.detailColor);
 });
 
 test('a filter and a search apply together',async({page})=>{
