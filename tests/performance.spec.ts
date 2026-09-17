@@ -119,6 +119,23 @@ test('the project notebook shows placeholders while it loads, then pages a long 
   await expect(page.locator('.project-card')).toHaveCount(1);
 });
 
+test('the workspace and review desk ask for their own data without waiting for the session check',async({page})=>{
+  await page.context().addCookies((await admin.storageState()).cookies);
+  // The session answer is held back, so a page that still asks for its own data proves it no longer
+  // waits for the sign-in check to come back first: the two requests overlap instead of queueing.
+  let release!:()=>void;const held=new Promise<void>(resolve=>{release=()=>resolve();});
+  let sessionAnswered=false;
+  await page.route('**/api/auth/me',async route=>{await held;sessionAnswered=true;await route.continue();});
+  try {
+    for(const [path,endpoint] of [['/workspace','**/api/workspace'],['/admin','**/api/admin']] as const) {
+      const asked=page.waitForRequest(endpoint);
+      await page.goto(path);
+      await asked;
+      expect(sessionAnswered,`${path} waited for the session check before asking for its data`).toBe(false);
+    }
+  } finally {release();}
+});
+
 test('draft recovery keeps what was typed even when the page closes before the save pause',async({page})=>{
   await page.context().addCookies((await student.storageState()).cookies);
   await page.goto('/submit');
