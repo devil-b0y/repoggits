@@ -6,7 +6,7 @@ import { requireCondition } from './errors';
 import { projectSchema, type ProjectData, type User, type Version, type Project } from './schema';
 
 export function versionView(row:Record<string,unknown>):Version {
-  return {id:String(row.id),projectId:String(row.project_id),number:Number(row.number),status:row.status as Version['status'],data:projectSchema.parse(row.data),changelog:String(row.changelog),createdAt:new Date(row.created_at as string).toISOString(),requiredApprovals:Number(row.required_approvals),approvals:Number(row.approvals||0),feedback:row.feedback?String(row.feedback):undefined};
+  return {id:String(row.id),projectId:String(row.project_id),number:Number(row.number),status:row.status as Version['status'],data:projectSchema.parse(row.data),changelog:String(row.changelog),createdAt:new Date(row.created_at as string).toISOString(),updatedAt:new Date((row.updated_at||row.created_at) as string).toISOString(),requiredApprovals:Number(row.required_approvals),approvals:Number(row.approvals||0),feedback:row.feedback?String(row.feedback):undefined};
 }
 // The sample's demo and video are files this deployment serves under /samples/, so they follow whatever address
 // the site is hosted at now rather than the one it had when the sample was first seeded.

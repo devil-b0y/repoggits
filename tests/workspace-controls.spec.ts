@@ -13,10 +13,12 @@ const fixtures:[string,VersionStatus,string][]=[
   ['Cobalt route planner','changes_requested','Bus timings across campus.'],
   ['Delta archive','rejected','Older notes, kept tidy.'],
 ];
-const projects:Project[]=fixtures.map(([title,status,summary])=>({
-  id:randomUUID(),ownerId:user.id,featured:false,archived:false,example:false,views:0,downloads:0,stars:0,likes:0,parentProjectId:null,parentVersionId:null,
-  version:{id:randomUUID(),projectId:'',number:1,status,data:{...emptyProject,title,summary,teamName:'Controls team'},changelog:'',createdAt:new Date().toISOString(),requiredApprovals:1,approvals:0},
-}));
+// An hour apart and newest first, matching the order the workspace read returns them in.
+const projects:Project[]=fixtures.map(([title,status,summary],i)=>{
+  const edited=new Date(Date.now()-i*3600_000).toISOString();
+  return {id:randomUUID(),ownerId:user.id,featured:false,archived:false,example:false,views:0,downloads:0,stars:0,likes:0,parentProjectId:null,parentVersionId:null,
+    version:{id:randomUUID(),projectId:'',number:1,status,data:{...emptyProject,title,summary,teamName:'Controls team'},changelog:'',createdAt:edited,updatedAt:edited,requiredApprovals:1,approvals:0}};
+});
 const titles=(page:Page)=>page.locator('.workspace-project h3');
 
 test.beforeEach(async({page})=>{
@@ -99,6 +101,75 @@ test('the controls are set above the small-print size at every width',async({pag
     // A phone needs 16px on the fields it focuses, or the browser zooms the page in.
     if(width<=760)expect(sizes.search,'phone search input').toBeGreaterThanOrEqual(16);
   }
+});
+
+const card=(page:Page,title:string)=>page.locator('.workspace-project').filter({hasText:title});
+
+test('each card carries its own edited time, visibility and review state',async({page})=>{
+  const meta=(title:string)=>card(page,title).locator('.project-meta-line');
+  // Fixtures are an hour apart, so the time comes from each version rather than the page load.
+  await expect(meta('Zephyr sensor grid')).toContainText('Edited 1m ago');
+  await expect(meta('Beacon lab tracker')).toContainText('Edited 2h ago');
+  // A version only becomes readable by others once approved.
+  await expect(meta('Zephyr sensor grid')).toContainText('Private');
+  await expect(meta('Beacon lab tracker')).toContainText('Public');
+  await expect(meta('Zephyr sensor grid')).toContainText('No reviews yet');
+  await expect(meta('Aurora campus map')).toContainText('Awaiting review');
+  await expect(meta('Beacon lab tracker')).toContainText('Published');
+  await expect(meta('Cobalt route planner')).toContainText('Changes requested');
+  await expect(meta('Delta archive')).toContainText('Not approved');
+  // Small print: quieter than the description it sits under, and parted by a dot rather than a rule.
+  const type=await page.evaluate(()=>{
+    const line=document.querySelector('.project-meta-line')!;
+    const summary=line.previousElementSibling!;
+    const parts=line.querySelectorAll('span');
+    return {meta:parseFloat(getComputedStyle(line).fontSize),summary:parseFloat(getComputedStyle(summary).fontSize),
+      firstSeparator:getComputedStyle(parts[0],'::before').content,laterSeparator:getComputedStyle(parts[1],'::before').content};
+  });
+  expect(type.meta).toBeLessThan(type.summary);
+  expect(type.meta).toBeGreaterThanOrEqual(12);
+  expect(type.firstSeparator).toBe('none');
+  expect(type.laterSeparator).toContain('·');
+});
+
+test('the card menu offers rename on a draft and a link only once published',async({page})=>{
+  const draft=card(page,'Zephyr sensor grid'),published=card(page,'Beacon lab tracker');
+  await draft.getByRole('button',{name:/More actions/}).click();
+  await expect(draft.getByRole('menuitem',{name:'Rename'})).toBeEnabled();
+  await expect(draft.getByRole('menuitem',{name:'Share'})).toBeDisabled();
+  await page.keyboard.press('Escape');
+  await expect(draft.getByRole('menuitem',{name:'Rename'})).toHaveCount(0);
+  await published.getByRole('button',{name:/More actions/}).click();
+  await expect(published.getByRole('menuitem',{name:'Rename'})).toBeDisabled();
+  await expect(published.getByRole('menuitem',{name:'Share'})).toBeEnabled();
+});
+
+test('renaming a draft writes through the version endpoint the editor already uses',async({page})=>{
+  let sent:{method:string;body:{data?:{title?:string};submit?:boolean;changelog?:string}}|null=null;
+  await page.route('**/api/versions/*',async route=>{
+    sent={method:route.request().method(),body:route.request().postDataJSON()};
+    await route.fulfill({json:{ok:true}});
+  });
+  // Anchored on the summary: while renaming, the title is an input value rather than card text.
+  const draft=card(page,'A weather rig for the roof.');
+  await draft.getByRole('button',{name:/More actions/}).click();
+  await draft.getByRole('menuitem',{name:'Rename'}).click();
+  await draft.getByLabel('Project title').fill('Zephyr weather rig');
+  await draft.getByRole('button',{name:'Save name'}).click();
+  await expect.poll(()=>sent?.body.data?.title).toBe('Zephyr weather rig');
+  expect(sent!.method).toBe('PATCH');
+  // Renaming must not submit the version for review or discard its changelog.
+  expect(sent!.body.submit).toBe(false);
+  expect(sent!.body.changelog).toBe('');
+});
+
+test('the existing view and edit actions are untouched',async({page})=>{
+  const draft=card(page,'Zephyr sensor grid');
+  await expect(draft.getByRole('link',{name:/View version/})).toHaveAttribute('href',/\/projects\/[^?]+\?version=/);
+  await expect(draft.getByRole('link',{name:'Continue editing'})).toHaveAttribute('href',/\/submit\?project=/);
+  await expect(draft.locator('.status-tag')).toHaveText('draft');
+  await expect(draft.locator('.version-label')).toHaveText('Version 1');
+  await expect(draft.locator('h3')).toHaveText('Zephyr sensor grid');
 });
 
 test('a filter and a search apply together',async({page})=>{

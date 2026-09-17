@@ -19,6 +19,24 @@ footer .footer-cookie-settings:hover{color:var(--blue)}
 .workspace-page .version-label,.workspace-page .notification small{font-size:12px}
 .workspace-page .status-tag{font-size:11px}
 
+/* Workspace cards: a quiet metadata line and a menu that only shows on hover, focus or while open */
+.workspace-page .workspace-project-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+/* Beats the card's own paragraph size above, so the metadata stays quieter than the description. */
+.workspace-page .workspace-project>p.project-meta-line{display:flex;flex-wrap:wrap;align-items:center;gap:9px;margin:10px 0 0;font-size:12px;line-height:1.5;color:var(--muted)}
+.workspace-page .project-meta-line span:not(:first-child)::before{content:'·';margin-right:9px;opacity:.65}
+.workspace-page .card-menu{position:relative}
+.workspace-page .card-menu>.icon-button{opacity:0;transition:opacity .2s ease}
+.workspace-page .workspace-project:hover .card-menu>.icon-button,.workspace-page .card-menu>.icon-button:focus-visible,.workspace-page .card-menu>.icon-button[aria-expanded=true]{opacity:1}
+.workspace-page .card-menu-list{position:absolute;right:0;top:calc(100% + 6px);z-index:20;min-width:160px;display:flex;flex-direction:column;padding:6px;background:var(--white);border:1px solid var(--line);border-radius:6px}
+.workspace-page .card-menu-list button{text-align:left;padding:9px 11px;border-radius:4px;font-size:13px;min-height:40px}
+.workspace-page .card-menu-list button:not(:disabled):hover{background:#3059b511;color:var(--blue)}
+.workspace-page .rename-row{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:16px 0 8px}
+.workspace-page .rename-row label{flex:1;min-width:190px;display:grid;gap:7px;font-size:12px}
+.workspace-page .rename-row input{padding:10px;font-size:14px;color:var(--ink);border:1px solid var(--line);background:var(--white);border-radius:4px;width:100%}
+/* A pointer cannot hover, so the menu stays visible where hovering is not available. */
+@media(hover:none){.workspace-page .card-menu>.icon-button{opacity:1}}
+@media(prefers-reduced-motion:reduce){.workspace-page .card-menu>.icon-button{transition:none}}
+
 /* Workspace controls: the gallery toolbar, filter tabs and search reused as-is; only the sort needs placing */
 .workspace-page .workspace-toolbar-end{display:flex;align-items:center;gap:16px}
 .workspace-page .workspace-sort{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);white-space:nowrap}
