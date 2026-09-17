@@ -8,7 +8,7 @@ import { imageUrl } from '@/lib/images';
 import { projectDuration } from '@/lib/project-display';
 import ProjectMedia from './ProjectMedia';
 import Discussion, { type Comment } from './Discussion';
-import {TechnologyMark,TechnologyToken,DetailHeading,StackDetails,TeamProfile} from './ProjectIdentity';
+import {TechnologyMark,TechnologyToken,DetailHeading,StackDetails,TeamProfile,ProjectSummary} from './ProjectIdentity';
 import './project-detail.css';
 import languageCatalogue from '@/lib/programming-languages.json';
 
@@ -34,7 +34,7 @@ function Content({id}:{id:string}){
  return <div className="page-wrap detail-page">
   <Link className="text-button" href="/projects"><ArrowLeft size={16}/> Back to the collective</Link>
   <PageTitle eyebrow={`${d.type.toUpperCase()} / ${d.department.toUpperCase()}`} title={d.title} description={d.summary}/>
-  <div className="detail-meta"><a href="#project-team" className="pd-team-link"><Users size={15}/> By {d.teamName}</a><span><CalendarDays size={14}/>{d.year}</span><span><GitBranch size={14}/>Version {p.version.number}</span><span><Eye size={14}/>{p.views} views</span><span><Download size={14}/>{p.downloads} downloads</span><span className={`status-tag ${p.version.status}`}>{p.version.status.replaceAll('_',' ')}</span></div>
+  <ProjectSummary project={p}/>
   {p.example&&<Notice>Sample project with a fictional team, AI-generated portraits, and illustrative costs. The live demo, screenshots, video, and source ZIP are working examples.</Notice>}
   {actionError&&<Notice error>{actionError}</Notice>}
   <div className="project-reactions" aria-label="Project appreciation">

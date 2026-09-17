@@ -12,6 +12,7 @@ async function setup(page:Page){
 }
 test('project identity, circular logos and team details render without altering the demo',async({page})=>{
  await setup(page);await page.screenshot({path:'test-results/detail-top-dark.png'});
+ await expect(page.getByRole('region',{name:'Project summary'})).toContainText('Campus Makers');await expect(page.locator('.pd-summary-stats dd')).toHaveText(['2026','v2','248','36']);await expect(page.locator('.pd-review-badge')).toHaveText('approved');await expect(page.locator('.pd-summary-team')).toHaveAttribute('href','#project-team');await page.locator('.pd-summary').screenshot({path:'test-results/detail-summary.png'});
  await expect(page.locator('.pd-technologies .tech-badges .pd-logo-orbit')).toHaveCount(6);
  await expect(page.locator('.pd-technologies .tech-badges img[src="/images/technologies/react.svg"]')).toBeVisible();await page.locator('.pd-technologies').scrollIntoViewIfNeeded();await expect.poll(()=>page.locator('.pd-technologies img').evaluateAll(els=>els.every(el=>(el as HTMLImageElement).complete))).toBeTruthy();await page.screenshot({path:'test-results/detail-stack-dark.png'});
  await expect(page.locator('.pd-team-card')).toHaveCount(2);await expect(page.locator('.pd-team-card').first()).toContainText('GGITS');
@@ -37,7 +38,7 @@ for(const width of [360,768,1440])test(`project case study fits ${width}px in bo
  await page.setViewportSize({width,height:1000});await page.emulateMedia({reducedMotion:'reduce'});await setup(page);
  for(const theme of ['dark','light']){
   if(theme==='light'){await page.evaluate(()=>localStorage.setItem('repoggits-theme','light'));await page.reload();await expect(page.locator('.platform')).not.toHaveClass(/dark/);}
-  for(const selector of ['.media-heading','.pd-language-grid','.pd-team-section','.pd-technologies','.history']){await page.locator(selector).scrollIntoViewIfNeeded();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();}
+  for(const selector of ['.pd-summary','.media-heading','.pd-language-grid','.pd-team-section','.pd-technologies','.history']){await page.locator(selector).scrollIntoViewIfNeeded();expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();}
  }
  await page.screenshot({path:`test-results/project-detail-${width}.png`,fullPage:true});
 });

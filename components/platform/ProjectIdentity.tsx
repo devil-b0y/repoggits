@@ -1,8 +1,8 @@
 'use client';
 import {useState,type ReactNode} from 'react';
-import {Code2,Layers,Users,GraduationCap,Building2,GitBranch,Hash,Cloud,Database,Globe,Server,Wrench,type LucideIcon} from 'lucide-react';
+import {Code2,Layers,Users,GraduationCap,Building2,GitBranch,Hash,Cloud,Database,Globe,Server,Wrench,CalendarDays,Eye,Download,ShieldCheck,Clock3,ArrowUpRight,type LucideIcon} from 'lucide-react';
 import catalogue from '@/lib/programming-languages.json';
-import type {ProjectData} from '@/lib/schema';
+import type {Project,ProjectData} from '@/lib/schema';
 import {imageUrl} from '@/lib/images';
 
 const technologies:Record<string,string>={react:'react','react.js':'react',reactjs:'react','next.js':'nextjs',nextjs:'nextjs','node.js':'nodejs',nodejs:'nodejs',postgresql:'postgresql',postgres:'postgresql',mongodb:'mongodb',firebase:'firebase',docker:'docker',git:'git',github:'github',figma:'figma','vs code':'vscode',vscode:'vscode','visual studio code':'vscode',arduino:'arduino','arduino ide':'arduino',tensorflow:'tensorflow',pytorch:'pytorch',fastapi:'fastapi',flask:'flask',redis:'redis',supabase:'supabase',vercel:'vercel',playwright:'playwright'};
@@ -14,6 +14,16 @@ export function TechnologyMark({name,icon:Icon=Code2}:{name:string;icon?:LucideI
 export function TechnologyToken({name,icon}:{name:string;icon?:LucideIcon}){return <span className="pd-tech-token"><TechnologyMark name={name} icon={icon}/><span>{name}</span></span>;}
 export function DetailHeading({title,kicker,icon:Icon,children}:{title:string;kicker:string;icon:LucideIcon;children?:ReactNode}){return <div className="pd-section-heading"><span className="pd-section-icon"><Icon size={23} strokeWidth={1.5}/></span><div><span className="pd-kicker">{kicker}</span><h2>{title}</h2>{children&&<p>{children}</p>}</div></div>;}
 const stackIcons:Record<string,LucideIcon>={frontend:Globe,backend:Server,database:Database,languages:Code2,frameworks:Layers,tools:Wrench};
+export function ProjectSummary({project}:{project:Project}){
+ const {data,number,status}=project.version;
+ const StatusIcon=status==='approved'?ShieldCheck:Clock3;
+ const stats=[{label:'Project year',value:data.year,Icon:CalendarDays},{label:'Version',value:`v${number}`,Icon:GitBranch},{label:'Views',value:project.views.toLocaleString(),Icon:Eye},{label:'Downloads',value:project.downloads.toLocaleString(),Icon:Download}];
+ return <section className="pd-summary" aria-label="Project summary">
+  <a href="#project-team" className="pd-summary-team"><span className="pd-summary-emblem" aria-hidden="true"><Users size={25} strokeWidth={1.5}/></span><span className="pd-summary-team-copy"><span className="pd-summary-label">Created by</span><strong>{data.teamName}</strong><span className="pd-summary-members">{data.team.length} {data.team.length===1?'contributor':'contributors'}</span></span><ArrowUpRight className="pd-summary-arrow" size={17} aria-hidden="true"/></a>
+  <dl className="pd-summary-stats">{stats.map(({label,value,Icon})=><div key={label}><dt><Icon size={15} aria-hidden="true"/>{label}</dt><dd>{value}</dd></div>)}</dl>
+  <div className={`pd-summary-status is-${status}`}><span className="pd-summary-label">Review status</span><span className="pd-review-badge"><StatusIcon size={17} aria-hidden="true"/>{status.replaceAll('_',' ')}</span></div>
+ </section>;
+}
 export function StackDetails({stack}:{stack:ProjectData['stack']}){return <dl className="pd-stack-details">{Object.entries(stack).filter(([,value])=>value).map(([key,value])=>{const Icon=stackIcons[key]||Code2;const names=value.split(',').map(v=>v.trim()).filter(Boolean);return <div key={key}><dt><Icon size={16}/><span className="capitalize">{key}</span></dt><dd>{names.length<=8&&names.every(n=>technologyLogo(n))?<div className="pd-stack-tokens">{names.map((name,i)=><TechnologyToken name={name} key={`${name}-${i}`}/>)}</div>:value}</dd></div>;})}</dl>;}
 export function TeamProfile({member,index}:{member:ProjectData['team'][number];index:number}){
  const [failed,setFailed]=useState(false);
