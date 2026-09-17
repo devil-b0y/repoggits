@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Bookmark, Download, Star, Heart, GitFork, CalendarDays, Clock3, Code2, HardDrive, Database, Cloud, Smartphone, ShieldCheck, Bot, Palette, GraduationCap, Gamepad2, Cpu, Tag, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Bookmark, Download, Star, Heart, GitFork, CalendarDays, Clock3, Code2, HardDrive, Database, Cloud, Smartphone, ShieldCheck, Bot, Palette, GraduationCap, Gamepad2, Cpu, Tag, CheckCircle2, MessageCircle } from 'lucide-react';
 import { Shell, Gate, Notice, Card, PageTitle, DetailSkeleton, useData, useSession, send, api } from './shared';
 import { projectCost, type Project } from '@/lib/schema';
 import { imageUrl } from '@/lib/images';
@@ -40,9 +40,13 @@ function Content({id}:{id:string}){
   {p.example&&<Notice>Sample project with a fictional team, AI-generated portraits, and illustrative costs. The live demo, screenshots, video, and source ZIP are working examples.</Notice>}
   {actionError&&<Notice error>{actionError}</Notice>}
   <div className="project-reactions" aria-label="Project appreciation">
-    <button className="button outline" aria-label="Star project" aria-pressed={data.starred} disabled={busy||!published} onClick={()=>void react('star')}><Star size={18} fill={data.starred?'currentColor':'none'}/><span>{p.stars} {p.stars===1?'star':'stars'}</span></button>
-    <button className="button outline" aria-label="Like project" aria-pressed={data.liked} disabled={busy||!published} onClick={()=>void react('like')}><Heart size={18} fill={data.liked?'currentColor':'none'}/><span>{p.likes} {p.likes===1?'like':'likes'}</span></button>
-    <a className="text-button" href="#discussion">Join the discussion</a><span className="muted">Stars move great projects to the top.</span>
+    <div className="reaction-actions">
+      <button className="button outline" aria-label="Star project" aria-pressed={data.starred} disabled={busy||!published} onClick={()=>void react('star')}><Star size={18} fill={data.starred?'currentColor':'none'}/><span>{p.stars} {p.stars===1?'star':'stars'}</span></button>
+      <button className="button outline" aria-label="Like project" aria-pressed={data.liked} disabled={busy||!published} onClick={()=>void react('like')}><Heart size={18} fill={data.liked?'currentColor':'none'}/><span>{p.likes} {p.likes===1?'like':'likes'}</span></button>
+    </div>
+    <div className="reaction-aside">
+      <a className="text-button" href="#discussion"><MessageCircle size={15}/> Join the discussion</a><span className="muted">Stars move great projects to the top.</span>
+    </div>
   </div>
   {p.parentProjectId&&<div className="lineage-banner"><GitFork size={19}/><div><strong>A new take on an existing idea</strong>{data.original?<p>Built on <Link className="inline-link" href={`/projects/${data.original.id}?version=${data.original.version_id}`}>{data.original.title}, version {data.original.number}</Link> by {data.original.team_name}.</p>:<p>The original project is currently unavailable.</p>}</div></div>}
   <div className="detail-layout"><div>
