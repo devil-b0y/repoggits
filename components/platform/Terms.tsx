@@ -1,0 +1,25 @@
+import Link from 'next/link';
+import { Shell, PageTitle } from './shared';
+
+const LAST_UPDATED = 'September 17, 2026';
+
+export default function Terms() {
+  return <Shell><div className="page-wrap">
+    <PageTitle eyebrow="LEGAL" title="Terms & Conditions" description={`Last updated: ${LAST_UPDATED}. By accessing or using repoggits, you agree to follow these terms.`}/>
+    <section className="detail-section"><h2>1. Acceptance of terms</h2><p>By accessing or using this website, you agree to be bound by these Terms & Conditions. If you do not agree with any part of these terms, please do not use the website.</p></section>
+    <section className="detail-section"><h2>2. Purpose of the website</h2><p>repoggits is an educational repository used to showcase, organize, and share college projects created by our students and team. Content is provided primarily for educational, demonstration, and reference purposes.</p></section>
+    <section className="detail-section"><h2>3. Project content</h2><p>Projects on this website may include source code, documentation, images and screenshots, project reports, diagrams, presentations, demonstrations, and other project-related materials. Some projects may depend on third-party libraries, APIs, frameworks, datasets, or services, which are governed by their own licenses and terms.</p></section>
+    <section className="detail-section"><h2>4. Intellectual property</h2><p>Project content remains the property of its respective creators or rights holders unless otherwise stated. Users must not claim someone else&rsquo;s project, documentation, code, or other original work as their own, and should provide appropriate attribution to the original creator where applicable. Not every piece of content on this website is exclusively owned by the website administrators.</p></section>
+    <section className="detail-section"><h2>5. Permitted use</h2><p>You may access this repository for legitimate educational, learning, and reference purposes, and view and study publicly available project materials subject to the applicable project or license terms.</p></section>
+    <section className="detail-section"><h2>6. Prohibited use</h2><p>You must not misrepresent another person&rsquo;s project as your own, remove attribution or copyright notices, use the website to distribute malicious code, attempt unauthorized access to the website or its systems, intentionally disrupt or damage the website, scrape, copy, or redistribute content in a way that violates applicable rights or licenses, or use project materials for unlawful purposes.</p></section>
+    <section className="detail-section"><h2>7. Source code and licenses</h2><p>Individual projects may carry different licenses. Where a project contains a specific LICENSE file or licensing notice, that license takes precedence for that project&rsquo;s code or materials. Review the applicable license before reusing, modifying, or redistributing any project content.</p></section>
+    <section className="detail-section"><h2>8. Third-party services and links</h2><p>Projects on this website may use or link to third-party services, APIs, websites, libraries, hosting providers, or tools. We are not responsible for the availability, policies, or practices of any third-party services.</p></section>
+    <section className="detail-section"><h2>9. Accuracy of information</h2><p>Projects and documentation on this website are created for educational purposes and may contain errors, incomplete implementations, outdated dependencies, or experimental code. We do not guarantee that every project is production-ready or error-free.</p></section>
+    <section className="detail-section"><h2>10. Website availability</h2><p>We may modify, update, temporarily suspend, or remove parts of the website or repository when necessary. We do not promise uninterrupted availability.</p></section>
+    <section className="detail-section"><h2>11. User submissions</h2><p>If you submit a project to this website, you confirm that you have the necessary rights or permissions to submit that content. You must not upload content that infringes copyright, privacy, or other legal rights.</p></section>
+    <section className="detail-section"><h2>12. Privacy</h2><p>Information about how we handle personal data and cookies is available in our <Link className="inline-link" href="/privacy">Privacy Policy</Link> and <Link className="inline-link" href="/cookies">Cookie Policy</Link>.</p></section>
+    <section className="detail-section"><h2>13. Changes to these terms</h2><p>These Terms & Conditions may be updated periodically. The latest version will always be published on this page, with the last updated date shown above.</p></section>
+    <section className="detail-section"><h2>14. Contact</h2><p>Questions about these Terms & Conditions can be sent to the repoggits team through the contact details on your institution&rsquo;s portal.</p></section>
+    <p className="muted">By using this website, you acknowledge that you have read and understood these Terms & Conditions.</p>
+  </div></Shell>;
+}

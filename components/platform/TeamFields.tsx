@@ -1,7 +1,7 @@
 'use client';
 import { Plus, Trash2 } from 'lucide-react';
 import { type TeamMember } from '@/lib/schema';
-import { FilePicker } from './FilePicker';
+import { FilePicker, SQUARE_ASPECT } from './FilePicker';
 
 export default function TeamFields({members,onChange}:{members:TeamMember[];onChange:(members:TeamMember[])=>void}) {
   function update(index:number,key:keyof TeamMember,value:string){onChange(members.map((m,i)=>i===index?{...m,[key]:value}:m));}
@@ -12,6 +12,6 @@ export default function TeamFields({members,onChange}:{members:TeamMember[];onCh
     {i>0&&<button type="button" className="text-button" onClick={()=>onChange(members.map((m,n)=>n===i?{...m,college:m.college||members[0].college,branch:m.branch||members[0].branch,semester:m.semester||members[0].semester}:m))}>Use first member’s college, branch & semester in empty fields</button>}
     <div className="form-row"><label>College<select value={member.college} onChange={e=>update(i,'college',e.target.value)}><option value="">Select college</option><option>GGITS</option><option>GGCT</option></select></label><label>Branch<input value={member.branch} maxLength={100} placeholder="e.g. Computer Science" onChange={e=>update(i,'branch',e.target.value)}/></label></div>
     <div className="form-row"><label>Semester<select value={member.semester} onChange={e=>update(i,'semester',e.target.value)}><option value="">Select semester</option>{Array.from({length:8},(_,n)=><option value={String(n+1)} key={n}>{n+1}</option>)}</select></label><label>Contribution<input value={member.contribution} maxLength={200} placeholder="e.g. Backend development" onChange={e=>update(i,'contribution',e.target.value)}/></label></div>
-    <FilePicker label={`Member ${i+1} photo`} kind="image" value={member.photoId} onChange={id=>update(i,'photoId',id)}/>
+    <FilePicker label={`Member ${i+1} photo`} kind="image" aspect={SQUARE_ASPECT} value={member.photoId} onChange={id=>update(i,'photoId',id)}/>
   </section>)}<button type="button" className="text-button" disabled={members.length>=20} onClick={()=>onChange([...members,{name:'',email:'',contribution:'',branch:'',semester:'',college:'',photoId:''}])}><Plus size={16}/> Add team member</button></div>;
 }

@@ -2,8 +2,10 @@
 import { useCallback, useEffect, useRef, useState, type CSSProperties, type KeyboardEvent, type PointerEvent } from 'react';
 import { Check, FlipHorizontal2, FlipVertical2, LoaderCircle, Move, RotateCcw, RotateCw, Undo2, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { Notice } from './shared';
+import './profile-studio.css';
 
 const OUTPUT_SIZE = 720, SOURCE_LIMIT = 2048, MAX_ZOOM = 4;
+type Aspect = { ratio:number; label:string };
 type Edit = { zoom:number; turns:number; straighten:number; flipX:boolean; flipY:boolean; x:number; y:number; look:string; brightness:number; contrast:number; saturation:number };
 const fresh:Edit = { zoom:1, turns:0, straighten:0, flipX:false, flipY:false, x:0, y:0, look:'original', brightness:100, contrast:100, saturation:100 };
 const looks = [
@@ -18,25 +20,39 @@ const looks = [
 const filterOf = (edit:Edit) => [looks.find(look => look.id===edit.look)?.filter, edit.brightness!==100 && `brightness(${edit.brightness}%)`, edit.contrast!==100 && `contrast(${edit.contrast}%)`, edit.saturation!==100 && `saturate(${edit.saturation}%)`].filter(Boolean).join(' ') || 'none';
 const zoomLimit = (zoom:number) => Math.round(Math.min(MAX_ZOOM, Math.max(1, zoom))*100)/100;
 const radians = (edit:Edit) => (edit.turns*90 + edit.straighten) * Math.PI/180;
-// Scale per unit of crop width at which the rotated image just covers the square crop.
-function cover(edit:Edit, width:number, height:number) {
-  const t = radians(edit), span = Math.abs(Math.cos(t)) + Math.abs(Math.sin(t));
-  return { span, scale:Math.max(span/width, span/height) * edit.zoom };
+// Everything below works in "frame-width" units: the crop frame is 1 unit wide and 1/frameRatio units tall, and
+// edit.x/edit.y (pan) are already stored in these units — see the pointer handler, which divides both axes by the
+// same on-screen frame width. The frame's own corners, rotated into the image's local (unrotated) axes, give its
+// half-extent there; the image covers the frame exactly when that half-extent fits the image's half-size.
+function frameHalfExtent(t:number, frameRatio:number) {
+  const cos = Math.abs(Math.cos(t)), sin = Math.abs(Math.sin(t)), frameHalfHeight = 1/(2*frameRatio);
+  return { x:cos*0.5 + sin*frameHalfHeight, y:sin*0.5 + cos*frameHalfHeight };
 }
-// The crop square stays filled exactly when its bounding box, measured in the image's own rotated frame, fits the image.
-function keepCovered(edit:Edit, width:number, height:number):Edit {
-  const t = radians(edit), cos = Math.cos(t), sin = Math.sin(t), { span, scale } = cover(edit, width, height);
-  const limitX = Math.max(0, (width*scale - span)/2), limitY = Math.max(0, (height*scale - span)/2);
-  const localX = Math.min(limitX, Math.max(-limitX, cos*edit.x + sin*edit.y));
-  const localY = Math.min(limitY, Math.max(-limitY, -sin*edit.x + cos*edit.y));
-  return { ...edit, x:cos*localX - sin*localY, y:sin*localX + cos*localY };
+function cover(edit:Edit, width:number, height:number, frameRatio:number) {
+  const half = frameHalfExtent(radians(edit), frameRatio);
+  // scale converts the source image's own pixels into frame-width units.
+  const scale = Math.max(half.x*2/width, half.y*2/height) * edit.zoom;
+  return { scale, imageWidth:width*scale, imageHeight:height*scale };
+}
+// The crop frame stays filled exactly when its own bounding box, measured in the image's local axes, fits inside
+// the (unrotated) image — clamped by moving the frame's center in that same local space, then rotating back.
+function keepCovered(edit:Edit, width:number, height:number, frameRatio:number):Edit {
+  const t = radians(edit), cos = Math.cos(t), sin = Math.sin(t);
+  const { imageWidth, imageHeight } = cover(edit, width, height, frameRatio);
+  const half = frameHalfExtent(t, frameRatio);
+  const limitX = Math.max(0, imageWidth/2 - half.x), limitY = Math.max(0, imageHeight/2 - half.y);
+  // Frame center in image-local space is R(-t) · (-pan); clamp it, then invert back to a pan.
+  const localX = -cos*edit.x - sin*edit.y, localY = sin*edit.x - cos*edit.y;
+  const clampedX = Math.min(limitX, Math.max(-limitX, localX)), clampedY = Math.min(limitY, Math.max(-limitY, localY));
+  return { ...edit, x:-(cos*clampedX - sin*clampedY), y:-(sin*clampedX + cos*clampedY) };
 }
 function paint(canvas:HTMLCanvasElement, source:HTMLCanvasElement, edit:Edit, filters:boolean) {
-  const size = canvas.width, ctx = canvas.getContext('2d')!, { scale } = cover(edit, source.width, source.height);
-  const width = source.width*scale*size, height = source.height*scale*size;
+  const w = canvas.width, h = canvas.height, frameRatio = w/h, ctx = canvas.getContext('2d')!;
+  const { imageWidth, imageHeight } = cover(edit, source.width, source.height, frameRatio);
+  const width = imageWidth*w, height = imageHeight*w;
   ctx.save();
-  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, size, size);
-  ctx.translate(size/2 + edit.x*size, size/2 + edit.y*size);
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+  ctx.translate(w/2 + edit.x*w, h/2 + edit.y*w);
   ctx.rotate(radians(edit));
   ctx.scale(edit.flipX ? -1 : 1, edit.flipY ? -1 : 1);
   if (filters) ctx.filter = filterOf(edit);
@@ -64,12 +80,15 @@ function Slider({ label, value, min, max, step=1, format, onChange }:{ label:str
   </label>;
 }
 
-export default function AvatarEditor({ source, busy, error, onCancel, onSave }:{ source:Blob|string; busy:boolean; error:string; onCancel:()=>void; onSave:(photo:Blob)=>void }) {
+const SQUARE:Aspect = { ratio:1, label:'square' };
+
+export default function AvatarEditor({ source, busy, error, aspect=SQUARE, title='Frame your photo', eyebrow='PROFILE PHOTO', onCancel, onSave }:{ source:Blob|string; busy:boolean; error:string; aspect?:Aspect; title?:string; eyebrow?:string; onCancel:()=>void; onSave:(photo:Blob)=>void }) {
   const dialog = useRef<HTMLDialogElement>(null), stage = useRef<HTMLDivElement>(null), preview = useRef<HTMLCanvasElement>(null);
   const pointers = useRef(new Map<number,{ x:number; y:number }>()), pinch = useRef<{ distance:number; zoom:number }|null>(null);
   const [image,setImage] = useState<HTMLCanvasElement|null>(null), [problem,setProblem] = useState(''), [edit,setEdit] = useState(fresh), [dragging,setDragging] = useState(false), [preparing,setPreparing] = useState(false);
   const [filters] = useState(() => 'filter' in (document.createElement('canvas').getContext('2d') ?? {}));
-  const update = useCallback((change:(edit:Edit)=>Edit) => setEdit(current => image ? keepCovered(change(current), image.width, image.height) : change(current)), [image]);
+  const update = useCallback((change:(edit:Edit)=>Edit) => setEdit(current => image ? keepCovered(change(current), image.width, image.height, aspect.ratio) : change(current)), [image, aspect.ratio]);
+  const outputWidth = OUTPUT_SIZE, outputHeight = Math.round(OUTPUT_SIZE/aspect.ratio);
 
   useEffect(() => { const element = dialog.current; if (element && !element.open) element.showModal(); }, []);
   useEffect(() => {
@@ -131,7 +150,7 @@ export default function AvatarEditor({ source, busy, error, onCancel, onSave }:{
     if (!image) return;
     setPreparing(true); setProblem('');
     try {
-      const canvas = document.createElement('canvas'); canvas.width = canvas.height = OUTPUT_SIZE;
+      const canvas = document.createElement('canvas'); canvas.width = outputWidth; canvas.height = outputHeight;
       paint(canvas, image, edit, filters);
       const webp = await toBlob(canvas, 'image/webp', 0.92);
       const photo = webp?.type==='image/webp' ? webp : await toBlob(canvas, 'image/png');
@@ -143,14 +162,14 @@ export default function AvatarEditor({ source, busy, error, onCancel, onSave }:{
 
   return <dialog ref={dialog} className="avatar-editor" aria-labelledby="avatar-editor-title" onCancel={event => { event.preventDefault(); if (!busy) onCancel(); }}>
     <header className="avatar-editor-head">
-      <div><span className="eyebrow">PROFILE PHOTO</span><h2 id="avatar-editor-title">Frame your photo</h2><p>Crop, straighten, and give it a look. It saves as a crisp square.</p></div>
+      <div><span className="eyebrow">{eyebrow}</span><h2 id="avatar-editor-title">{title}</h2><p>Crop, straighten, and give it a look. It saves as a crisp {aspect.label}.</p></div>
       <button type="button" className="avatar-icon-button" aria-label="Close photo editor" disabled={busy} onClick={onCancel}><X size={18}/></button>
     </header>
     <div className="avatar-editor-body">
       <div className="avatar-stage-wrap">
-        <div ref={stage} className={`avatar-stage${dragging?' dragging':''}`} tabIndex={0} role="group" aria-label="Crop area. Drag to reposition, use the arrow keys to move and plus or minus to zoom."
+        <div ref={stage} className={`avatar-stage${dragging?' dragging':''}${aspect.ratio!==1?' avatar-stage-rect':''}`} style={{ aspectRatio:aspect.ratio }} tabIndex={0} role="group" aria-label="Crop area. Drag to reposition, use the arrow keys to move and plus or minus to zoom."
           onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up} onKeyDown={key}>
-          <canvas ref={preview} width={OUTPUT_SIZE} height={OUTPUT_SIZE} aria-hidden="true"/>
+          <canvas ref={preview} width={outputWidth} height={outputHeight} aria-hidden="true"/>
           <span className="avatar-stage-grid" aria-hidden="true"/>
           <span className="avatar-stage-mask" aria-hidden="true"/>
           {!image && !problem && <span className="avatar-stage-status"><LoaderCircle size={18} className="profile-spin"/> Opening your photo…</span>}
