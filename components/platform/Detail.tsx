@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Bookmark, Download, Star, Heart, GitFork, CalendarDays, Clock3, Code2 } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Bookmark, Download, Star, Heart, GitFork, CalendarDays, Clock3, Code2, HardDrive, Database, Cloud, Smartphone, ShieldCheck, Bot, Palette, GraduationCap, Gamepad2, Cpu, Tag } from 'lucide-react';
 import { Shell, Gate, Notice, Card, PageTitle, DetailSkeleton, useData, useSession, send, api } from './shared';
 import { projectCost, type Project } from '@/lib/schema';
 import { imageUrl } from '@/lib/images';
@@ -13,6 +13,13 @@ import languageCatalogue from '@/lib/programming-languages.json';
 type DetailData={project:Project;editable:boolean;saved:boolean;starred:boolean;liked:boolean;original:{id:string;version_id:string;number:number;title:string;team_name:string}|null;modifications:{id:string;title:string;team_name:string}[];versions:{id:string;number:number;status:string;changelog:string;createdAt:string}[];comments:Comment[];reviews:{action:string;reason:string;name:string;created_at:string}[];related:Project[]};
 const displayDate=(date:string)=>new Date(`${date}T00:00:00Z`).toLocaleDateString(undefined,{year:'numeric',month:'short',day:'numeric',timeZone:'UTC'});
 export const findLanguageLogo=(name:string)=>languageCatalogue.find(item=>item.name.toLowerCase()===name.toLowerCase()||item.aliases.some(alias=>alias.toLowerCase()===name.toLowerCase()))?.icon;
+const tagIconRules:[RegExp,typeof Tag][]=[[/local\s*storage|session\s*storage|indexeddb|browser cache/i,HardDrive],[/database|sql|firebase|mongo|postgres|supabase/i,Database],[/cloud|hosting|server|deploy|aws|azure|vercel|netlify/i,Cloud],[/mobile|ios|android/i,Smartphone],[/security|auth|encryption/i,ShieldCheck],[/ai|ml|machine learning|neural|gpt/i,Bot],[/design|ui|ux/i,Palette],[/productivity|student|education|school|study/i,GraduationCap],[/game|gaming/i,Gamepad2],[/iot|sensor|hardware|embedded/i,Cpu]];
+export const tagIconFor=(tag:string)=>tagIconRules.find(([pattern])=>pattern.test(tag))?.[1]??Tag;
+function TechBadge({tag}:{tag:string}){
+ const logo=findLanguageLogo(tag);
+ const FallbackIcon=tagIconFor(tag);
+ return <span className="tech-badge"><span className="tech-badge-icon">{logo?<img src={logo} alt="" width={12} height={12} loading="lazy"/>:<FallbackIcon size={12}/>}</span><span>{tag}</span></span>;
+}
 
 function Content({id}:{id:string}){
  const [version,setVersion]=useState(''),[actionError,setActionError]=useState(''),[busy,setBusy]=useState(false);
@@ -63,7 +70,7 @@ function Content({id}:{id:string}){
       {published&&<button className="button outline" disabled={busy} onClick={()=>void action(async()=>{await send(`projects/${id}/bookmark`,{saved:!data.saved});await reload();})}><Bookmark size={16} fill={data.saved?'currentColor':'none'}/>{data.saved?'Remove from saved':'Save project'}</button>}
       {data.editable&&['draft','changes_requested'].includes(p.version.status)&&<Link className="button blue" href={`/submit?project=${id}&version=${p.version.id}`}>Edit draft</Link>}
       {!user&&<Link className="inline-link" href="/auth">Sign in to download, star, or contribute</Link>}
-    </div><h3>Tech Stack</h3><div className="tags">{d.tags.map(tag=><span key={tag}>{tag}</span>)}</div><dl>{Object.entries(d.stack).filter(([,v])=>v).map(([k,v])=><div key={k}><dt className="capitalize">{k}</dt><dd>{v}</dd></div>)}</dl><h3>Build timeline</h3><dl><div><dt>Subject</dt><dd>{d.subject}</dd></div>{d.startDate&&<div><dt>Started</dt><dd>{displayDate(d.startDate)}</dd></div>}{d.endDate&&<div><dt>Completed</dt><dd>{displayDate(d.endDate)}</dd></div>}{duration&&<div><dt>Time taken</dt><dd>{duration}</dd></div>}{d.purchaseDate&&<div><dt>Parts purchased</dt><dd>{displayDate(d.purchaseDate)}</dd></div>}</dl></div>
+    </div><h3>Tech Stack</h3><div className="tech-badges">{d.tags.map(tag=><TechBadge tag={tag} key={tag}/>)}</div><dl>{Object.entries(d.stack).filter(([,v])=>v).map(([k,v])=><div key={k}><dt className="capitalize">{k}</dt><dd>{v}</dd></div>)}</dl><h3>Build timeline</h3><dl><div><dt>Subject</dt><dd>{d.subject}</dd></div>{d.startDate&&<div><dt>Started</dt><dd>{displayDate(d.startDate)}</dd></div>}{d.endDate&&<div><dt>Completed</dt><dd>{displayDate(d.endDate)}</dd></div>}{duration&&<div><dt>Time taken</dt><dd>{duration}</dd></div>}{d.purchaseDate&&<div><dt>Parts purchased</dt><dd>{displayDate(d.purchaseDate)}</dd></div>}</dl></div>
     <section className="panel history"><h2>Version notebook</h2>{data.versions.map(v=><details key={v.id} open={v.id===p.version.id}><summary>Version {v.number} <span className="status-tag">{v.status.replaceAll('_',' ')}</span></summary><p>{v.changelog||'Changelog in progress.'}</p><small>{new Date(v.createdAt).toLocaleDateString()}</small><button className="text-button" onClick={()=>{setVersion(v.id);window.history.replaceState({},'',`/projects/${id}?version=${v.id}`);}}>View this version <ArrowUpRight size={14}/></button></details>)}</section>
     {data.reviews.length>0&&<section className="panel"><h2>Review notes</h2>{data.reviews.map((r,i)=><div className="review-note" key={i}><strong>{r.name}  -  {r.action.replaceAll('_',' ')}</strong><p>{r.reason||'Approved without additional notes.'}</p></div>)}</section>}
   </aside></div>
