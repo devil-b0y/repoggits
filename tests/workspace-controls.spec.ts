@@ -306,6 +306,99 @@ test('updates stay plain rather than becoming coloured cards',async({page})=>{
   expect(look.iconColor).toBe(look.detailColor);
 });
 
+const SCREENS=[{name:'desktop',width:1440,columns:2},{name:'laptop',width:1280,columns:2},
+  {name:'tablet landscape',width:1024,columns:2},{name:'tablet portrait',width:768,columns:1},
+  {name:'mobile',width:390,columns:1},{name:'small mobile',width:320,columns:1}] as const;
+
+test('the whole workspace fits every screen without sideways scrolling',async({page})=>{
+  await withSaved(page);
+  await page.route('**/api/workspace',route=>route.fulfill({json:{user,projects,saved,notifications}}));
+  await page.reload();
+  for(const screen of SCREENS) {
+    await page.setViewportSize({width:screen.width,height:900});
+    await expect(page.locator('.workspace-project').first()).toBeVisible();
+    const report=await page.evaluate(()=>{
+      const wider=[...document.querySelectorAll('.workspace-page *')]
+        .filter(el=>el.getBoundingClientRect().right>window.innerWidth+1).map(el=>el.className.toString()||el.tagName);
+      const layout=document.querySelector('.workspace-layout')!;
+      return {overflow:document.documentElement.scrollWidth>window.innerWidth,wider:wider.slice(0,4),
+        columns:getComputedStyle(layout).gridTemplateColumns.split(' ').length};
+    });
+    expect(report.overflow,`${screen.name} scrolls sideways`).toBe(false);
+    expect(report.wider,`${screen.name} has elements past the edge`).toEqual([]);
+    // Projects beside updates on the wider screens, stacked from a tablet held upright down.
+    expect(report.columns,`${screen.name} columns`).toBe(screen.columns);
+  }
+});
+
+test('card actions stay reachable and finger-sized on a phone',async({page})=>{
+  await withSaved(page);
+  await page.setViewportSize({width:390,height:844});
+  const first=page.locator('.workspace-project').first();
+  // The menu does not depend on hovering, since a phone cannot hover.
+  const trigger=first.getByRole('button',{name:/More actions/});
+  // Revealing it is a 200ms fade, so this settles rather than reading mid-transition.
+  await expect.poll(()=>trigger.evaluate(el=>getComputedStyle(el).opacity)).toBe('1');
+  const triggerBox=(await trigger.boundingBox())!;
+  expect(Math.min(triggerBox.width,triggerBox.height)).toBeGreaterThanOrEqual(44);
+  await trigger.click();
+  const item=first.getByRole('menuitem',{name:'Rename'});
+  const itemBox=(await item.boundingBox())!;
+  expect(itemBox.height).toBeGreaterThanOrEqual(44);
+  // The menu opens inside the screen rather than off the right edge.
+  expect(itemBox.x).toBeGreaterThanOrEqual(0);
+  expect(itemBox.x+itemBox.width).toBeLessThanOrEqual(390);
+  await item.click();
+  await expect(first.getByLabel('Project title')).toBeVisible();
+  // Renaming, and the actions under every card, stay on screen too.
+  for(const name of ['Save name','Cancel'])expect((await first.getByRole('button',{name}).boundingBox())!.x+(await first.getByRole('button',{name}).boundingBox())!.width).toBeLessThanOrEqual(390);
+  await first.getByRole('button',{name:'Cancel'}).click();
+  await expect(first.getByRole('link',{name:/View version/})).toBeVisible();
+  await expect(first.getByRole('link',{name:'Continue editing'})).toBeVisible();
+});
+
+test('cards and buttons answer the pointer without lifting, glowing or casting shadows',async({page})=>{
+  await withSaved(page);
+  const card=page.locator('.workspace-project').first();
+  const resting=await card.evaluate(el=>{const s=getComputedStyle(el);return {border:s.borderColor,background:s.backgroundColor};});
+  await card.hover();
+  await expect.poll(()=>card.evaluate(el=>getComputedStyle(el).borderColor)).not.toBe(resting.border);
+  const hovered=await card.evaluate(el=>{const s=getComputedStyle(el);
+    return {background:s.backgroundColor,transform:s.transform,shadow:s.boxShadow,image:s.backgroundImage,filter:s.filter,backdrop:s.backdropFilter};});
+  expect(hovered.background).not.toBe(resting.background);
+  // None of the treatments that were ruled out.
+  expect(hovered.transform,'card must not lift or scale').toBe('none');
+  expect(hovered.shadow,'card must not cast a shadow').toBe('none');
+  expect(hovered.image,'card must not gain a gradient').toBe('none');
+  expect(hovered.filter+hovered.backdrop,'card must not glow or blur behind').toBe('nonenone');
+  // A text action answers the pointer too.
+  const action=card.getByRole('link',{name:/View version/});
+  const before=await action.evaluate(el=>getComputedStyle(el).color);
+  await action.hover();
+  await expect.poll(()=>action.evaluate(el=>getComputedStyle(el).color)).not.toBe(before);
+});
+
+test('the menu fades in and focus is visible inside it',async({page})=>{
+  await withSaved(page);
+  const card=page.locator('.workspace-project').first();
+  await card.getByRole('button',{name:/More actions/}).click();
+  const list=card.locator('.card-menu-list');
+  const opening=await list.evaluate(el=>{const s=getComputedStyle(el);
+    return {name:s.animationName,duration:s.animationDuration,shadow:s.boxShadow,backdrop:s.backdropFilter,image:s.backgroundImage};});
+  expect(opening.name).toBe('workspace-menu-open');
+  // Quick enough to feel immediate rather than animated at the viewer.
+  expect(parseFloat(opening.duration)).toBeLessThanOrEqual(0.2);
+  expect(opening.shadow+opening.backdrop+opening.image).toBe('nonenonenone');
+  // Reached by keyboard, since :focus-visible deliberately ignores focus moved by script after a click.
+  await page.keyboard.press('Tab');
+  const item=card.getByRole('menuitem',{name:'Rename'});
+  await expect(item).toBeFocused();
+  const focused=await item.evaluate(el=>{const s=getComputedStyle(el);return {width:s.outlineWidth,style:s.outlineStyle,offset:s.outlineOffset};});
+  expect(focused.style).toBe('solid');
+  expect(parseFloat(focused.width)).toBeGreaterThanOrEqual(2);
+  expect(parseFloat(focused.offset)).toBeLessThanOrEqual(0);
+});
+
 test('a filter and a search apply together',async({page})=>{
   await page.getByRole('button',{name:'Draft',exact:true}).click();
   await page.getByRole('textbox',{name:'Search projects'}).fill('route');

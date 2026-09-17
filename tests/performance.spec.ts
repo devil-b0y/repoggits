@@ -139,10 +139,21 @@ test('the workspace and review desk ask for their own data without waiting for t
 test('the review desk returns every section whether the reads run together or the log is scoped to one reviewer',async({playwright})=>{
   // A Super Admin's log and people list load alongside the project rows; a Teacher-Admin's log still
   // waits for those rows so it can be limited to what they may review. Both branches are checked here.
+  // Published here rather than relying on an earlier test, so the payload always has something to check.
+  await publish(`Review payload ${randomUUID().slice(0,8)}`);
   const wide=await (await admin.get('/api/admin')).json();
   expect(Object.keys(wide).sort()).toEqual(['audit','projects','queue','users']);
   expect(Array.isArray(wide.queue)&&Array.isArray(wide.projects)&&Array.isArray(wide.audit)).toBe(true);
   expect(wide.users.length).toBeGreaterThan(0);
+  // The desk sends only the fields it renders, so every one of them has to survive the trimmed read.
+  const listed=wide.projects[0];
+  expect(listed,'the review desk returned no projects to check').toBeTruthy();
+  for(const field of ['title','summary','department','subject','teamName','type','github'])
+    expect(listed.version.data,`version data is missing ${field}`).toHaveProperty(field);
+  expect(typeof listed.version.data.title).toBe('string');
+  expect(listed.version.changelog).toBeDefined();
+  expect(typeof listed.version.approvals).toBe('number');
+  expect(typeof listed.views).toBe('number');
   const id=randomUUID(),email=`speed-teacher-${randomUUID()}@example.test`;
   await db.query('INSERT INTO r.users(id,email,password_hash,name,role,verified,scopes,profile) VALUES($1,$2,$3,$4,$5,true,$6,$7)',
     [id,email,await hashPassword(password),'Speed teacher','teacher',JSON.stringify(['subject:Final Year Project']),JSON.stringify({name:'Speed teacher'})]);

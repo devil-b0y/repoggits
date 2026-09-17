@@ -7,7 +7,7 @@ import { authRoute } from '@/lib/api-auth';
 import { upload, fileRoute } from '@/lib/api-files';
 import { bodyJson, originCheck, json, failure, revalidatedJson, compressed } from '@/lib/http';
 import { requireCondition, HttpError } from '@/lib/errors';
-import { createProject, updateVersion, newVersion, reviewVersions, publicProjects, invalidatePublicProjects, projectSelect, projectView, versionView, canEdit } from '@/lib/projects';
+import { createProject, updateVersion, newVersion, reviewVersions, publicProjects, invalidatePublicProjects, projectSelect, reviewSelect, projectView, versionView, canEdit } from '@/lib/projects';
 import { roles, type ProjectData, type User } from '@/lib/schema';
 import { queueMail } from '@/lib/mail';
 import { reactToProject, modifyProject, projectLineage } from '@/lib/project-community';
@@ -31,7 +31,7 @@ async function adminData(user:User,exportAll=false) {
   // together instead of one after another. A Teacher-Admin's log is scoped to the rows they can
   // review, so that one still waits for them.
   const [rows,wideAudit,users]=await Promise.all([
-    db.query(`${projectSelect} ORDER BY v.updated_at DESC${exportAll?'':' LIMIT 1000'}`).then(all=>all.filter(row=>canReview(user,row.data))),
+    db.query(`${reviewSelect} ORDER BY v.updated_at DESC${exportAll?'':' LIMIT 1000'}`).then(all=>all.filter(row=>canReview(user,row.data))),
     superadmin?db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id ORDER BY a.created_at DESC LIMIT 100'):null,
     superadmin?db.query('SELECT id,email,name,role,scopes,verified,suspended FROM r.users ORDER BY created_at DESC LIMIT 500').then(list=>list.map(row=>({...row,email:openText(row.email,'users.email')}))):[],
   ]);

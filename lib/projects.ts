@@ -25,6 +25,17 @@ export const projectSelect=`SELECT v.*,p.owner_id,p.featured,p.archived,p.exampl
   (SELECT count(*) FROM r.reviews rv WHERE rv.version_id=v.id AND rv.action='approve') AS approvals,
   (SELECT reason FROM r.reviews rv WHERE rv.version_id=v.id AND rv.action IN ('reject','changes_requested') ORDER BY created_at DESC LIMIT 1) AS feedback
   FROM r.versions v JOIN r.projects p ON p.id=v.project_id`;
+// The review desk lists up to a thousand versions at once, and the cost of that is the bytes crossing the
+// network, not the query: a full row carries the write-up, the team, the stack and every media id, none of
+// which the desk shows — a reviewer opens the project itself for those. So only the fields it renders are
+// sent, and only the approval count is counted (it shows no reaction totals and no earlier reviewer's reason).
+// The missing keys are restored by projectSchema's own defaults, and projectView reads its columns defensively.
+export const reviewSelect=`SELECT v.id,v.project_id,v.number,v.status,v.changelog,v.created_at,v.updated_at,v.required_approvals,
+  jsonb_strip_nulls(jsonb_build_object('title',v.data->'title','summary',v.data->'summary','department',v.data->'department',
+    'subject',v.data->'subject','teamName',v.data->'teamName','type',v.data->'type','github',v.data->'github')) AS data,
+  p.owner_id,p.featured,p.archived,p.example,p.views,p.downloads,p.parent_project_id,p.parent_version_id,
+  (SELECT count(*) FROM r.reviews rv WHERE rv.version_id=v.id AND rv.action='approve') AS approvals
+  FROM r.versions v JOIN r.projects p ON p.id=v.project_id`;
 // Every place a version can point at an uploaded file, written as containment tests so the versions_data_idx GIN
 // index answers them. `first` numbers the first of four placeholders, which fileReferenceParams fills in order.
 export const fileReference=(first:number)=>`(data @> $${first}::jsonb OR data @> $${first+1}::jsonb OR data @> $${first+2}::jsonb OR data @> $${first+3}::jsonb)`;
