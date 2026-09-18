@@ -154,6 +154,15 @@ test('the review desk returns every section whether the reads run together or th
   expect(listed.version.changelog).toBeDefined();
   expect(typeof listed.version.approvals).toBe('number');
   expect(typeof listed.views).toBe('number');
+  // The CSV is built from the same trimmed read, so it has to carry real values rather than blanks.
+  const report=await admin.get('/api/admin/export');
+  expect(report.status()).toBe(200);
+  const rows=(await report.text()).split('\r\n');
+  expect(rows[0]).toContain('"Title"');
+  const row=rows.find(line=>line.includes(listed.version.data.title));
+  expect(row,'the exported report is missing the project just published').toBeTruthy();
+  expect(row).toContain(`"${listed.version.data.department}"`);
+  expect(row).toContain(`"${listed.version.data.teamName}"`);
   const id=randomUUID(),email=`speed-teacher-${randomUUID()}@example.test`;
   await db.query('INSERT INTO r.users(id,email,password_hash,name,role,verified,scopes,profile) VALUES($1,$2,$3,$4,$5,true,$6,$7)',
     [id,email,await hashPassword(password),'Speed teacher','teacher',JSON.stringify(['subject:Final Year Project']),JSON.stringify({name:'Speed teacher'})]);
