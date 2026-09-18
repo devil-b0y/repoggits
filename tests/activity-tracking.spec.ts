@@ -101,3 +101,36 @@ test('declining analytics cookies means no beacon and no visitor cookie for that
  expect(activityRequests).toHaveLength(0);
  expect((await page.context().cookies()).some(c=>c.name==='repoggits_visitor')).toBe(false);
 });
+
+// A signed-in visitor is account/security information for the admins already running this platform, not
+// third-party analytics, so their presence tracks regardless of the analytics cookie choice — only anonymous
+// visitors are gated on it (the two tests above).
+test('a signed-in visitor sends beacons and shows online even without accepting analytics cookies',async({page,request})=>{
+ const person=await account('student');
+ const superadmin=await account('superadmin');
+ await page.context().addCookies([{name:'repoggits_session',value:person.token,url:process.env.APP_ORIGIN}]);
+ const activityRequests:string[]=[];
+ page.on('request',req=>{if(req.url().includes('/api/activity'))activityRequests.push(req.url());});
+
+ const firstBeacon=page.waitForResponse(res=>res.url().includes('/api/activity')&&res.request().method()==='POST');
+ await page.goto('/');
+ // Deliberately left unanswered: analytics consent is null, not accepted, yet a beacon still goes out.
+ await expect(page.locator('.cookie-banner')).toBeVisible();
+ await firstBeacon;
+ expect(activityRequests.length).toBeGreaterThan(0);
+ // The response above only confirms the request completed, not that its DB write (inside a transaction) has
+ // settled by the time this next query runs, so poll rather than reading once.
+ await expect.poll(async()=>{
+  const [row]=await db.query('SELECT tracked_session_id FROM r.sessions WHERE hash=$1',[hashToken(person.token)]);
+  return row.tracked_session_id;
+ },{timeout:5000}).toBeTruthy();
+ const [linked]=await db.query('SELECT tracked_session_id FROM r.sessions WHERE hash=$1',[hashToken(person.token)]);
+ const live:Json=await (await request.get('/api/admin/live',{headers:superadmin.headers})).json();
+ expect(live.sessions.find((s:Json)=>s.id===linked.tracked_session_id)).toMatchObject({status:'online',kind:'authenticated',user:{id:person.id}});
+
+ // Explicitly declining must not stop it either — only an anonymous visitor's tracking is consent-gated.
+ activityRequests.length=0;
+ await page.getByRole('button',{name:'Reject non-essential'}).click();
+ await page.reload();
+ await expect.poll(()=>activityRequests.length,{timeout:10000}).toBeGreaterThan(0);
+});
