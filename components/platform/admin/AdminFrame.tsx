@@ -1,5 +1,5 @@
 'use client';
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
@@ -16,9 +16,22 @@ export function AdminPage({section,title,description,actions,children}:{section:
   return <Shell><Gate admin><Frame section={section} title={title} description={description} actions={actions}>{children}</Frame></Gate></Shell>;
 }
 
+// There is no persistent admin layout — every /admin/* route is its own independent page, so Frame fully unmounts
+// and remounts on every click between sections. Replaying the sidebar's entrance stagger and the heading reveal
+// on every one of those reads as the whole panel reloading, not as a normal page change. This flag is remembered
+// for the tab (not per Frame instance, the same way shared.tsx's sessionCache remembers the signed-in session
+// across Shell remounts): the very first admin page this tab opens still gets the full reveal, every click after
+// that renders straight into the settled state instead of fading/staggering in again.
+let admittedAdminShellOnce=false;
+
 function Frame({section,title,description,actions,children}:{section:AdminSection;title:string;description?:string;actions?:ReactNode;children:ReactNode}) {
   const {user}=useSession();
   const still=useAdminStill();
+  // Separate from `still`: this only skips the mount reveal (desktop nav stagger + heading below), never the
+  // mobile menu's own open/close slide, which should keep animating every time someone taps it regardless of
+  // how many admin pages this tab has already visited.
+  const skipEntrance=still||admittedAdminShellOnce;
+  useEffect(()=>{admittedAdminShellOnce=true;},[]);
   const {mobile:isMobile,ready:navReady}=useIsMobileNav();
   const [open,setOpen]=useState(false);
   // Deferred, not `open` directly: on mobile the panel needs to stay classed "open" (CSS keeps it displayed) for
@@ -46,7 +59,7 @@ function Frame({section,title,description,actions,children}:{section:AdminSectio
             <motion.div variants={staggerGroup} initial={still?false:'hidden'} animate="show">{navGroups}</motion.div>
           </motion.div>}
         </AnimatePresence>
-      : <motion.div className="admin-nav-groups" variants={staggerGroup} initial={still?false:'hidden'} animate="show">{navGroups}</motion.div>;
+      : <motion.div className="admin-nav-groups" variants={staggerGroup} initial={skipEntrance?false:'hidden'} animate="show">{navGroups}</motion.div>;
   return <div className="page-wrap admin-panel">
     <aside className="admin-sidebar">
       <button type="button" className="admin-menu-toggle" aria-expanded={open} aria-controls="admin-navigation" onClick={()=>setOpen(!open)}>{open?<X size={18} aria-hidden="true"/>:<Menu size={18} aria-hidden="true"/>}<span>Admin menu · {current?.label??title}</span></button>
@@ -56,7 +69,7 @@ function Frame({section,title,description,actions,children}:{section:AdminSectio
     </aside>
     <div className="admin-main">
       <header className="admin-heading">
-        <motion.div variants={staggerGroup} initial={still?false:'hidden'} animate="show">
+        <motion.div variants={staggerGroup} initial={skipEntrance?false:'hidden'} animate="show">
           <motion.div className="eyebrow" variants={tileRise}>ADMIN PANEL{current?` / ${current.group.toUpperCase()}`:''}</motion.div>
           <motion.h1 variants={tileRise}>{title}</motion.h1>
           {description&&<motion.p variants={tileRise}>{description}</motion.p>}

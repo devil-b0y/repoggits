@@ -46,14 +46,30 @@ function useSessionData() {
 type Session={user:User|null;loading:boolean;uploadsAvailable:boolean;emailVerificationRequired:boolean;refresh:()=>Promise<void>};
 const SessionContext=createContext<Session>({user:null,loading:true,uploadsAvailable:false,emailVerificationRequired:true,refresh:async()=>{}});
 export const useSession=()=>useContext(SessionContext);
+// Shell has no persistent layout of its own, so a client-side navigation (e.g. clicking between admin panel
+// sections) unmounts and remounts it — and reading `dark` as false-then-flip-in-an-effect on every one of those
+// reads as the whole site flashing back to light theme. But the flip can't simply become a synchronous read on
+// every mount either: the very first mount IS the SSR hydration pass, where `window` already exists on the
+// client even though the server rendered with none — so a synchronous read there would mismatch the server's
+// always-`false` output whenever a returning visitor already has dark mode saved. This flag distinguishes the
+// two: false only for the tab's first-ever Shell mount (matches SSR, corrected via the effect below, same one
+// unavoidable flash this always had), true for every later remount (safe to read for real immediately).
+let shellHydratedOnce=false;
 export function Shell({children}:{children:ReactNode}) {
   const session=useSessionData();
-  const [menu,setMenu]=useState(false),[dark,setDark]=useState(false);
+  const [menu,setMenu]=useState(false),[dark,setDark]=useState(()=>{
+    if(!shellHydratedOnce)return false;
+    try{return localStorage.getItem('repoggits-theme')==='dark';}catch{return false;}
+  });
+  useEffect(()=>{
+    if(shellHydratedOnce)return;
+    shellHydratedOnce=true;
+    try{const real=localStorage.getItem('repoggits-theme')==='dark';if(real)setDark(true);}catch{}
+  },[]);
   const adminPanelHref=firstAdminHref(session.data?.user);
   // The admin panel and account live on nested paths, so a section stays marked while you are inside it.
   const pathname=usePathname();
   const current=(href:string)=>pathname===href||pathname.startsWith(`${href}/`)?'page':undefined;
-  useEffect(()=>{try{setDark(localStorage.getItem('repoggits-theme')==='dark');}catch{}},[]);
   function toggle(){const next=!dark;setDark(next);try{localStorage.setItem('repoggits-theme',next?'dark':'light');}catch{}}
   // Kept stable so opening the menu or switching theme does not re-render everything that reads the session.
   const value=useMemo<Session>(()=>({user:session.data?.user||null,loading:session.loading&&!session.data,uploadsAvailable:!!session.data?.uploadsAvailable,emailVerificationRequired:session.data?.emailVerificationRequired??true,refresh:session.reload}),[session.data,session.loading,session.reload]);

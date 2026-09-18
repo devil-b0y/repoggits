@@ -1,0 +1,25 @@
+/* "Add from catalog" picker for the departments field in AdminSettings.tsx. Kept as its own small stylesheet
+   (not admin/admin-system.css) so it doesn't collide with concurrent work inside components/platform/admin/**. */
+.platform .dept-catalog{position:relative;margin-top:8px}
+.platform .dept-catalog-toggle{display:inline-flex;align-items:center;gap:7px;padding:9px 13px;min-height:40px;border:1px solid var(--line);border-radius:8px;background:var(--white);color:var(--blue);font-size:12px;cursor:pointer}
+.platform .dept-catalog-toggle:hover{border-color:var(--blue)}
+.platform .dept-catalog-toggle[aria-expanded=true] .dept-catalog-chevron{transform:rotate(180deg)}
+.platform .dept-catalog-chevron{transition:transform .15s ease;margin-left:2px}
+.platform .dept-catalog-menu{position:absolute;left:0;right:0;z-index:11;margin-top:7px;border:1px solid var(--line);border-radius:10px;background:var(--white);box-shadow:0 15px 40px #08192e30;overflow:hidden}
+.platform .dept-catalog-search{position:relative;border-bottom:1px solid var(--line)}
+.platform .dept-catalog-search>svg{position:absolute;left:13px;top:13px;color:var(--muted);pointer-events:none}
+.platform .dept-catalog-search input{width:100%;margin:0;border:0;border-radius:0;padding:11px 13px 11px 38px;background:transparent}
+.platform .dept-catalog-list{max-height:280px;overflow:auto;padding:6px;scrollbar-width:thin;scrollbar-color:var(--muted) transparent;overscroll-behavior:contain}
+.platform .dept-catalog-group+.dept-catalog-group{margin-top:4px;padding-top:8px;border-top:1px solid var(--line)}
+.platform .dept-catalog-group>p{padding:6px 8px 4px;margin:0;font-size:10px;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)}
+.platform .dept-catalog-group button{display:flex;align-items:center;gap:11px;width:100%;padding:9px 8px;border:0;background:none;border-radius:6px;cursor:pointer;color:var(--ink);font-size:13px;text-align:left}
+.platform .dept-catalog-group button:hover{background:#3059b513}
+.platform .dept-catalog-group button[aria-selected=true]{color:var(--blue)}
+.platform .dept-catalog-group button>svg:first-child{flex-shrink:0;color:var(--blue)}
+.platform .dept-catalog-group button>span{flex:1;min-width:0;overflow-wrap:anywhere}
+.platform .dept-catalog-group button>svg:last-child{flex-shrink:0;color:var(--muted)}
+.platform .dept-catalog-group button[aria-selected=true]>svg:last-child{color:var(--blue)}
+.platform .dept-catalog-empty{padding:14px;margin:0;font-size:13px;color:var(--muted)}
+@media(max-width:760px){
+ .platform .dept-catalog-group button{min-height:44px}
+}

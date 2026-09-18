@@ -268,3 +268,24 @@ test('studio objects and introductions follow each step without resetting answer
  await expect(page.locator('.studio-step-object')).toBeVisible();
  await page.locator('.studio-hero').screenshot({path:'test-results/studio-step-mobile.png'});
 });
+
+test('department dropdown offers the RGPV branch catalog with a distinct icon per branch family',async({page})=>{
+ await mockSession(page);
+ await page.route('**/api/settings',r=>r.fulfill({json:{categories:{departments:['Computer Science Engineering (CSE)','Computer Science Engineering (Cyber Security)','Computer Science Engineering (IoT)','Robotics and AI','MBA (General)'],subjects:['Final Year Project'],tags:['ESP32']}}}));
+ await page.goto('/submit');
+ const select=page.getByRole('combobox',{name:'Department'});
+ await select.click();
+ const menu=page.locator('.dropdown-select-menu');
+ await expect(menu.getByRole('option',{name:'Computer Science Engineering (Cyber Security)'})).toBeVisible();
+ // Each branch family resolves to its own lucide icon rather than the generic GraduationCap fallback, and no two
+ // of these five resolve to the same icon.
+ await expect(menu.getByRole('option',{name:'Computer Science Engineering (Cyber Security)'}).locator('svg.lucide-shield-check')).toBeVisible();
+ await expect(menu.getByRole('option',{name:'Computer Science Engineering (IoT)'}).locator('svg.lucide-wifi')).toBeVisible();
+ await expect(menu.getByRole('option',{name:'Robotics and AI'}).locator('svg.lucide-bot')).toBeVisible();
+ await expect(menu.getByRole('option',{name:'MBA (General)'}).locator('svg.lucide-briefcase')).toBeVisible();
+ // Code2 renders under lucide-react's current icon name, code-xml.
+ await expect(menu.getByRole('option',{name:'Computer Science Engineering (CSE)',exact:true}).locator('svg.lucide-code-xml')).toBeVisible();
+ await menu.getByRole('option',{name:'Computer Science Engineering (IoT)'}).click();
+ await expect(select).toContainText('Computer Science Engineering (IoT)');
+ await expect(select.locator('svg.lucide-wifi')).toBeVisible();
+});

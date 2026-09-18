@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { Plus, Trash2, Upload, ArrowUpRight, Code2, Cpu, Cog, Zap, Database, Building2, GraduationCap, Layers } from 'lucide-react';
+import { Plus, Trash2, Upload, ArrowUpRight, Code2, Cpu, Cog, Zap, Database, Building2, GraduationCap, Layers, ShieldCheck, Wifi, Brain, LineChart, BarChart3, Handshake, Palette, CircuitBoard, ServerCog, Bot, Factory, BatteryCharging, Clapperboard, FlaskConical, Dna, CarFront, Tractor, HeartPulse, TrendingUp, PiggyBank, Wheat, Stethoscope, Layers3, Briefcase } from 'lucide-react';
 import { emptyProject, projectSchema, projectCost, teamMemberSchema, type ProjectData, type Project } from '@/lib/schema';
 import { FilePicker, COVER_ASPECT } from './FilePicker';
 export { FilePicker } from './FilePicker';
@@ -19,7 +19,34 @@ import { Shell, Gate, Notice, api, send, useData, useSession } from './shared';
 import Select from './Select';
 
 // A department name's icon is picked heuristically, similar in spirit to tagIconFor in Detail.tsx.
+// Covers every branch/specialization in the RGPV catalog (see the department catalog in AdminSettings.tsx) — most
+// specific patterns first, since the generic "computer science"/"electronics"/"mba" rules below would otherwise
+// swallow their own specializations. New department names not covered fall back to GraduationCap.
 const departmentIconRules:[RegExp,typeof GraduationCap][]=[
+ [/cyber\s*security/i,ShieldCheck],
+ [/\biot\b/i,Wifi],
+ [/machine learning/i,Brain],
+ [/ai\s*(?:&|and)\s*data science/i,LineChart],
+ [/\bdata science\b/i,BarChart3],
+ [/business systems|\bcsbs\b/i,Handshake],
+ [/computer science\s*(?:&|and)\s*design|\bcsd\b/i,Palette],
+ [/electronics\s*(?:&|and)\s*computer science|\becs\b/i,CircuitBoard],
+ [/advanced computing|\bact\b/i,ServerCog],
+ [/robotics\s*(?:&|and)\s*ai/i,Bot],
+ [/automation\s*(?:&|and)\s*robotics/i,Factory],
+ [/electric vehicles?/i,BatteryCharging],
+ [/animation|graphics/i,Clapperboard],
+ [/chemical/i,FlaskConical],
+ [/biotechnology/i,Dna],
+ [/automobile/i,CarFront],
+ [/agriculture/i,Tractor],
+ [/mba.*healthcare|healthcare management/i,HeartPulse],
+ [/mba.*marketing|marketing management/i,TrendingUp],
+ [/mba.*financial|financial administration/i,PiggyBank],
+ [/mba.*rural|rural management/i,Wheat],
+ [/mba.*pharmaceutical|pharmaceutical management/i,Stethoscope],
+ [/mba integrated/i,Layers3],
+ [/^mba\b/i,Briefcase],
  [/computer science|computer engineering|\bcse\b/i,Code2],
  [/electronics|electronic|\bece\b/i,Cpu],
  [/mechanical/i,Cog],
@@ -27,7 +54,7 @@ const departmentIconRules:[RegExp,typeof GraduationCap][]=[
  [/information technology|\bit\b/i,Database],
  [/civil/i,Building2],
 ];
-const departmentIconFor=(name:string)=>departmentIconRules.find(([pattern])=>pattern.test(name))?.[1]??GraduationCap;
+export const departmentIconFor=(name:string)=>departmentIconRules.find(([pattern])=>pattern.test(name))?.[1]??GraduationCap;
 
 function Editor(){
  const {user}=useSession();const settings=useData<{categories:{departments:string[];subjects:string[];tags:string[]}}>('settings');

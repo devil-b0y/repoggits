@@ -14,7 +14,10 @@
    plain CSS transition gives it the same "settles instead of snapping" feel on hover/focus without needing the
    delegated press system. */
 @media (prefers-reduced-motion: no-preference) {
-  .admin-nav a{transition:background-color .15s ease,border-color .15s ease,color .15s ease}
+  .admin-nav a{transition:background-color .15s ease,border-color .15s ease,color .15s ease,transform .15s ease,box-shadow .15s ease}
+  /* A barely-there nudge on hover/focus, on top of the color/tile treatment admin-panel.css already handles —
+     small enough to read as the row "waking up" rather than sliding. */
+  .admin-nav a:hover,.admin-nav a:focus-visible{transform:translateX(2px)}
 }
 @media (prefers-reduced-motion: reduce) {
   .admin-nav a{transition:none}
