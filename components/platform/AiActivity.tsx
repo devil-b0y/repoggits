@@ -3,6 +3,7 @@ import {useDeferredValue,useMemo,useState} from 'react';
 import {PauseCircle,PlayCircle,Search} from 'lucide-react';
 import type {AiRequestView} from '@/lib/ai-usage';
 import {Notice,ShowMore,send,useData,usePaged} from './shared';
+import Select from './Select';
 import './ai-activity.css';
 
 const outcomes={pending:'In progress',completed:'Draft returned',blocked:'Refused',failed:'Failed'} as const;
@@ -31,7 +32,7 @@ export default function AiActivity(){
   <div className="panel"><h2 id="ai-activity-title">Gemini assistant activity</h2><p className="ai-intro">Every prompt sent to the project assistant, newest first, with the account that sent it. Prompts are stored encrypted and deleted after {data?.retentionDays??180} days. Only Super Admins can see this page.</p></div>
   {(error||actionError)&&<Notice error>{error||actionError}</Notice>}{notice&&<Notice>{notice}</Notice>}
   {busiest.length>0&&<div className="panel"><h3>Most active in the last 24 hours</h3><ul className="ai-people">{busiest.map(person=><li key={person.userId}><div><strong>{person.name}</strong><small>{person.email}</small></div><span>{person.total} {person.total===1?'request':'requests'}{person.refused?` · ${person.refused} refused`:''}</span>{accessButton(person.userId,person.name,person.aiBlocked)}</li>)}</ul></div>}
-  <div className="panel ai-filters"><label>Search prompts, names or emails<span><Search size={16} aria-hidden="true"/><input type="search" value={query} onChange={e=>setQuery(e.target.value)}/></span></label><label>Outcome<select value={outcome} onChange={e=>setOutcome(e.target.value)}><option value="all">All outcomes</option>{Object.entries(outcomes).map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label><span className="muted">{requests.length} of {data?.requests.length||0} shown</span></div>
+  <div className="panel ai-filters"><label>Search prompts, names or emails<span><Search size={16} aria-hidden="true"/><input type="search" value={query} onChange={e=>setQuery(e.target.value)}/></span></label><label>Outcome<Select ariaLabel="Outcome" value={outcome} onChange={setOutcome} options={[{value:'all',label:'All outcomes'},...Object.entries(outcomes).map(([value,label])=>({value,label}))]}/></label><span className="muted">{requests.length} of {data?.requests.length||0} shown</span></div>
   {!requests.length&&<div className="empty-state panel"><h3>No matching requests.</h3><p>Prompts appear here as soon as someone uses the assistant.</p></div>}
   {page.visible.map(r=><article className="panel ai-request" key={r.id}>
    <header><div><strong>{r.name}</strong><small>{r.email} · {r.role}{r.aiBlocked?' · AI access paused':''}</small></div><span className={`status-tag ${tagClass[r.status]}`}>{outcomes[r.status]}</span><time dateTime={r.createdAt}>{new Date(r.createdAt).toLocaleString()}</time></header>

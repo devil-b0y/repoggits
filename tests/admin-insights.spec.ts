@@ -59,7 +59,8 @@ test('the overview dashboard shows its stat tiles, the activity chart and keeps 
   await expect(page.locator('.chart-legend')).toContainText('Page views');
   // The default range stays out of the URL; choosing another one goes into it and into the next request.
   expect(requests[0]).toContain('date=7d');
-  await page.getByRole('combobox',{name:'Date range'}).selectOption('30d');
+  await page.getByRole('combobox',{name:'Date range'}).click();
+  await page.getByRole('option',{name:'Last 30 days'}).click();
   await expect(page).toHaveURL(/date=30d/);
   await expect.poll(()=>requests.at(-1)??'').toContain('date=30d');
   await page.setViewportSize({width:390,height:844});
@@ -293,8 +294,9 @@ test('the audit log offers the actions it has recorded and shows each action its
   await expect(page.locator('.admin-table tbody tr').filter({hasText:'tracking › pruned'})).toContainText('System');
   await expect(page.locator('.admin-table tbody tr').filter({hasText:'tracking › pruned'}).locator('.admin-meta')).toHaveCount(0);
   await page.getByRole('button',{name:/More filters/}).click();
-  await expect(page.getByLabel('Action')).toContainText('retention.updated');
-  await page.getByLabel('Action').selectOption('logs.exported');
+  await page.getByRole('combobox',{name:'Action'}).click();
+  await expect(page.getByRole('option',{name:'retention.updated'})).toBeVisible();
+  await page.getByRole('option',{name:'logs.exported'}).click();
   await expect(page).toHaveURL(/action=logs.exported/);
   await expect.poll(()=>requests.at(-1)??'').toContain('action=logs.exported');
   await expect(page.getByRole('link',{name:'JSON'})).toHaveAttribute('href',/\/api\/admin\/audit\/export\?.*format=json/);

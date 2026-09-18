@@ -290,7 +290,8 @@ test('user detail renders its sections and hides network information from a view
  expect(logsRequest).toContain(`user=${userId}`);
  expect(logsRequest).toContain('pageSize=30');
  await timeline.getByRole('button',{name:/More filters/}).click();
- await timeline.getByLabel('Activity type').selectOption('project_view');
+ await timeline.getByRole('combobox',{name:'Activity type'}).click();
+ await timeline.getByRole('option',{name:'Project view'}).click();
  await expect(page).toHaveURL(/t_event=project_view/);
  await expect.poll(()=>logsRequest).toContain('event=project_view');
  const prompts=page.locator('.admin-section').filter({has:page.getByRole('heading',{name:'Prompt activity'})});
@@ -323,10 +324,12 @@ test('session filters stay in the address bar and the sessions list fits a phone
  await expect(page.locator('.admin-table')).toContainText('Anonymous visitor');
  await page.getByRole('button',{name:/More filters/}).click();
  await expect(page.getByLabel('IP address')).toBeVisible();
- await page.getByLabel('Status',{exact:true}).selectOption('ended');
+ await page.getByRole('combobox',{name:'Status',exact:true}).click();
+ await page.getByRole('option',{name:'Ended'}).click();
  await expect(page).toHaveURL(/status=ended/);
  await expect.poll(()=>requests.some(url=>url.includes('status=ended'))).toBe(true);
- await page.getByLabel('Browser',{exact:true}).selectOption('Firefox');
+ await page.getByRole('combobox',{name:'Browser',exact:true}).click();
+ await page.getByRole('option',{name:'Firefox'}).click();
  await expect(page).toHaveURL(/browser=Firefox/);
  await page.getByRole('button',{name:'Anonymous visitors'}).click();
  await expect(page).toHaveURL(/visitor=anonymous/);

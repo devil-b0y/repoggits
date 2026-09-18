@@ -6,6 +6,7 @@ import { HEALTH, PROVIDERS, ROLES, SSL_MODES, type Comparison, type DatabaseOver
 import { AdminPage } from './AdminFrame';
 import { Badge, DataTable, DetailList, FactGrid, Section, useAdminData, type Column } from './kit';
 import { formatDateTime, formatDuration, formatNumber, timeAgo } from './format';
+import Select from '../Select';
 import './admin-database.css';
 
 // Admin › Database manager (Super Admins only): which database the site is running on, which others are configured,
@@ -143,7 +144,7 @@ function DatabaseCard({record,isActive,busy,onTest,onSchema,onSync,onCompare,onV
       {!ready?<button type="button" className="button blue" onClick={onConfigure}>Configure</button>:<>
         <button type="button" className="button outline" disabled={working} onClick={onTest}>Test</button>
         {usable&&<>
-          <label className="admin-database-mode">Copy<select aria-label={`Copy mode for ${record.name}`} value={mode} onChange={event=>setMode(event.target.value)}><option value="incremental">Changes only</option><option value="full">Everything</option></select></label>
+          <label className="admin-database-mode">Copy<Select ariaLabel={`Copy mode for ${record.name}`} value={mode} onChange={setMode} options={[{value:'incremental',label:'Changes only'},{value:'full',label:'Everything'}]}/></label>
           <button type="button" className="button outline" disabled={working} onClick={()=>onSync(mode)}>Sync</button>
           <button type="button" className="button outline" disabled={working} onClick={onCompare}>Compare</button>
           <button type="button" className="button outline" disabled={working} onClick={onVerify}>Verify</button>
@@ -252,15 +253,14 @@ function DatabaseForm({record,onCancel,onSaved}:{record:DatabaseRecord|null;onCa
     {problem&&<Notice error>{problem}</Notice>}
     <form className="admin-database-form" onSubmit={submit}>
       <label>Name<input name="name" required maxLength={80} value={values.name} onChange={event=>set({name:event.target.value})}/></label>
-      <label>Provider<select name="provider" value={values.provider} onChange={event=>{const provider=event.target.value as Provider;set({provider,port:values.port===PORTS[values.provider]?PORTS[provider]:values.port});}}>
-        {(Object.keys(PROVIDERS) as Provider[]).map(provider=><option key={provider} value={provider}>{PROVIDERS[provider]}</option>)}</select></label>
+      <label>Provider<Select ariaLabel="Provider" value={values.provider} onChange={value=>{const provider=value as Provider;set({provider,port:values.port===PORTS[values.provider]?PORTS[provider]:values.port});}} options={(Object.keys(PROVIDERS) as Provider[]).map(provider=>({value:provider,label:PROVIDERS[provider]}))}/></label>
       <label>Host<input name="host" required value={values.host} placeholder="db.example.com" spellCheck={false} onChange={event=>set({host:event.target.value})}/></label>
       <label>Port<input name="port" required type="number" inputMode="numeric" min={1} max={65535} value={values.port} onChange={event=>set({port:event.target.value})}/></label>
       <label>Database<input name="database" required value={values.database} spellCheck={false} onChange={event=>set({database:event.target.value})}/></label>
       <label>Username<input name="username" required value={values.username} spellCheck={false} autoComplete="off" onChange={event=>set({username:event.target.value})}/></label>
       <label>Password<input name="password" type="password" autoComplete="new-password" value={values.password} required={!record} onChange={event=>set({password:event.target.value})}/><small>Stored sealed. No page and no API response ever shows it again.</small></label>
       <label>Schema<input name="schema" required value={values.schema} spellCheck={false} onChange={event=>set({schema:event.target.value})}/><small>MySQL has no separate schema: use the database name.</small></label>
-      <label>SSL mode<select name="ssl" value={values.ssl} onChange={event=>set({ssl:event.target.value as SslMode})}>{SSL_MODES.map(option=><option key={option} value={option}>{option}</option>)}</select></label>
+      <label>SSL mode<Select ariaLabel="SSL mode" value={values.ssl} onChange={value=>set({ssl:value as SslMode})} options={[...SSL_MODES]}/></label>
       <div className="admin-database-form-actions">
         <button className="button blue" disabled={saving}>{saving?'Saving…':record?'Save changes':'Add database'}</button>
         <button type="button" className="button outline" onClick={onCancel}>Cancel</button>

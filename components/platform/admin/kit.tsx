@@ -7,6 +7,7 @@ import { hasPermission } from '@/lib/admin/permissions';
 import { DATE_PRESETS, DEVICE_TYPES, SESSION_STATUSES, type DatePreset, type PersonRef, type ProjectRef, type SessionStatus, type StatCard } from '@/lib/admin/types';
 import { Sparkline } from './charts';
 import { formatBytes, formatChange, formatDuration, formatNumber, formatPercent, viewerTimeZone } from './format';
+import Select from '../Select';
 
 // Building blocks every admin panel page shares: filters kept in the URL, data loading, the Advanced Filters bar,
 // server-paged tables, pagination, exports, stat tiles and small display helpers.
@@ -158,7 +159,7 @@ export function AdvancedFilters({fields,values,onChange,onReset,quickFilters,chi
     if(field.type==='dateRange')return <DateRangeField key="date" values={values} onChange={onChange} presets={field.presets} allowAllTime={field.allowAllTime}/>;
     if(field.type==='search')return <label key={field.name} className="admin-filter-search">{field.label}<span><Search size={15} aria-hidden="true"/><DebouncedInput type="search" value={values[field.name]||''} placeholder={field.placeholder} onCommit={value=>onChange({[field.name]:value.trim()})}/></span></label>;
     if(field.type==='text')return <label key={field.name}>{field.label}<DebouncedInput type="text" value={values[field.name]||''} placeholder={field.placeholder} spellCheck={false} onCommit={value=>onChange({[field.name]:value.trim()})}/></label>;
-    return <label key={field.name}>{field.label}<select value={values[field.name]||''} onChange={event=>onChange({[field.name]:event.target.value})}><option value="">{field.allLabel??'All'}</option>{field.options.map(option=><option key={option.value} value={option.value}>{option.label}</option>)}</select></label>;
+    return <label key={field.name}>{field.label}<Select ariaLabel={field.label} value={values[field.name]||''} onChange={value=>onChange({[field.name]:value})} options={[{value:'',label:field.allLabel??'All'},...field.options.map(option=>({value:option.value,label:option.label}))]}/></label>;
   };
   return <section className="admin-filters panel" aria-label="Filters">
     <div className="admin-filters-row">
@@ -174,7 +175,7 @@ export function AdvancedFilters({fields,values,onChange,onReset,quickFilters,chi
 function DateRangeField({values,onChange,presets=['today','yesterday','7d','30d','90d','custom'],allowAllTime=false}:{values:FilterValues;onChange:(patch:FilterValues)=>void;presets?:readonly DatePreset[];allowAllTime?:boolean}) {
   const preset=values.date??'';
   return <div className="admin-date-range" role="group" aria-label="Date range">
-    <label>Date range<select value={preset} onChange={event=>onChange(event.target.value==='custom'?{date:'custom'}:{date:event.target.value,from:'',to:''})}>{allowAllTime&&<option value="">All time</option>}{presets.map(option=><option key={option} value={option}>{DATE_PRESETS[option]}</option>)}</select></label>
+    <label>Date range<Select ariaLabel="Date range" value={preset} onChange={value=>onChange(value==='custom'?{date:'custom'}:{date:value,from:'',to:''})} options={[...(allowAllTime?[{value:'',label:'All time'}]:[]),...presets.map(option=>({value:option,label:DATE_PRESETS[option]}))]}/></label>
     {preset==='custom'&&<><label>From<input type="datetime-local" value={values.from||''} max={values.to||undefined} onChange={event=>onChange({from:event.target.value})}/></label><label>To<input type="datetime-local" value={values.to||''} min={values.from||undefined} onChange={event=>onChange({to:event.target.value})}/></label></>}
   </div>;
 }

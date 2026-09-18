@@ -106,7 +106,8 @@ test('a password submitted when adding a database never appears anywhere in the 
   // control inside it directly, sidestepping accessible-name computation entirely.
   const field = (label: string) => page.locator('.admin-database-form label', { hasText: new RegExp(`^${label}`) }).locator('input, select');
   await field('Name').fill('cPanel MySQL');
-  await page.locator('.admin-database-form label', { hasText: 'Provider' }).locator('select').selectOption('mysql');
+  await page.locator('.admin-database-form label', { hasText: 'Provider' }).getByRole('combobox').click();
+  await page.getByRole('option', { name: 'MySQL / MariaDB' }).click();
   await field('Host').fill('sql123.hostinger.example');
   await field('Database').fill('cpaneluser_repoggits');
   await field('Username').fill('cpaneluser');

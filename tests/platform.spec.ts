@@ -368,11 +368,12 @@ test('built-in upload picker attaches a cover and source archive',async({page})=
   await page.getByLabel('Project title',{exact:true}).fill('Refresh-safe project');
   await page.getByRole('textbox',{name:'Full story',exact:true}).fill('My unfinished project description');
   await page.getByLabel('Demo video URL',{exact:false}).fill('https://unfinished');
-  await page.getByRole('combobox',{name:'College',exact:true}).selectOption('GGCT');
+  await page.getByRole('combobox',{name:'College',exact:true}).click();
+  await page.getByRole('option',{name:'GGCT',exact:true}).click();
   await page.reload();
   await expect(page.getByLabel('Project title',{exact:true})).toHaveValue('Refresh-safe project');
   await expect(page.getByRole('textbox',{name:'Full story',exact:true})).toHaveValue('My unfinished project description');
-  await expect(page.getByRole('combobox',{name:'College',exact:true})).toHaveValue('GGCT');
+  await expect(page.getByRole('combobox',{name:'College',exact:true})).toHaveText('GGCT');
   await expect(page.getByAltText('Uploaded preview',{exact:true})).toBeVisible();
   await expect(page.getByText('Source archive attached',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Save draft',exact:true}).click();
@@ -484,7 +485,7 @@ test('modified builds credit a pinned original and require separate ownership an
 test('project thumbnail opens video and galleries, team details and discussion work on mobile',async({page})=>{
   await page.context().addCookies((await outsider.storageState()).cookies);
   await page.route('https://www.youtube-nocookie.com/**',route=>route.fulfill({contentType:'text/html',body:'<html><body>Embedded player test stand-in</body></html>'}));
-  await page.goto('/projects');await expect(page.getByLabel('Sort by')).toHaveValue('Most starred');
+  await page.goto('/projects');await expect(page.getByLabel('Sort by')).toHaveText('Most starred');
   await expect(page.locator('.project-card').first()).toContainText('Solar lab monitor');
   await page.getByRole('link',{name:'View Solar lab monitor',exact:true}).click();
   const video=page.getByTitle('Solar lab monitor working demo');await expect(video).toBeVisible();await expect(video).toHaveAttribute('src',/autoplay=1&mute=1/);
@@ -577,8 +578,10 @@ test('student UI can save and reopen a real Neon-backed draft',async({page})=>{
   await expect(page).toHaveURL(/workspace/);
   await page.getByRole('link',{name:'New project',exact:true}).click();
   await page.getByLabel('Project title',{exact:true}).fill('UI-created persistent draft');
-  await page.getByRole('combobox',{name:'College',exact:true}).selectOption('GGCT');
-  await page.getByRole('combobox',{name:'Semester',exact:true}).selectOption('5');
+  await page.getByRole('combobox',{name:'College',exact:true}).click();
+  await page.getByRole('option',{name:'GGCT',exact:true}).click();
+  await page.getByRole('combobox',{name:'Semester',exact:true}).click();
+  await page.getByRole('option',{name:'5',exact:true}).click();
   await page.getByLabel('Branch',{exact:true}).fill('Electronics');
   await expect(page.getByLabel('Member 1 photo',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Add service',exact:true}).click();
@@ -592,8 +595,8 @@ test('student UI can save and reopen a real Neon-backed draft',async({page})=>{
   const draft=page.locator('.workspace-project').filter({hasText:'UI-created persistent draft'});
   await draft.getByRole('link',{name:'Continue editing'}).click();
   await expect(page.getByLabel('Project title',{exact:true})).toHaveValue('UI-created persistent draft');
-  await expect(page.getByRole('combobox',{name:'College',exact:true})).toHaveValue('GGCT');
-  await expect(page.getByRole('combobox',{name:'Semester',exact:true})).toHaveValue('5');
+  await expect(page.getByRole('combobox',{name:'College',exact:true})).toHaveText('GGCT');
+  await expect(page.getByRole('combobox',{name:'Semester',exact:true})).toHaveText('5');
   await expect(page.getByLabel('Branch',{exact:true})).toHaveValue('Electronics');
   await expect(page.getByLabel('Service name',{exact:true})).toHaveValue('Neon');
   await page.screenshot({path:'test-results/submission-desktop.png',fullPage:true});
