@@ -7,7 +7,7 @@ import { currentUser, requireUser, canReview, rateLimit, newToken } from './auth
 import { canEdit, fileReference, fileReferenceParams } from './projects';
 import { requireCondition } from './errors';
 import { readBody, json } from './http';
-import { MAX_UPLOAD, safeFilename, validateImage, validateZip } from './file-validation';
+import { MAX_UPLOAD, MAX_VIDEO_UPLOAD, safeFilename, validateImage, validateVideo, validateZip } from './file-validation';
 import { openBytes, openText, sealBytes, sealText } from './encryption';
 import { IMAGE_WIDTHS } from './images';
 
@@ -34,10 +34,13 @@ export async function upload(request:NextRequest) {
   const user=await requireUser(request);await rateLimit(`upload:${user.id}`,15,3600);
   const name=safeFilename(request.headers.get('x-filename')||'');
   const extension=name.split('.').pop()?.toLowerCase();
-  requireCondition(['zip','png','jpg','jpeg','webp'].includes(extension||''),400,'Only ZIP, PNG, JPEG, and WebP files are accepted.');
-  const original=await readBody(request,MAX_UPLOAD);requireCondition(original.length>0,400,'The file is empty.');
+  requireCondition(['zip','png','jpg','jpeg','webp','mp4','webm'].includes(extension||''),400,'Only ZIP, PNG, JPEG, WebP, MP4, and WebM files are accepted.');
+  const isVideo=extension==='mp4'||extension==='webm';
+  const max=isVideo?MAX_VIDEO_UPLOAD:MAX_UPLOAD;
+  const original=await readBody(request,max);requireCondition(original.length>0,400,'The file is empty.');
   let content=original,mime='application/zip',filename=name;
   if(extension==='zip')await validateZip(original);
+  else if(isVideo){await validateVideo(original,extension as 'mp4'|'webm');mime=extension==='mp4'?'video/mp4':'video/webm';}
   else {content=await validateImage(original);mime='image/webp';filename=name.replace(/\.[^.]+$/,'.webp');}
   const id=randomUUID();
   await db.query("INSERT INTO r.files(id,owner_id,filename,mime,size,content,scan_status) VALUES($1,$2,$3,$4,$5,$6,'validated_internal')",[id,user.id,sealText(filename,'files.filename'),mime,content.length,sealBytes(content,'files.content')]);
@@ -85,5 +88,21 @@ export async function fileRoute(request:NextRequest,id:string,sign=false) {
   const content=width?await scaledImage(id,Number(width),original):await original();
   // Photos anyone may see are reused by the browser for an hour; drafts, reviews and source archives are never stored.
   const cache=shared&&file.mime.startsWith('image/')?'private, max-age=3600':'private, no-store';
-  return new Response(new Uint8Array(content),{headers:{'Content-Type':width?'image/webp':file.mime,'Content-Length':String(content.length),'Content-Disposition':`${file.mime==='application/zip'?'attachment':'inline'}; filename="${openText(file.filename,'files.filename')}"`,'Cache-Control':cache,'X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; sandbox"}});
+  const isVideo=file.mime.startsWith('video/');
+  const headers:Record<string,string>={'Content-Type':width?'image/webp':file.mime,'Content-Disposition':`${file.mime==='application/zip'?'attachment':'inline'}; filename="${openText(file.filename,'files.filename')}"`,'Cache-Control':cache,'X-Content-Type-Options':'nosniff','Content-Security-Policy':"default-src 'none'; sandbox"};
+  // A demo video is buffered fully in memory by the time we get here (no blob storage/streaming layer), but the
+  // player still needs to scrub and seek without downloading the whole file first, so Range requests are sliced
+  // out of that same in-memory buffer rather than fetched again.
+  const range=isVideo?request.headers.get('range'):null;
+  const match=range?/^bytes=(\d*)-(\d*)$/.exec(range.trim()):null;
+  if(match&&(match[1]||match[2])) {
+    const start=match[1]?Math.min(Number(match[1]),content.length-1):Math.max(0,content.length-Number(match[2]));
+    const end=match[1]&&match[2]?Math.min(Number(match[2]),content.length-1):content.length-1;
+    if(start<=end) {
+      const slice=content.subarray(start,end+1);
+      return new Response(new Uint8Array(slice),{status:206,headers:{...headers,'Content-Range':`bytes ${start}-${end}/${content.length}`,'Content-Length':String(slice.length),'Accept-Ranges':'bytes'}});
+    }
+  }
+  if(isVideo)headers['Accept-Ranges']='bytes';
+  return new Response(new Uint8Array(content),{headers:{...headers,'Content-Length':String(content.length)}});
 }

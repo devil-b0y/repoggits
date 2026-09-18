@@ -4,7 +4,10 @@ export function projectDuration(start:string,end:string) {
   return Number.isFinite(days)&&end>=start?`${days} ${days===1?'day':'days'}`:'';
 }
 
-export function videoSource(value:string):{kind:'embed'|'file';url:string}|null {
+export function videoSource(data:{videoUrl:string;videoId:string}):{kind:'embed'|'file';url:string}|null {
+  // An uploaded file always wins over a pasted link — it's the one with stored rotation/trim metadata.
+  if(data.videoId)return {kind:'file',url:`/api/files/${data.videoId}`};
+  const value=data.videoUrl;
   try {
     const url=new URL(value);
     if(!['http:','https:'].includes(url.protocol))return null;

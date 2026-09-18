@@ -68,8 +68,6 @@
 .platform .submission-studio .file-picker>label{display:grid;gap:13px;font-size:15px}
 .platform .submission-studio input[type=file]{font-family:inherit;font-size:12px;font-weight:400;min-height:46px;color:var(--muted)}
 .platform .submission-studio input[type=file]::file-selector-button{font-family:inherit;font-weight:500;font-size:12px;line-height:1.5;min-height:44px;padding:12px 16px;background:#3059b5;border-radius:7px}
-.platform .submission-studio .studio-section-next{min-height:55px;font-size:13px;font-weight:500;padding-top:20px;margin-top:25px}
-.platform .submission-studio .studio-section-next>span{font-size:9px;font-weight:400;letter-spacing:1px}
 .platform .submission-studio .draft-recovery-status{font-size:12px;padding:15px 18px;line-height:1.7;border-radius:10px}
 .platform .submission-studio .editor-actions{gap:12px}
 .platform .submission-studio .editor-actions .button{font-size:14px;min-height:50px;padding:14px 20px}
@@ -119,7 +117,6 @@
  .platform .submission-studio .file-picker{padding:17px}
  .platform .submission-studio .editor-actions{flex-wrap:wrap}
  .platform .submission-studio .editor-actions .button{font-size:12px;padding:12px;min-height:48px}
- .platform .submission-studio .studio-section-next{font-size:12px;gap:12px}
 }
 @media(max-width:360px){
  .platform .submission-studio .studio-hero{padding:24px 19px 0}
@@ -133,3 +130,13 @@
  .platform .submission-studio .studio-start:hover{transform:none}
  .platform .submission-studio .studio-hero-art:hover .paper-front{transform:translateX(16px) rotate(5deg)}
 }
+
+/* Section-aware physical objects, contained within the existing studio hero. */
+.platform .submission-studio .studio-chapter-art{display:block;min-width:0;align-self:stretch;min-height:380px;position:relative}
+.studio-step-object{position:relative;height:100%;min-height:380px;width:100%;isolation:isolate}
+.studio-object-canvas{position:absolute;inset:0 0 30px;min-width:0}
+.studio-object-canvas canvas{display:block;width:100%;height:100%;max-width:100%}
+.studio-object-caption{position:absolute;bottom:0;left:0;right:0;text-align:center;color:var(--muted);font:10px/1.6 monospace;letter-spacing:2px;text-transform:uppercase}
+.studio-object-fallback{position:absolute;inset:20% 18%;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;border:1px solid var(--line);border-radius:20px;background:var(--paper);color:var(--ink);transform:perspective(600px) rotateY(-12deg)}
+.studio-object-fallback>span{font:64px Georgia,serif;color:var(--blue)}
+@media(max-width:760px){.platform .submission-studio .studio-chapter-art{display:block;min-height:250px;grid-row:auto}.studio-step-object{min-height:250px;height:250px}.studio-object-caption{font-size:9px}.submission-studio .studio-hero{min-width:0}.submission-studio .studio-hero-copy{min-width:0}}

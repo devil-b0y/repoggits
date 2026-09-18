@@ -1,0 +1,15 @@
+/* The upload zone reuses .file-picker/.upload-invitation/.uploaded-file (see FilePicker.tsx's styling) for visual
+   consistency; only the parts specific to a video preview are added here. */
+.platform .video-field{display:grid;gap:14px}
+.platform .video-upload{margin-bottom:0}
+.platform .uploaded-file.video-uploaded-file{align-items:flex-start;flex-wrap:wrap}
+.platform .uploaded-file.video-uploaded-file video{width:220px;max-width:100%;aspect-ratio:16/9;border-radius:8px;background:#101a2a;object-fit:contain}
+.platform .uploaded-file.video-uploaded-file .uploaded-file-actions{flex-direction:column;align-items:flex-start;gap:8px}
+
+.video-editor-stage-wrap{width:100%;min-width:0;max-width:max(280px,min(100%,calc(100dvh - 280px)));margin:0 auto}
+.video-editor-stage{position:relative;width:100%;overflow:hidden;border-radius:16px;background:#101a2a}
+.video-editor-stage video{display:block;width:100%;height:100%;background:#101a2a}
+
+@media (max-width:760px){
+  .platform .uploaded-file.video-uploaded-file video{width:100%}
+}

@@ -1,10 +1,11 @@
 'use client';
 
 import {useEffect,useId,useRef,useState} from 'react';
-import {Brain,ShieldCheck,Cloud,BarChart3,Radio,Smartphone,Leaf,Heart,GraduationCap,ShoppingCart,MapPin,TestTube,Palette,ChevronDown,Bot,Cpu,Wifi,ScanFace,ClipboardCheck,Tag,Code2,Database,Globe,Layers,Link2,Plus,Server,Terminal,Video,Wrench,X} from 'lucide-react';
+import {Brain,ShieldCheck,Cloud,BarChart3,Radio,Smartphone,Leaf,Heart,GraduationCap,ShoppingCart,MapPin,TestTube,Palette,ChevronDown,Bot,Cpu,Wifi,ScanFace,ClipboardCheck,Tag,Code2,Database,Globe,Layers,Link2,Plus,Server,Terminal,Wrench,X} from 'lucide-react';
 import {technologyTags,tagMatches} from '@/lib/technology-tags';
 import type {ProjectData} from '@/lib/schema';
 import LanguagePicker from './LanguagePicker';
+import VideoField from './VideoField';
 import {TechnologyMark} from './ProjectIdentity';
 import './technology-fields.css';
 
@@ -37,9 +38,9 @@ function StackPicker({field,value,onChange}:{field:typeof fields[number];value:s
  }
  return <div className="tech-stack-field" onBlur={e=>{if(!e.currentTarget.contains(e.relatedTarget))setOpen(false);}} onKeyDown={e=>{if(e.key==='Escape')setOpen(false);}}>
   <label htmlFor={id}><Icon size={17}/>{title}</label><small>{hint}</small>
-  <div className="stack-presets-control"><input ref={input} id={id} aria-label={title} value={value} maxLength={300} placeholder={example} onChange={e=>onChange(e.target.value)}/><button type="button" aria-label={`Choose ${title.toLowerCase()} technologies`} aria-expanded={open} aria-controls={`${id}-presets`} onClick={()=>setOpen(!open)}><ChevronDown size={18}/></button></div>
+  <div className="stack-presets-control"><input ref={input} id={id} aria-label={title} value={value} maxLength={300} placeholder={example} onChange={e=>onChange(e.target.value)}/><button type="button" aria-label={`Choose ${title.toLowerCase()} technologies`} aria-expanded={open} aria-controls={`${id}-presets`} onClick={()=>setOpen(!open)}><ChevronDown size={18}/></button>
+  {open&&<div className="stack-presets-menu" id={`${id}-presets`} aria-label={`${title} presets`}>{presets[key].map(name=><button type="button" key={name} aria-pressed={selected.some(v=>v.toLowerCase()===name.toLowerCase())} onClick={()=>choose(name)}><TechnologyMark name={name} icon={Icon}/><span>{name}</span><Plus size={15}/></button>)}<button type="button" onClick={()=>{setOpen(false);input.current?.focus();setMessage('Type your own technology in the field above. Separate multiple names with commas.');}}><TechnologyMark name="Custom technology" icon={Icon}/><span>Other / type custom</span></button></div>}</div>
   {selected.length>0&&<div className="stack-selected-logos">{selected.map((name,i)=><span key={`${name}-${i}`}><TechnologyMark name={name} icon={Icon}/><span>{name}</span></span>)}</div>}
-  {open&&<div className="stack-presets-menu" id={`${id}-presets`} aria-label={`${title} presets`}>{presets[key].map(name=><button type="button" key={name} aria-pressed={selected.some(v=>v.toLowerCase()===name.toLowerCase())} onClick={()=>choose(name)}><TechnologyMark name={name} icon={Icon}/><span>{name}</span><Plus size={15}/></button>)}<button type="button" onClick={()=>{setOpen(false);input.current?.focus();setMessage('Type your own technology in the field above. Separate multiple names with commas.');}}><TechnologyMark name="Custom technology" icon={Icon}/><span>Other / type custom</span></button></div>}
   <small>Choose presets or type your own. Separate multiple technologies with commas.</small>
   {message&&<small role="status">{message}</small>}
  </div>;
@@ -89,6 +90,6 @@ export default function TechnologyFields({data,onChange,suggestions}:{data:Proje
     <div className="tech-stack-grid"><LanguagePicker value={data.stack.languages} onChange={languages=>onChange({stack:{...data.stack,languages}})}/>{fields.map(field=><StackPicker key={field.key} field={field} value={data.stack[field.key]} onChange={value=>onChange({stack:{...data.stack,[field.key]:value}})}/>)}</div>
     <div className="tech-group-heading"><span><Link2 size={18}/>See it in action</span><p>Connect your repository and working demos.</p></div>
     <div className="form-row"><label>GitHub repository URL (optional)<input type="url" value={data.github} onChange={e=>onChange({github:e.target.value})} placeholder="https://github.com/your-team/project"/></label><label>Live demo URL<input type="url" value={data.liveUrl} onChange={e=>onChange({liveUrl:e.target.value})} placeholder="https://your-project.com"/></label></div>
-    <label className="tech-video-label"><span><Video size={17}/>Demo video URL</span><input aria-label="Demo video URL" type="url" value={data.videoUrl} onChange={e=>onChange({videoUrl:e.target.value})} placeholder="YouTube link or direct MP4 / WebM URL"/><small>Show the moment it works. The video opens when someone clicks your project thumbnail.</small></label>
+    <VideoField data={data} onChange={onChange}/>
   </div>;
 }

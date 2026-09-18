@@ -4,6 +4,7 @@ import { crc32 } from 'node:zlib';
 import { HttpError } from './errors';
 
 export const MAX_UPLOAD = 20 * 1024 * 1024;
+export const MAX_VIDEO_UPLOAD = 100 * 1024 * 1024;
 const MAX_EXPANDED = 100 * 1024 * 1024;
 const MAX_ENTRIES = 2000;
 const rasterExtensions = new Set(['png','jpg','jpeg','webp']);
@@ -77,4 +78,17 @@ export async function validateImage(buffer:Buffer) {
     if (!['png','jpeg','webp'].includes(meta.format || '') || (meta.pages || 1)>1) throw new Error('format');
     return await image.rotate().resize({width:2400,height:2400,fit:'inside',withoutEnlargement:true}).webp({quality:85}).toBuffer();
   } catch { throw new HttpError(400, 'Upload a valid PNG, JPEG, or WebP image under 25 megapixels.'); }
+}
+
+// A basic container-format sanity check only — magic-byte sniffing, not a codec/stream parse. Trim and rotation are
+// applied live by the player as metadata (see lib/video-playback.ts), so the stored bytes are never re-encoded here.
+export async function validateVideo(buffer:Buffer,extension:'mp4'|'webm') {
+  if (extension==='mp4') {
+    // ISO-BMFF files open with a box whose 4-byte size is followed by a 4-byte type; the first box is usually
+    // 'ftyp', identifying the file as MP4/QuickTime-family media.
+    if (buffer.length < 12 || buffer.subarray(4,8).toString('ascii') !== 'ftyp') throw new HttpError(400, 'Upload a valid MP4 video file.');
+    return;
+  }
+  // WebM is Matroska-based (EBML container), which always starts with this 4-byte magic number.
+  if (buffer.length < 4 || buffer.readUInt32BE(0) !== 0x1a45dfa3) throw new HttpError(400, 'Upload a valid WebM video file.');
 }

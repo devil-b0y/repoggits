@@ -20,6 +20,11 @@ export const projectSchema = z.object({
   tags: z.array(text(40).min(1)).max(40).default([]),
   stack: z.object({ frontend: text(300).default(''), backend: text(300).default(''), database: text(300).default(''), languages: text(300).default(''), frameworks: text(300).default(''), tools: text(300).default('') }).default({ frontend:'', backend:'', database:'', languages:'', frameworks:'', tools:'' }),
   github: optionalUrl, liveUrl: optionalUrl, videoUrl: optionalUrl,
+  videoId: z.string().uuid().or(z.literal('')).default(''),
+  videoRotation: z.union([z.literal(0),z.literal(90),z.literal(180),z.literal(270)]).default(0),
+  videoTrimStart: z.number().min(0).default(0),
+  // 0 is a sentinel meaning "unset" — play to the video's natural end, not "trim everything after 0 seconds".
+  videoTrimEnd: z.number().min(0).default(0),
   services: z.array(z.object({name:text(100).min(1),purpose:text(300).default(''),url:optionalUrl})).max(30).default([]),
   startDate: date, endDate: date, purchaseDate: date, year: z.string().regex(/^20\d{2}$/).default(String(new Date().getFullYear())),
   hardwareCosts: z.array(z.object({ name: text(100).min(1), quantity: z.number().int().min(1).max(10000), unitCost: z.number().min(0).max(10000000) })).max(100).default([]),

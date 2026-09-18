@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { deflateRawSync } from 'node:zlib';
 import sharp from 'sharp';
-import { validateZip, validateImage, safeFilename } from '../lib/file-validation';
+import { validateZip, validateImage, validateVideo, safeFilename } from '../lib/file-validation';
 
 // Minimal ZIP fixture builder: never extracts or executes fixture contents.
 export function zipFixture(name:string,content:Buffer,compressed=false) {
@@ -29,6 +29,17 @@ test('image decoding rejects fake images and re-encodes real images',async()=>{
   const png=await sharp({create:{width:4,height:4,channels:3,background:'#3059b5'}}).png().toBuffer();
   const output=await validateImage(png);expect((await sharp(output).metadata()).format).toBe('webp');
   expect(safeFilename('../../bad\r\nname.png')).toBe('bad__name.png');
+});
+
+test('video validation sniffs container magic bytes without touching codec content',async()=>{
+  // A real MP4 opens with a box size (4 bytes) then the 'ftyp' box type; a real WebM starts with the EBML magic
+  // number. Neither check parses codecs/streams — that is left entirely to the browser, matching the "lightweight,
+  // non-destructive" mandate (no ffmpeg, no re-encoding).
+  await expect(validateVideo(Buffer.concat([Buffer.from([0,0,0,0x20]),Buffer.from('ftypisom'),Buffer.alloc(20)]),'mp4')).resolves.toBeUndefined();
+  await expect(validateVideo(Buffer.from('not a video at all'),'mp4')).rejects.toThrow('valid MP4');
+  await expect(validateVideo(Buffer.from([0x1a,0x45,0xdf,0xa3,0,0,0,0]),'webm')).resolves.toBeUndefined();
+  await expect(validateVideo(Buffer.from('RIFF....WEBPVP8 '),'webm')).rejects.toThrow('valid WebM');
+  await expect(validateVideo(Buffer.alloc(2),'mp4')).rejects.toThrow('valid MP4');
 });
 
 test('built-in inspection validates source text and embedded images',async()=>{

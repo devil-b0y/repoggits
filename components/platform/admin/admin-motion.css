@@ -1,0 +1,34 @@
+/* Admin panel motion: entrance choreography plus the small set of press/hover tuning vars that ButtonMotion.tsx
+   (mounted once in app/layout.tsx) needed to size for controls admin-panel.css added after button-motion.css
+   shipped. Everything that actually *animates* --btn-press/--btn-hover lives in ButtonMotion.tsx and
+   button-motion.css; this file only sets how deep those channels go for a couple of admin-specific controls. */
+
+/* .admin-menu-toggle is a full-width row button (not a bare icon control, not a card), so the default press
+   depth from button-motion.css's base rule reads a little heavy here; a lighter touch suits its size. */
+.admin-menu-toggle[data-btn-motion]{--btn-press-depth:.02;--btn-lift:-1px}
+/* The sortable column-header buttons are bare text with no chrome to squash, same family as .text-button. */
+.admin-table th button[data-btn-motion]{--btn-press-depth:.05;--btn-lift:-1px}
+
+/* Sidebar nav: `.admin-nav a` matches no selector in button-motion.css's CONTROLS list (a bare `<a>` without
+   "button" in its class), so ButtonMotion never stamps it and the vars above would have nothing to drive. A
+   plain CSS transition gives it the same "settles instead of snapping" feel on hover/focus without needing the
+   delegated press system. */
+@media (prefers-reduced-motion: no-preference) {
+  .admin-nav a{transition:background-color .15s ease,border-color .15s ease,color .15s ease}
+}
+@media (prefers-reduced-motion: reduce) {
+  .admin-nav a{transition:none}
+}
+
+/* The active-section indicator: a slim accent bar riding along with whichever link carries aria-current=page.
+   `.admin-nav-link` gives the anchor a positioning context without touching admin-panel.css's own `.admin-nav a`
+   rules; the indicator sits inside the link's own padding so it never overflows the 220px sidebar column. */
+.admin-nav-link{position:relative}
+.admin-nav-indicator{position:absolute;left:2px;top:6px;bottom:6px;width:3px;border-radius:2px;background:var(--blue)}
+@media (prefers-reduced-motion: reduce) {
+  .admin-nav-indicator{transition:none}
+}
+
+/* The mobile nav panel and the Advanced Filters "More filters" panel both animate height via inline styles from
+   AdminFrame.tsx / kit.tsx; this just keeps their content from spilling out mid-animation. */
+.admin-nav-groups,.admin-filters-grid{overflow:hidden}

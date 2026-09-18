@@ -2,7 +2,8 @@
 .admin-panel .admin-view-tabs{margin:-4px 0 16px}
 
 /* Metadata and audit details inside a table cell */
-.admin-panel .admin-meta summary{display:inline-flex;align-items:center;min-height:28px;font-size:11px;color:var(--muted);cursor:pointer}
+.admin-panel .admin-meta summary{display:inline-flex;align-items:center;min-height:28px;font-size:11px;font-weight:600;color:var(--muted);cursor:pointer;transition:color .14s}
+.admin-panel .admin-meta summary:hover{color:var(--blue)}
 .admin-panel .admin-meta summary:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:3px}
 .admin-panel .admin-meta dl{display:grid;gap:4px;margin:6px 0 0;max-width:420px}
 .admin-panel .admin-meta dl>div{display:grid;grid-template-columns:minmax(72px,34%) minmax(0,1fr);gap:8px}
@@ -11,7 +12,7 @@
 
 /* Reading one prompt */
 .platform .admin-panel .admin-read-prompt{min-height:32px;padding:0 11px;font-size:11px;white-space:nowrap}
-.admin-panel .admin-prompt-text{margin:16px 0 0;padding:14px 16px;background:var(--paper);border:1px solid var(--line);border-radius:6px;font-size:13px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
+.admin-panel .admin-prompt-text{margin:16px 0 0;padding:14px 16px;background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--blue);border-radius:0 8px 8px 0;font-size:13px;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
 
 @media(max-width:760px){
   .admin-panel .admin-meta dl{max-width:none}

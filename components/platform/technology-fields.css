@@ -31,7 +31,7 @@
 .platform .tech-group-heading>span{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:500;color:var(--ink)}
 .platform .tech-group-heading svg{color:var(--blue)}
 .platform .tech-group-heading>p{font-size:13px;line-height:1.7;color:var(--muted);margin:7px 0 0}
-.platform .tech-stack-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.platform .tech-stack-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;align-items:start}
 .platform .tech-stack-grid>.tech-stack-field:last-child{grid-column:1/-1}
 .platform .submission-studio .tech-stack-field{min-width:0;margin:0;padding:17px;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;gap:8px}
 .platform .tech-stack-field>span,.platform .tech-video-label>span{display:flex;align-items:center;gap:9px}
@@ -66,12 +66,12 @@
 .platform .tech-chip .pd-logo-orbit svg,.platform .tech-quick .pd-logo-orbit svg{width:16px;height:16px}
 
 .platform .tech-stack-field>label{display:flex;align-items:center;gap:9px;margin:0}
-.platform .stack-presets-control{display:flex;align-items:center;gap:6px;min-width:0}
+.platform .stack-presets-control{position:relative;display:flex;align-items:center;gap:6px;min-width:0}
 .platform .stack-presets-control input{min-width:0;flex:1}
 .platform .stack-presets-control>button{display:grid;place-items:center;flex:0 0 44px;min-height:46px;border:1px solid var(--line);background:var(--white);color:var(--blue);border-radius:8px;cursor:pointer}
 .platform .stack-selected-logos{display:flex;flex-wrap:wrap;gap:8px}
 .platform .stack-selected-logos>span{display:inline-flex;align-items:center;gap:7px;max-width:100%;font-size:13px;overflow-wrap:anywhere}
-.platform .stack-presets-menu{display:flex;flex-direction:column;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--white);padding:5px;scrollbar-width:thin;scrollbar-color:var(--muted) transparent;overscroll-behavior:contain}
+.platform .stack-presets-menu{position:absolute;top:calc(100% + 7px);left:0;right:0;z-index:20;display:flex;flex-direction:column;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;background:var(--white);box-shadow:0 15px 40px #08192e30;padding:5px;scrollbar-width:thin;scrollbar-color:var(--muted) transparent;overscroll-behavior:contain}
 .platform .stack-presets-menu button{display:flex;align-items:center;gap:10px;text-align:left;padding:8px;min-height:44px;color:var(--ink);background:transparent;border:0;border-radius:5px;cursor:pointer;font:inherit;font-size:14px}
 .platform .stack-presets-menu button>span:nth-child(2){flex:1}
 .platform .stack-presets-menu button:hover,.platform .stack-presets-menu button[aria-pressed=true]{background:var(--paper);color:var(--blue)}

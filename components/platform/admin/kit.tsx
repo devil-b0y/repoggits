@@ -1,6 +1,7 @@
 'use client';
 import { useCallback, useEffect, useId, useRef, useState, type InputHTMLAttributes, type ReactNode } from 'react';
 import Link from 'next/link';
+import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, Download, RotateCcw, Search, SlidersHorizontal } from 'lucide-react';
 import { useSession } from '../shared';
 import { hasPermission } from '@/lib/admin/permissions';
@@ -8,6 +9,8 @@ import { DATE_PRESETS, DEVICE_TYPES, SESSION_STATUSES, type DatePreset, type Per
 import { Sparkline } from './charts';
 import { formatBytes, formatChange, formatDuration, formatNumber, formatPercent, viewerTimeZone } from './format';
 import Select from '../Select';
+import { ease } from '../MotionKit';
+import { Reveal, rowFade, rowGroup, staggerGroup, tileRise, useAdminStill, useCollapse } from './AdminMotion';
 
 // Building blocks every admin panel page shares: filters kept in the URL, data loading, the Advanced Filters bar,
 // server-paged tables, pagination, exports, stat tiles and small display helpers.
@@ -150,11 +153,13 @@ export const optionsOf=(values:readonly string[]):FilterOption[]=>values.map(val
  */
 export function AdvancedFilters({fields,values,onChange,onReset,quickFilters,children}:{fields:FilterField[];values:FilterValues;onChange:(patch:FilterValues)=>void;onReset:()=>void;quickFilters?:ReactNode;children?:ReactNode}) {
   const panelId=useId();
+  const still=useAdminStill();
   const primary=fields.filter(field=>field.type==='search'||field.type==='dateRange');
   const secondary=fields.filter(field=>field.type!=='search'&&field.type!=='dateRange') as Extract<FilterField,{name:string}>[];
   const active=secondary.filter(field=>values[field.name]).length;
   const [expanded,setExpanded]=useState<boolean|null>(null);
   const open=expanded??active>0;
+  const {visible,onExitComplete}=useCollapse(open);
   const render=(field:FilterField)=>{
     if(field.type==='dateRange')return <DateRangeField key="date" values={values} onChange={onChange} presets={field.presets} allowAllTime={field.allowAllTime}/>;
     if(field.type==='search')return <label key={field.name} className="admin-filter-search">{field.label}<span><Search size={15} aria-hidden="true"/><DebouncedInput type="search" value={values[field.name]||''} placeholder={field.placeholder} onCommit={value=>onChange({[field.name]:value.trim()})}/></span></label>;
@@ -168,7 +173,13 @@ export function AdvancedFilters({fields,values,onChange,onReset,quickFilters,chi
       <button type="button" className="text-button" onClick={()=>{setExpanded(null);onReset();}}><RotateCcw size={14} aria-hidden="true"/> Reset filters</button>
     </div>
     {quickFilters&&<div className="admin-quick-filters" role="group" aria-label="Quick filters">{quickFilters}</div>}
-    {secondary.length>0&&<div id={panelId} className="admin-filters-grid" hidden={!open}>{secondary.map(render)}</div>}
+    {secondary.length>0&&<div id={panelId} hidden={!visible}>
+      <AnimatePresence initial={false} onExitComplete={onExitComplete}>
+        {open&&<motion.div key="panel" className="admin-filters-grid" initial={still?false:{height:0,opacity:0}} animate={{height:'auto',opacity:1}} exit={{height:0,opacity:0}} transition={{duration:still?0:.2,ease}}>
+          {secondary.map(render)}
+        </motion.div>}
+      </AnimatePresence>
+    </div>}
     {children}
   </section>;
 }
@@ -188,6 +199,7 @@ export function QuickFilter({pressed,onClick,children}:{pressed:boolean;onClick:
 export type Column<T>={key:string;label:string;render:(row:T)=>ReactNode;sortKey?:string;className?:string};
 /** A server-sorted table. Below 760px each row becomes a card with its column labels. */
 export function DataTable<T,>({caption,columns,rows,rowKey,sort,dir,onSort,empty='Nothing matches these filters.',busy=false}:{caption:string;columns:Column<T>[];rows:T[];rowKey:(row:T)=>string;sort?:string;dir?:string;onSort?:(sort:string,dir:'asc'|'desc')=>void;empty?:ReactNode;busy?:boolean}) {
+  const still=useAdminStill();
   return <div className="admin-table-wrap" aria-busy={busy}>
     <table className="admin-table"><caption className="sr-only">{caption}</caption>
       <thead><tr>{columns.map(column=>{
@@ -196,16 +208,22 @@ export function DataTable<T,>({caption,columns,rows,rowKey,sort,dir,onSort,empty
           {column.sortKey&&onSort?<button type="button" onClick={()=>onSort(column.sortKey!,active&&dir!=='asc'?'asc':'desc')}>{column.label}{active&&(dir==='asc'?<ArrowUp size={13} aria-hidden="true"/>:<ArrowDown size={13} aria-hidden="true"/>)}</button>:column.label}
         </th>;
       })}</tr></thead>
-      <tbody>{rows.length?rows.map(row=><tr key={rowKey(row)}>{columns.map(column=><td key={column.key} className={column.className} data-label={column.label}>{column.render(row)}</td>)}</tr>):<tr><td className="admin-table-empty" colSpan={columns.length}>{empty}</td></tr>}</tbody>
+      {/* variants/initial/animate are constant across renders, so this only plays for rows genuinely new to the
+          DOM (a fresh page, a fresh filter) — a row whose key persists across a poll tick or an unrelated
+          re-render is already resting at "show" and framer will not replay it. */}
+      <motion.tbody variants={rowGroup} initial={still?false:'hidden'} animate="show">
+        {rows.length?rows.map(row=><motion.tr key={rowKey(row)} variants={rowFade}>{columns.map(column=><td key={column.key} className={column.className} data-label={column.label}>{column.render(row)}</td>)}</motion.tr>):<tr><td className="admin-table-empty" colSpan={columns.length}>{empty}</td></tr>}
+      </motion.tbody>
     </table>
   </div>;
 }
 export function Pager({page,pageSize,total,totalCapped=false,count,onPage}:{page:number;pageSize:number;total:number;totalCapped?:boolean;count:number;onPage:(page:number)=>void}) {
+  const still=useAdminStill();
   const pages=Math.max(1,Math.ceil(total/pageSize)),first=count?(page-1)*pageSize+1:0,last=(page-1)*pageSize+count;
   const hasNext=totalCapped?count===pageSize:page<pages;
   return <nav className="admin-pager" aria-label="Pagination">
     <span>{count?`Showing ${formatNumber(first)}–${formatNumber(last)} of ${formatNumber(total)}${totalCapped?'+':''}`:'No results'}</span>
-    <div><button type="button" className="button outline" disabled={page<=1} onClick={()=>onPage(page-1)}><ChevronLeft size={15} aria-hidden="true"/> Previous</button><span aria-live="polite">Page {formatNumber(page)} of {formatNumber(pages)}{totalCapped?'+':''}</span><button type="button" className="button outline" disabled={!hasNext} onClick={()=>onPage(page+1)}>Next <ChevronRight size={15} aria-hidden="true"/></button></div>
+    <div><button type="button" className="button outline" disabled={page<=1} onClick={()=>onPage(page-1)}><ChevronLeft size={15} aria-hidden="true"/> Previous</button><span aria-live="polite"><motion.span key={page} style={{display:'inline-block'}} initial={still?false:{opacity:0,y:4}} animate={{opacity:1,y:0}} transition={{duration:still?0:.16,ease}}>Page {formatNumber(page)} of {formatNumber(pages)}{totalCapped?'+':''}</motion.span></span><button type="button" className="button outline" disabled={!hasNext} onClick={()=>onPage(page+1)}>Next <ChevronRight size={15} aria-hidden="true"/></button></div>
   </nav>;
 }
 /** Download links for the current results. `endpoint` is the list endpoint, e.g. "admin/logs"; paging is dropped so the export covers every match. */
@@ -231,24 +249,30 @@ export function StatTile({card}:{card:StatCard}) {
   </Link>;
 }
 export function StatGrid({cards,label}:{cards:StatCard[];label:string}) {
-  return <div className="admin-stat-grid" role="list" aria-label={label}>{cards.map(card=><div role="listitem" key={card.key}><StatTile card={card}/></div>)}</div>;
+  const still=useAdminStill();
+  return <motion.div className="admin-stat-grid" role="list" aria-label={label} variants={staggerGroup} initial={still?false:'hidden'} animate="show">
+    {cards.map(card=><motion.div role="listitem" key={card.key} variants={tileRise}><StatTile card={card}/></motion.div>)}
+  </motion.div>;
 }
 /** A plain figure with no earlier period to compare against: analytics totals, "most common device" and the like. */
 export type Fact={key:string;label:string;value:ReactNode;hint?:ReactNode;href?:string};
 export function FactGrid({facts,label}:{facts:Fact[];label:string}) {
+  const still=useAdminStill();
   const body=(fact:Fact)=><><span className="admin-stat-label">{fact.label}</span><strong className="admin-stat-value">{fact.value}</strong>{fact.hint&&<span className="admin-stat-hint">{fact.hint}</span>}</>;
-  return <div className="admin-stat-grid" role="list" aria-label={label}>{facts.map(fact=><div role="listitem" key={fact.key}>
-    {fact.href?<Link className="admin-stat panel" href={fact.href}>{body(fact)}</Link>:<div className="admin-stat panel">{body(fact)}</div>}
-  </div>)}</div>;
+  return <motion.div className="admin-stat-grid" role="list" aria-label={label} variants={staggerGroup} initial={still?false:'hidden'} animate="show">
+    {facts.map(fact=><motion.div role="listitem" key={fact.key} variants={tileRise}>
+      {fact.href?<Link className="admin-stat panel" href={fact.href}>{body(fact)}</Link>:<div className="admin-stat panel">{body(fact)}</div>}
+    </motion.div>)}
+  </motion.div>;
 }
 
 // ----- Display helpers -----
 export function Section({title,description,actions,children,id}:{title:string;description?:ReactNode;actions?:ReactNode;children:ReactNode;id?:string}) {
   const generated=useId(),headingId=`${id??generated}-title`;
-  return <section className="admin-section panel" id={id} aria-labelledby={headingId}>
+  return <Reveal as="section" className="admin-section panel" id={id} aria-labelledby={headingId}>
     <div className="admin-section-head"><div><h2 id={headingId}>{title}</h2>{description&&<p>{description}</p>}</div>{actions}</div>
     {children}
-  </section>;
+  </Reveal>;
 }
 export function Badge({tone='neutral',children}:{tone?:'neutral'|'good'|'warn'|'bad'|'info';children:ReactNode}) {
   return <span className={`admin-badge ${tone}`}>{children}</span>;

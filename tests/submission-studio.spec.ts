@@ -227,3 +227,44 @@ test('stack presets preserve custom values, show icons and save after refresh',a
  await expect(page.getByText('Draft saved to your account.',{exact:false})).toBeVisible();
  expect(saved.data.stack.frontend).toBe('Existing custom interface, React');expect(saved.data.stack.database).toBe('PostgreSQL (Neon DB)');
 });
+
+
+test('named technology presets render their brand logos',async({page,request})=>{
+ await mockSession(page);await page.goto('/submit');
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
+ const input=page.getByRole('combobox',{name:'Technology tags'});
+ for(const name of ['Fastify','Laravel','Ruby on Rails','.NET','ROS','ROS 2','ESP32','PlatformIO']){
+  await input.fill(name);
+  const option=page.getByRole('option',{name,exact:true});
+  const logo=option.locator('img');await expect(logo).toHaveCount(1);
+  const response=await request.get((await logo.getAttribute('src'))!);
+  expect(response.ok(),name).toBe(true);expect(await response.text()).toContain('<svg');
+ }
+ await input.fill('Machine Learning');
+ await expect(page.getByRole('option',{name:'Machine Learning',exact:true}).locator('.pd-logo-orbit svg')).toHaveCount(1);
+});
+
+
+test('studio objects and introductions follow each step without resetting answers',async({page})=>{
+ await mockSession(page);await page.goto('/submit');
+ const cookies=page.getByRole('button',{name:'Reject non-essential',exact:true});if(await cookies.isVisible())await cookies.click();
+ await page.getByLabel('Project title',{exact:true}).fill('My preserved engineering project');
+ const headings=['Your idea.','Great work.','Inside the build.','Show the spark.','What it took.','One last look.'];
+ const nav=page.getByRole('navigation',{name:'Project form sections'});
+ for(let i=0;i<6;i++){
+  await nav.getByRole('link').nth(i).click();
+  await expect(page.locator('.studio-hero h1')).toContainText(headings[i]);
+  await expect(page.locator('.studio-step-object')).toHaveAttribute('data-object',String(i+1));
+  await expect(page.locator('.studio-form-content')).toHaveAttribute('data-step',String(i+1));
+ }
+ await page.getByRole('button',{name:'Back',exact:true}).click();
+ await expect(page.locator('.studio-step-object')).toHaveAttribute('data-object','5');
+ await nav.getByRole('link').first().click();
+ await expect(page.getByLabel('Project title',{exact:true})).toHaveValue('My preserved engineering project');
+ await page.locator('.studio-hero').screenshot({path:'test-results/studio-step-notebook.png'});
+ await nav.getByRole('link').nth(2).click();
+ await page.locator('.studio-hero').screenshot({path:'test-results/studio-step-board.png'});
+ await page.setViewportSize({width:390,height:844});
+ await expect(page.locator('.studio-step-object')).toBeVisible();
+ await page.locator('.studio-hero').screenshot({path:'test-results/studio-step-mobile.png'});
+});

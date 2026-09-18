@@ -5,10 +5,10 @@
 {$APP_DOMAIN} {
 	encode zstd gzip
 
-	# The application rejects uploads above 20 MB itself; this leaves headroom for
-	# multipart overhead while still refusing oversized bodies before Node sees them.
+	# The application rejects uploads above 100 MB itself (demo videos; images and ZIPs stay at 20 MB);
+	# this leaves headroom for multipart overhead while still refusing oversized bodies before Node sees them.
 	request_body {
-		max_size 24MB
+		max_size 120MB
 	}
 
 	header {

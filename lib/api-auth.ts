@@ -9,6 +9,7 @@ import { bodyJson, json } from './http';
 import { requireCondition, HttpError } from './errors';
 import { queueMail } from './mail';
 import { emailVerificationRequired } from './policy';
+import { endTrackedSessions, startTrackedSession } from './tracking';
 
 // Matches the countdown on the "Send a new code" button.
 const CODE_COOLDOWN='Please wait a minute before requesting another code.';
@@ -37,7 +38,7 @@ export async function authRoute(request:NextRequest,action:string) {
   if(action==='me')return json({user:await currentUser(request),uploadsAvailable:true,emailVerificationRequired:emailVerificationRequired()});
   if(action==='logout'){
     const token=request.cookies.get(SESSION_COOKIE)?.value;
-    if(token)await db.query('DELETE FROM r.sessions WHERE hash=$1',[hashToken(token)]);
+    if(token){await endTrackedSessions({sessionHash:hashToken(token)},'logout');await db.query('DELETE FROM r.sessions WHERE hash=$1',[hashToken(token)]);}
     const response=json({ok:true});response.cookies.set(SESSION_COOKIE,'',{path:'/',maxAge:0,httpOnly:true,sameSite:'lax'});return response;
   }
   if(action==='resend') {
@@ -81,6 +82,7 @@ export async function authRoute(request:NextRequest,action:string) {
     const valid=await checkPassword(input.password,row?.password_hash||null);
     requireCondition(valid&&row&&!row.suspended,401,'Email or password is incorrect.');
     const token=newToken();await db.query("INSERT INTO r.sessions(hash,user_id,expires_at) VALUES($1,$2,now()+interval '7 days')",[hashToken(token),row.id]);
+    await startTrackedSession(request,row.id,hashToken(token));
     const response=json({user:userView(row)});response.cookies.set(SESSION_COOKIE,token,{httpOnly:true,sameSite:'lax',secure:process.env.APP_ORIGIN?.startsWith('https:')||false,path:'/',maxAge:7*86400});return response;
   }
   if(action==='forgot') {
@@ -117,7 +119,7 @@ export async function authRoute(request:NextRequest,action:string) {
           // Returned rather than thrown: throwing here would roll back the increment, and the
           // attempt limit would silently never engage.
           await client.query('UPDATE r.tokens SET code_attempts=code_attempts+1 WHERE hash=$1',[pending.hash]);
-          return 'wrong-code' as const;
+          return {outcome:'wrong-code' as const,userId:null};
         }
         await client.query('DELETE FROM r.tokens WHERE hash=$1',[pending.hash]);
         userId=user.id;
@@ -125,9 +127,10 @@ export async function authRoute(request:NextRequest,action:string) {
       if(action==='verify')await client.query('UPDATE r.users SET verified=true WHERE id=$1',[userId]);
       else {await client.query('UPDATE r.users SET password_hash=$1,verified=true WHERE id=$2',[passwordHash,userId]);await client.query('DELETE FROM r.sessions WHERE user_id=$1',[userId]);}
       await audit(client,userId,`account.${action}`,userId,{method:input.token?'link':'code'});
-      return 'ok' as const;
+      return {outcome:'ok' as const,userId};
     });
-    if(outcome==='wrong-code')throw new HttpError(400,'Incorrect code. Try again.');
+    if(outcome.outcome==='wrong-code')throw new HttpError(400,'Incorrect code. Try again.');
+    if(action==='reset')await endTrackedSessions({userId:outcome.userId},'password_reset');
     return json({message:action==='verify'?'Email verified. You can now sign in.':'Password saved. Sign in with your new password.'});
   }
   if(action==='profile') {

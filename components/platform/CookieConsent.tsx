@@ -8,6 +8,10 @@ type Prefs = { analytics: boolean; functional: boolean; marketing: boolean };
 type Consent = Prefs & { updatedAt: string };
 const STORAGE_KEY = 'repoggits-cookie-consent';
 const OPEN_EVENT = 'repoggits:cookie-preferences';
+// Fired on this same tab the instant consent is written (accept all / reject / save preferences), with the new
+// Consent as event.detail. The 'storage' event only reaches OTHER tabs, so anything that must react live in this
+// tab (e.g. ActivityTracker.tsx starting or stopping its beacons without a reload) listens for this instead.
+export const CONSENT_EVENT = 'repoggits:cookie-consent';
 const DECLINED: Prefs = { analytics: false, functional: false, marketing: false };
 
 // Read-only helper for gating optional scripts elsewhere in the app, e.g. `if (readConsent()?.analytics) {...}`.
@@ -17,6 +21,7 @@ export function readConsent(): Consent | null {
 function writeConsent(prefs: Prefs): Consent {
   const consent: Consent = { ...prefs, updatedAt: new Date().toISOString() };
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(consent)); } catch {}
+  if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: consent }));
   return consent;
 }
 // The footer's "Cookie Settings" link calls this to reopen the panel from anywhere in the tree.

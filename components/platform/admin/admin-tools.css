@@ -1,0 +1,78 @@
+/* Admin command palette: the Ctrl/⌘ K overlay, its launcher and the saved-view tools, in the platform tokens
+   (paper, white, ink, blue, muted, line). Everything here is namespaced .admin-palette-* so it never touches the
+   rest of the admin panel's styles. Press and hover motion comes from ButtonMotion.tsx, which drives --btn-press
+   and --btn-hover on every button; only the depth of those channels is set here. */
+
+/* Launcher: the palette is a keyboard feature, so it needs a thing to click as well. */
+.admin-palette-launch{position:fixed;right:20px;bottom:20px;z-index:12;display:inline-flex;align-items:center;gap:10px;min-height:40px;padding:0 9px 0 14px;border-radius:999px;background:var(--white);border:1px solid var(--line);color:var(--muted);font-size:11px;font-weight:600;box-shadow:0 10px 26px #1129571f;--btn-lift:-3px;--btn-press-depth:.045}
+.admin-palette-launch:hover{border-color:var(--blue);color:var(--blue)}
+.admin-palette-launch svg{color:var(--blue)}
+
+/* The dialog itself is only a full-screen stage: the scrim and the panel inside it are what animate. */
+.admin-palette-dialog{--palette-scrim:#12264c66;--palette-cursor:#3059b514;--palette-edge:#3059b52e;--palette-shadow:0 34px 90px #11295733;position:fixed;inset:0;width:100%;max-width:none;height:100%;max-height:none;margin:0;padding:0;border:0;background:transparent;box-shadow:none;overflow:hidden;color:var(--ink)}
+.admin-palette-dialog::backdrop{background:transparent;backdrop-filter:none}
+.platform.dark .admin-palette-dialog{--palette-scrim:#04070cad;--palette-cursor:#9ab9ff1f;--palette-edge:#9ab9ff33;--palette-shadow:0 34px 90px #00000066}
+.admin-palette-backdrop{position:absolute;inset:0;background:var(--palette-scrim);backdrop-filter:blur(4px)}
+
+.admin-palette{position:relative;z-index:1;display:flex;flex-direction:column;width:min(640px,calc(100% - 28px));max-height:min(74dvh,580px);margin:min(11vh,88px) auto 0;background:var(--white);border:1px solid var(--line);border-radius:14px;box-shadow:var(--palette-shadow);overflow:hidden;transform-origin:50% 0}
+.admin-palette-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.admin-palette-search{display:flex;align-items:center;gap:12px;padding:13px 12px 13px 16px;border-bottom:1px solid var(--line)}
+.admin-palette-search>svg{color:var(--muted);flex-shrink:0}
+.admin-palette-input{flex:1;min-width:0;min-height:30px;border:0;background:transparent;color:var(--ink);font-size:15px;font-weight:550;letter-spacing:-.2px;outline:none}
+.admin-palette-input::placeholder{color:var(--muted);font-weight:400}
+.admin-palette-close{width:32px;height:32px;display:grid;place-items:center;border-radius:7px;color:var(--muted);--btn-press-depth:.06;--btn-lift:-1px}
+.admin-palette-close:hover{background:var(--paper);color:var(--ink)}
+
+.admin-palette-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:6px}
+.admin-palette-group{font:600 9.5px 'Space Grotesk',sans-serif;letter-spacing:1.3px;text-transform:uppercase;color:var(--muted);margin:12px 10px 4px}
+.admin-palette-list>div:first-child .admin-palette-group{margin-top:6px}
+.admin-palette-option{position:relative;display:grid;grid-template-columns:20px minmax(0,1fr) auto auto;align-items:center;gap:12px;padding:9px 12px;border-radius:9px;cursor:pointer}
+.admin-palette-option>:not(.admin-palette-cursor){position:relative}
+.admin-palette-cursor{position:absolute;inset:0;border-radius:9px;background:var(--palette-cursor);box-shadow:inset 0 0 0 1px var(--palette-edge)}
+.admin-palette-icon{display:flex;color:var(--muted)}
+.admin-palette-option[data-active=true] .admin-palette-icon{color:var(--blue)}
+.admin-palette-text{display:grid;gap:2px;min-width:0}
+.admin-palette-label{font-size:13px;font-weight:600;letter-spacing:-.15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-palette-hint{font-size:10.5px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-palette-enter{color:var(--blue);opacity:0}
+.admin-palette-option[data-active=true] .admin-palette-enter{opacity:1}
+.admin-palette-rowactions{display:flex;gap:2px;opacity:0}
+.admin-palette-option:hover .admin-palette-rowactions,.admin-palette-option[data-active=true] .admin-palette-rowactions{opacity:1}
+.admin-palette-rowaction{width:28px;height:28px;display:grid;place-items:center;border-radius:6px;color:var(--muted);--btn-press-depth:.08;--btn-lift:-1px}
+.admin-palette-rowaction:hover{background:var(--paper);color:var(--ink)}
+.admin-palette-empty{padding:26px 16px 30px;text-align:center;font-size:12px;line-height:1.7;color:var(--muted)}
+
+/* Naming a saved view takes the panel over, so there is one thing to answer and Escape steps back to the list. */
+.admin-palette-name{padding:18px 16px 16px}
+.admin-palette-name label{display:block;font-size:12px;font-weight:600;margin-bottom:9px}
+.admin-palette-name input{width:100%;background:var(--paper);border:1px solid var(--line);color:var(--ink);padding:11px 12px;border-radius:7px;font-size:13px}
+.admin-palette-path{display:flex;align-items:center;gap:7px;margin-top:10px;font-size:10.5px;color:var(--muted);overflow-wrap:anywhere}
+.admin-palette-path svg{color:var(--blue);flex-shrink:0}
+.admin-palette-nameactions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+.admin-palette-nameactions .button{min-height:38px;gap:0;padding:0 16px;font-size:11px}
+
+.admin-palette-foot{display:flex;align-items:center;gap:14px;padding:9px 12px 9px 16px;border-top:1px solid var(--line);background:var(--paper);font-size:10.5px;color:var(--muted)}
+.admin-palette-count{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.admin-palette-keys{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.admin-palette-helpbtn{display:inline-flex;align-items:center;gap:7px;min-height:30px;padding:0 10px;border-radius:7px;font-size:10.5px;font-weight:600;color:var(--muted);--btn-press-depth:.06;--btn-lift:-1px}
+.admin-palette-helpbtn:hover,.admin-palette-helpbtn[aria-expanded=true]{background:var(--white);color:var(--blue)}
+.admin-palette-dialog kbd,.admin-palette-launch kbd{font:500 10px/1 'Space Grotesk',sans-serif;letter-spacing:.7px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;padding:4px 6px;background:var(--white);color:var(--muted);white-space:nowrap}
+.admin-palette-launch kbd{background:var(--paper)}
+
+.admin-palette-help{margin:0;overflow:hidden;background:var(--paper);border-top:1px solid var(--line)}
+.admin-palette-help>div{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 18px;padding:14px 16px}
+.admin-palette-help>div>div{display:flex;align-items:center;gap:10px;min-width:0}
+.admin-palette-help dt{margin:0;flex-shrink:0}
+.admin-palette-help dd{margin:0;font-size:10.5px;line-height:1.5;color:var(--muted);text-align:left}
+.admin-palette-note{padding:10px 16px 12px;font-size:10.5px;line-height:1.6;color:var(--muted);background:var(--paper);border-top:1px solid var(--line)}
+
+@media(max-width:760px){
+  .admin-palette-launch{right:14px;bottom:14px;padding:0;width:44px;height:44px;justify-content:center;gap:0}
+  .admin-palette-launch-label,.admin-palette-launch kbd{display:none}
+  .admin-palette{width:calc(100% - 20px);margin-top:52px;max-height:80dvh}
+  .admin-palette-keys{display:none}
+  .admin-palette-help>div{grid-template-columns:minmax(0,1fr)}
+  .admin-palette-rowactions{opacity:1}
+}
+@media(hover:none){.admin-palette-rowactions{opacity:1}}

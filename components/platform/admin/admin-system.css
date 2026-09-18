@@ -1,14 +1,14 @@
 /* Admin › System health (SystemHealthPage.tsx), in the admin panel tokens. */
-.admin-system-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px;margin:0 0 22px;padding:0;list-style:none}
+.admin-system-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;margin:0 0 24px;padding:0;list-style:none}
 .admin-system-cards>li{min-width:0}
-.platform .admin-system-card{display:grid;align-content:start;gap:7px;height:100%;padding:17px}
+.platform .admin-system-card{display:grid;align-content:start;gap:7px;height:100%;padding:17px;border-radius:9px;box-shadow:var(--admin-shadow-1)}
 .admin-system-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.admin-system-card-label{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--muted)}
+.admin-system-card-label{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
 .admin-system-card-value{font:500 28px/1.1 'Space Grotesk',sans-serif;letter-spacing:-.8px;overflow-wrap:anywhere}
 .admin-system-card-detail{font-size:12px;line-height:1.5;color:var(--muted);overflow-wrap:anywhere}
 .admin-panel .admin-system-warnings{display:grid;gap:8px;margin:0 0 18px;padding:0;list-style:none}
-.admin-system-warnings li{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:5px;background:var(--warn-wash);color:var(--warn-ink);font-size:13px;line-height:1.5;overflow-wrap:anywhere}
-.admin-system-warnings li>svg{flex:none;margin-top:3px}
+.admin-system-warnings li{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-left:3px solid currentColor;border-radius:0 6px 6px 0;background:var(--warn-wash);color:var(--warn-ink);font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.admin-system-warnings li>svg{flex:none;margin-top:3px;color:var(--warn-ink)}
 .admin-system-ok{display:flex;align-items:center;gap:8px;margin:0 0 18px;font-size:13px}
 .admin-retention-form{display:grid;gap:16px;margin-top:18px}
 .admin-retention-fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
