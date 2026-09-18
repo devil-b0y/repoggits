@@ -26,18 +26,12 @@ type Context={params:Promise<{path:string[]}>};
 const uuid=(value:string)=>z.uuid().parse(value);
 async function adminData(user:User,exportAll=false) {
   requireCondition(user.role!=='student',403,'Administrator access required.');
-  const superadmin=user.role==='superadmin';
-  // A Super Admin's log and people list do not depend on the project rows, so the three reads run
-  // together instead of one after another. A Teacher-Admin's log is scoped to the rows they can
-  // review, so that one still waits for them.
-  const [rows,wideAudit,users]=await Promise.all([
-    db.query(`${reviewSelect} ORDER BY v.updated_at DESC${exportAll?'':' LIMIT 1000'}`).then(all=>all.filter(row=>canReview(user,row.data))),
-    superadmin?db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id ORDER BY a.created_at DESC LIMIT 100'):null,
-    superadmin?db.query('SELECT id,email,name,role,scopes,verified,suspended FROM r.users ORDER BY created_at DESC LIMIT 500').then(list=>list.map(row=>({...row,email:openText(row.email,'users.email')}))):[],
-  ]);
+  const rows=(await db.query(`${projectSelect} ORDER BY v.updated_at DESC${exportAll?'':' LIMIT 1000'}`)).filter(row=>canReview(user,row.data));
   const projects=rows.map(projectView);
   const queue=projects.filter(p=>p.version.status==='pending'&&!p.archived);
-  const audits=wideAudit??await db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id WHERE target_id=ANY($1::text[]) ORDER BY a.created_at DESC LIMIT 100',[rows.flatMap(r=>[r.id,r.project_id])]);
+  const targets=rows.flatMap(r=>[r.id,r.project_id]);
+  const audits=user.role==='superadmin'?await db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id ORDER BY a.created_at DESC LIMIT 100'):await db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id WHERE target_id=ANY($1::text[]) ORDER BY a.created_at DESC LIMIT 100',[targets]);
+  const users=user.role==='superadmin'?(await db.query('SELECT id,email,name,role,scopes,verified,suspended FROM r.users ORDER BY created_at DESC LIMIT 500')).map(row=>({...row,email:openText(row.email,'users.email')})):[];
   return {queue,projects,audit:audits,users};
 }
 async function handler(request:NextRequest,context:Context) {

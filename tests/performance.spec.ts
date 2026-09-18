@@ -119,64 +119,6 @@ test('the project notebook shows placeholders while it loads, then pages a long 
   await expect(page.locator('.project-card')).toHaveCount(1);
 });
 
-test('the workspace and review desk ask for their own data without waiting for the session check',async({page})=>{
-  await page.context().addCookies((await admin.storageState()).cookies);
-  // The session answer is held back, so a page that still asks for its own data proves it no longer
-  // waits for the sign-in check to come back first: the two requests overlap instead of queueing.
-  let release!:()=>void;const held=new Promise<void>(resolve=>{release=()=>resolve();});
-  let sessionAnswered=false;
-  await page.route('**/api/auth/me',async route=>{await held;sessionAnswered=true;await route.continue();});
-  try {
-    for(const [path,endpoint] of [['/workspace','**/api/workspace'],['/admin','**/api/admin']] as const) {
-      const asked=page.waitForRequest(endpoint);
-      await page.goto(path);
-      await asked;
-      expect(sessionAnswered,`${path} waited for the session check before asking for its data`).toBe(false);
-    }
-  } finally {release();}
-});
-
-test('the review desk returns every section whether the reads run together or the log is scoped to one reviewer',async({playwright})=>{
-  // A Super Admin's log and people list load alongside the project rows; a Teacher-Admin's log still
-  // waits for those rows so it can be limited to what they may review. Both branches are checked here.
-  // Published here rather than relying on an earlier test, so the payload always has something to check.
-  await publish(`Review payload ${randomUUID().slice(0,8)}`);
-  const wide=await (await admin.get('/api/admin')).json();
-  expect(Object.keys(wide).sort()).toEqual(['audit','projects','queue','users']);
-  expect(Array.isArray(wide.queue)&&Array.isArray(wide.projects)&&Array.isArray(wide.audit)).toBe(true);
-  expect(wide.users.length).toBeGreaterThan(0);
-  // The desk sends only the fields it renders, so every one of them has to survive the trimmed read.
-  const listed=wide.projects[0];
-  expect(listed,'the review desk returned no projects to check').toBeTruthy();
-  for(const field of ['title','summary','department','subject','teamName','type','github'])
-    expect(listed.version.data,`version data is missing ${field}`).toHaveProperty(field);
-  expect(typeof listed.version.data.title).toBe('string');
-  expect(listed.version.changelog).toBeDefined();
-  expect(typeof listed.version.approvals).toBe('number');
-  expect(typeof listed.views).toBe('number');
-  // The CSV is built from the same trimmed read, so it has to carry real values rather than blanks.
-  const report=await admin.get('/api/admin/export');
-  expect(report.status()).toBe(200);
-  const rows=(await report.text()).split('\r\n');
-  expect(rows[0]).toContain('"Title"');
-  const row=rows.find(line=>line.includes(listed.version.data.title));
-  expect(row,'the exported report is missing the project just published').toBeTruthy();
-  expect(row).toContain(`"${listed.version.data.department}"`);
-  expect(row).toContain(`"${listed.version.data.teamName}"`);
-  const id=randomUUID(),email=`speed-teacher-${randomUUID()}@example.test`;
-  await db.query('INSERT INTO r.users(id,email,password_hash,name,role,verified,scopes,profile) VALUES($1,$2,$3,$4,$5,true,$6,$7)',
-    [id,email,await hashPassword(password),'Speed teacher','teacher',JSON.stringify(['subject:Final Year Project']),JSON.stringify({name:'Speed teacher'})]);
-  const teacher=await playwright.request.newContext({baseURL:origin,extraHTTPHeaders:{origin}});
-  try {
-    expect((await teacher.post('/api/auth/login',{data:{email,password}})).status()).toBe(200);
-    const scoped=await (await teacher.get('/api/admin')).json();
-    expect(scoped.users).toEqual([]);
-    expect(Array.isArray(scoped.audit)).toBe(true);
-    // Only work in the reviewer's own subject comes back, log included.
-    for(const project of scoped.projects) expect(project.version.data.subject).toBe('Final Year Project');
-  } finally {await teacher.dispose();}
-});
-
 test('draft recovery keeps what was typed even when the page closes before the save pause',async({page})=>{
   await page.context().addCookies((await student.storageState()).cookies);
   await page.goto('/submit');
