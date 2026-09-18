@@ -358,6 +358,7 @@ test('gallery thumbnail is not shown as active when there is no cover photo',asy
 test('built-in upload picker attaches a cover and source archive',async({page})=>{
   await page.context().addCookies((await student.storageState()).cookies);
   await page.goto('/submit');
+  await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Show your work/}).click();
   const cover=page.getByLabel('Cover image',{exact:true});
   await expect(cover).toBeEnabled();
   const image=await sharp({create:{width:8,height:8,channels:3,background:'#3059b5'}}).png().toBuffer();
@@ -365,19 +366,26 @@ test('built-in upload picker attaches a cover and source archive',async({page})=
   await expect(page.getByAltText('Uploaded preview',{exact:true})).toBeVisible();
   await page.getByLabel('Source code ZIP',{exact:true}).setInputFiles({name:'source.zip',mimeType:'application/zip',buffer:zipFixture('README.md',Buffer.from('Working source example'))});
   await expect(page.getByText('Source archive attached',{exact:true})).toBeVisible();
+  await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/The big idea/}).click();
   await page.getByLabel('Project title',{exact:true}).fill('Refresh-safe project');
   await page.getByRole('textbox',{name:'Full story',exact:true}).fill('My unfinished project description');
+  await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
   await page.getByLabel('Demo video URL',{exact:false}).fill('https://unfinished');
+  await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/People & process/}).click();
   await page.getByRole('combobox',{name:'College',exact:true}).click();
   await page.getByRole('option',{name:'GGCT',exact:true}).click();
   await page.reload();
   await expect(page.getByLabel('Project title',{exact:true})).toHaveValue('Refresh-safe project');
   await expect(page.getByRole('textbox',{name:'Full story',exact:true})).toHaveValue('My unfinished project description');
+  await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/People & process/}).click();
   await expect(page.getByRole('combobox',{name:'College',exact:true})).toHaveText('GGCT');
+  await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Show your work/}).click();
   await expect(page.getByAltText('Uploaded preview',{exact:true})).toBeVisible();
   await expect(page.getByText('Source archive attached',{exact:true})).toBeVisible();
+  await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/This chapter/}).click();
   await page.getByRole('button',{name:'Save draft',exact:true}).click();
   await expect(page.locator('.notice[role="status"]')).toContainText('Draft saved to your account');
+  await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/The big idea/}).click();
   await page.getByLabel('Project title',{exact:true}).fill('Later unsaved edit');
   await page.reload();
   await expect(page.getByLabel('Project title',{exact:true})).toHaveValue('Later unsaved edit');

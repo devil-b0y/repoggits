@@ -74,6 +74,10 @@
 .platform .submission-studio .editor-actions{gap:12px}
 .platform .submission-studio .editor-actions .button{font-size:14px;min-height:50px;padding:14px 20px}
 .platform .submission-studio .editor-actions .button.blue{color:#fff;background:#3059b5;border-color:#3059b5}
+.platform .submission-studio .studio-sidebar-label>span{font:500 9px/1 monospace;letter-spacing:.8px;padding:4px 8px;background:#3059b50e;color:var(--blue);border-radius:20px}
+.platform .submission-studio .studio-step-nav{background:var(--white);border-radius:14px;box-shadow:0 5px 20px #243e7703}
+.platform .submission-studio .studio-step-nav .button.blue{color:#fff;background:#3059b5;border-color:#3059b5}
+.platform .submission-studio .studio-step-indicator{font-family:'Space Grotesk',sans-serif;font-weight:500;color:var(--blue)}
 .platform .submission-studio a:focus-visible,.platform .submission-studio button:focus-visible{outline:3px solid var(--blue);outline-offset:4px}
 .dark .submission-studio .studio-hero{box-shadow:none}
 .dark .submission-studio .studio-sidebar nav a[aria-current=step]{background:#9dbbfa12}

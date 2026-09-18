@@ -13,15 +13,22 @@ async function mockSession(page:Page){
 test('starter kits preserve custom answers and the downloadable draft matches recovered work',async({page})=>{
  await mockSession(page);await page.goto('/submit');
  await page.getByLabel('Project title',{exact:true}).fill('Smart garden notebook');
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
  await page.getByLabel('Frontend',{exact:true}).fill('My custom interface');
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/The big idea/}).click();
  await page.locator('.starter-details > summary').click();
  await page.getByRole('button',{name:/ESP32 \/ connected device/}).click();
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
  await expect(page.getByLabel('Frontend',{exact:true})).toHaveValue('My custom interface');
  await expect(page.locator('.language-chip')).toHaveCount(2);
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/The big idea/}).click();
  await page.getByRole('button',{name:'Use writing outline'}).click();
  await expect(page.getByLabel('Full story',{exact:true})).toHaveValue(/The problem/);
  await expect(page.getByRole('button',{name:'Use writing outline'})).toBeDisabled();
- await page.reload();await expect(page.locator('.language-chip')).toHaveCount(2);
+ await page.reload();
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
+ await expect(page.locator('.language-chip')).toHaveCount(2);
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/The big idea/}).click();
  const downloadPromise=page.waitForEvent('download');await page.getByRole('button',{name:'Download draft JSON'}).click();
  const download=await downloadPromise;const exported=JSON.parse(await readFile((await download.path())!,'utf8'));
  expect(exported.data.title).toBe('Smart garden notebook');expect(exported.data.stack.frontend).toBe('My custom interface');expect(exported.data.stack.languages).toBe('C++, Python');
@@ -30,13 +37,16 @@ test('starter kits preserve custom answers and the downloadable draft matches re
 test('review explains missing fields and submits only after required details are ready',async({page})=>{
  await mockSession(page);await page.goto('/submit');
  await page.getByLabel('Project title',{exact:true}).fill('A working project');
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/This chapter/}).click();
  await page.getByRole('button',{name:'Submit for review'}).click();
  await expect(page.locator('#submission-review')).toBeFocused();
  await expect(page.locator('.readiness')).toContainText('Choose a subject.');
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/The big idea/}).click();
  await page.getByLabel('Subject',{exact:false}).fill('Mini Project');
  await page.getByLabel('Short description',{exact:false}).fill('A helpful project that students can reuse for their own work.');
  await page.getByLabel('Full story',{exact:true}).fill('We built a helpful project for students to organise their academic work and share their discoveries with the next team.');
  await page.locator('.starter-details > summary').click();await page.getByRole('button',{name:/Web application/}).click();
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/This chapter/}).click();
  await expect(page.locator('.readiness')).toContainText('All required details are ready');
  let saved:any;await page.route('**/api/projects',async r=>{saved=r.request().postDataJSON();await r.fulfill({json:{id:'project-test',versionId:'version-test'}});});
  await page.route('**/workspace',r=>r.fulfill({contentType:'text/html',body:'<h1>Workspace</h1>'}));
@@ -71,9 +81,12 @@ test('language menu supports logos, aliases, multiple selections and custom lang
  await picker.getByLabel('Other coding language',{exact:true}).fill('CampusLang');
  await picker.getByRole('button',{name:'Add language',exact:true}).click();
  await expect(picker.getByRole('button',{name:'Remove language CampusLang',exact:true})).toBeVisible();
- await page.reload();await expect(picker.locator('.language-chip')).toHaveCount(4);
+ await page.reload();
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
+ await expect(picker.locator('.language-chip')).toHaveCount(4);
  await picker.getByRole('button',{name:'Remove language C++',exact:true}).click();await expect(picker.locator('.language-chip')).toHaveCount(3);
  let saved:any;await page.route('**/api/projects',async route=>{saved=route.request().postDataJSON();await route.fulfill({json:{id:'language-project',versionId:'language-version'}});});
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/This chapter/}).click();
  await page.getByRole('button',{name:'Save draft',exact:true}).click();await expect(page.getByText('Draft saved to your account.',{exact:false})).toBeVisible();
  expect(saved.data.stack.languages).toBe('Python, JavaScript, CampusLang');
 });
@@ -87,6 +100,7 @@ test('all bundled language logos load locally',async({request})=>{
 
 test('language choices fit a phone and custom names respect the stored field limit',async({page})=>{
  await mockSession(page);await page.setViewportSize({width:320,height:844});await page.goto('/submit');
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
  const picker=page.locator('.language-picker');await picker.scrollIntoViewIfNeeded();
  await picker.getByRole('button',{name:'Open language menu'}).click();
  await expect(picker.getByRole('option')).toHaveCount(languages.length+1);
@@ -117,6 +131,7 @@ test('technology picker supports keyboard choices, custom chips and refresh reco
  await expect(page.locator('.tech-chip')).toHaveCount(3);
  await input.press('Escape');await expect(input).toHaveAttribute('aria-expanded','false');
  await page.getByLabel('Frontend',{exact:true}).fill('React');await page.reload();
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
  await expect(page.locator('.tech-chip')).toHaveCount(3);
  await expect(page.getByLabel('Frontend',{exact:true})).toHaveValue('React');
  await page.getByRole('button',{name:'Remove technology Custom board',exact:true}).click();
@@ -170,6 +185,7 @@ test('studio previews edits, retains refresh recovery, uploads, and saves the ex
  await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/The big idea/}).click();
  await page.screenshot({path:'test-results/submission-studio-desktop.png'});
  let saved:any;await page.route('**/api/projects',async r=>{saved=r.request().postDataJSON();await r.fulfill({json:{id:'project-test',versionId:'version-test'}});});
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/This chapter/}).click();
  await page.getByRole('button',{name:'Save draft',exact:true}).click();await expect(page.getByText('Draft saved to your account.',{exact:false})).toBeVisible();
  expect(saved.data.title).toBe('My connected garden');expect(saved.data.coverId).toBe(fileId);expect(saved.submit).toBe(false);
 });
@@ -186,6 +202,7 @@ test('mobile studio keeps all form fields accessible and navigation fits',async(
 test('stack presets preserve custom values, show icons and save after refresh',async({page})=>{
  await mockSession(page);await page.setViewportSize({width:390,height:844});await page.goto('/submit');
  await page.getByLabel('Project title',{exact:true}).fill('Stack preset testing project');
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
  await page.getByLabel('Frontend',{exact:true}).fill('Existing custom interface');
  await page.getByRole('button',{name:'Choose frontend technologies',exact:true}).click();
  const menu=page.locator('.stack-presets-menu');
@@ -200,9 +217,12 @@ test('stack presets preserve custom values, show icons and save after refresh',a
  await expect(dbField.locator('.stack-selected-logos img')).toHaveAttribute('src','/images/technologies/postgresql.svg');
  const frontend=page.locator('.tech-stack-field').filter({has:page.getByLabel('Frontend',{exact:true})});
  await expect(frontend.locator('.stack-selected-logos .pd-logo-orbit svg')).toHaveCount(1);
- await page.reload();await expect(page.getByLabel('Frontend',{exact:true})).toHaveValue('Existing custom interface, React');
+ await page.reload();
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();
+ await expect(page.getByLabel('Frontend',{exact:true})).toHaveValue('Existing custom interface, React');
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  let saved:any;await page.route('**/api/projects',async r=>{saved=r.request().postDataJSON();await r.fulfill({json:{id:'stack-project',versionId:'stack-version'}});});
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/This chapter/}).click();
  await page.getByRole('button',{name:'Save draft',exact:true}).click();
  await expect(page.getByText('Draft saved to your account.',{exact:false})).toBeVisible();
  expect(saved.data.stack.frontend).toBe('Existing custom interface, React');expect(saved.data.stack.database).toBe('PostgreSQL (Neon DB)');
