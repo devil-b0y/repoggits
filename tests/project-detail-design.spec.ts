@@ -2,8 +2,8 @@ import {test,expect,type Page} from '@playwright/test';
 import {emptyProject} from '../lib/schema';
 const id='11111111-1111-4111-8111-111111111111';
 const fixture={project:{id,ownerId:'owner',featured:false,archived:false,views:248,downloads:36,stars:18,likes:9,parentProjectId:null,parentVersionId:null,example:false,version:{id:'version-one',projectId:id,number:2,status:'approved',changelog:'Improved the planning experience.',createdAt:'2026-08-22T12:00:00Z',requiredApprovals:1,approvals:1,data:{...emptyProject,title:'CampusFlow',summary:'A calmer workspace for everything you are building.',description:'Bring tasks, ideas, and documentation into one thoughtful workspace.\nBuilt for students who want to focus on the work that matters.',teamName:'Campus Makers',tags:['JavaScript','HTML','CSS','React','LocalStorage','Student productivity'],stack:{frontend:'React, Next.js',backend:'Node.js',database:'Browser LocalStorage',languages:'JavaScript, HTML, CSS',frameworks:'React',tools:'Playwright, Figma'},team:[{name:'Aarav Sharma',email:'aarav@example.test',contribution:'Frontend development & interaction design',college:'GGITS',branch:'Computer Science',semester:'6',photoId:''},{name:'Ananya Verma',email:'ananya@example.test',contribution:'Product design & quality assurance',college:'GGCT',branch:'Information Technology',semester:'6',photoId:''}],features:['Organize tasks and milestones in one workspace','Keep your documentation close to your code','Designed for smaller screens, too','Save your progress as you build'],services:[{name:'Vercel',purpose:'Frontend hosting and preview deployments',url:'https://vercel.com'}],startDate:'2026-08-01',endDate:'2026-08-22',year:'2026',subject:'Mini Project',coverId:'cover',galleryIds:['photo-two'],sourceId:'source',videoUrl:'/samples/campusflow/demo.webm',liveUrl:'/samples/campusflow/index.html',github:'https://github.com/example/campusflow',softwareCosts:[{name:'Hosting',amount:0}],hardwareCosts:[]}}},editable:false,saved:false,starred:false,liked:false,original:null,modifications:[],versions:[{id:'version-one',number:2,status:'approved',changelog:'Improved the planning experience.',createdAt:'2026-08-22T12:00:00Z'}],comments:[],reviews:[],related:[]};
-async function setup(page:Page){
- const data=structuredClone(fixture);data.project.version.data.videoUrl=new URL('/samples/campusflow/demo.webm',process.env.PLAYWRIGHT_BASE_URL||'http://127.0.0.1:3107').href;
+async function setup(page:Page,customize?:(data:typeof fixture)=>void){
+ const data=structuredClone(fixture);customize?.(data);data.project.version.data.videoUrl=new URL('/samples/campusflow/demo.webm',process.env.PLAYWRIGHT_BASE_URL||'http://127.0.0.1:3107').href;
  await page.addInitScript(()=>{if(!localStorage.getItem('repoggits-theme'))localStorage.setItem('repoggits-theme','dark');});
  await page.route('**/api/auth/me',r=>r.fulfill({json:{user:{id:'viewer',name:'Viewer',role:'student',verified:true},emailVerificationRequired:false,uploadsAvailable:true}}));
  await page.route(`**/api/projects/${id}**`,async r=>{const url=new URL(r.request().url());if(url.pathname.endsWith('/reactions')){const body=r.request().postDataJSON();data[body.kind==='star'?'starred':'liked']=body.active;data.project[body.kind==='star'?'stars':'likes']+=body.active?1:-1;return r.fulfill({json:{active:body.active,stars:data.project.stars,likes:data.project.likes}});}if(url.pathname.endsWith('/bookmark')){data.saved=r.request().postDataJSON().saved;return r.fulfill({json:{ok:true}});}if(url.pathname.endsWith('/view'))return r.fulfill({json:{ok:true}});return r.fulfill({json:data});});
@@ -33,6 +33,22 @@ test('stars, likes and saving still work after visual changes',async({page})=>{
 test('failed technology images have meaningful icon fallbacks',async({page})=>{
  await page.route('**/images/technologies/react.svg',r=>r.abort());await setup(page);
  await expect(page.locator('.pd-technologies .tech-badges .pd-tech-token').filter({hasText:/^React$/}).locator('.pd-logo-orbit svg')).toBeVisible();
+});
+test('lineage banner is large, uses the display font and stays readable in dark mode',async({page})=>{
+ const channel=(v:number)=>{const c=v/255;return c<=0.03928?c/12.92:((c+0.055)/1.055)**2.4;};
+ const luminance=(rgb:string)=>{const [r,g,b]=rgb.match(/\d+/g)!.map(Number);return 0.2126*channel(r)+0.7152*channel(g)+0.0722*channel(b);};
+ const contrast=(a:string,b:string)=>{const [hi,lo]=[luminance(a),luminance(b)].sort((x,y)=>y-x);return (hi+0.05)/(lo+0.05);};
+ await setup(page,data=>{Object.assign(data.project,{parentProjectId:'22222222-2222-4222-8222-222222222222',parentVersionId:'original-version'});Object.assign(data,{original:{id:'22222222-2222-4222-8222-222222222222',version_id:'original-version',title:'CampusFlow — your semester, a little more organised',number:1,team_name:'Campus Makers'}});});
+ const banner=page.locator('.lineage-banner');await banner.scrollIntoViewIfNeeded();
+ await expect(banner.getByRole('link',{name:'CampusFlow — your semester, a little more organised, version 1'})).toHaveAttribute('href','/projects/22222222-2222-4222-8222-222222222222?version=original-version');
+ const heading=banner.locator('strong');
+ await expect(heading).toHaveCSS('font-size','22px');expect(await heading.evaluate(el=>getComputedStyle(el).fontFamily)).toContain('Space Grotesk');
+ await expect(banner.locator('p')).toHaveCSS('font-size','17px');
+ const background=await banner.evaluate(el=>getComputedStyle(el).backgroundColor);
+ for(const target of [heading,banner.locator('p'),banner.getByRole('link')])expect(contrast(await target.evaluate(el=>getComputedStyle(el).color),background)).toBeGreaterThanOrEqual(4.5);
+ await banner.screenshot({path:'test-results/lineage-banner-dark.png'});
+ await page.setViewportSize({width:360,height:900});await banner.scrollIntoViewIfNeeded();
+ await expect(heading).toHaveCSS('font-size','19px');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
 });
 for(const width of [360,768,1440])test(`project case study fits ${width}px in both themes`,async({page})=>{
  await page.setViewportSize({width,height:1000});await page.emulateMedia({reducedMotion:'reduce'});await setup(page);
