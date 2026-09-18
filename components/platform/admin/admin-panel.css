@@ -46,11 +46,11 @@
 
 /* Stat tiles */
 .admin-stat-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:16px;margin-bottom:24px}
-.platform .admin-stat{display:grid;align-content:start;gap:6px;height:100%;padding:17px 17px 12px;border-radius:9px;color:var(--ink);box-shadow:var(--admin-shadow-1);transition:border-color .15s,box-shadow .15s}
+.platform .admin-stat{display:grid;align-content:start;gap:6px;height:100%;padding:17px 17px 12px;border-radius:9px;color:var(--ink);box-shadow:var(--admin-shadow-1);transition:border-color .15s,box-shadow .15s;container-type:inline-size}
 .admin-stat:hover{border-color:var(--blue);box-shadow:var(--admin-shadow-2)}
 .admin-stat:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .admin-stat-label{font-size:11px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--muted)}
-.admin-stat-value{font:500 30px/1.1 'Space Grotesk',sans-serif;letter-spacing:-.8px;overflow-wrap:anywhere}
+.admin-stat-value{font:500 clamp(19px,10cqi,30px) 'Space Grotesk',sans-serif;letter-spacing:-.8px;overflow-wrap:anywhere;word-break:normal}
 .admin-stat-change{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;line-height:1.4;color:var(--muted)}
 .admin-stat-change.good{color:var(--good-ink)}
 .admin-stat-change.bad{color:var(--bad-ink)}
@@ -78,6 +78,12 @@
 .admin-chip:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 .admin-chip[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff;box-shadow:0 2px 8px #3059b540}
 .platform.dark .admin-chip[aria-pressed=true]{background:#365cb1;border-color:#365cb1;box-shadow:0 2px 8px #00000050}
+
+/* A row of view-switching tabs built from .admin-chip (Media Manager's All/Folders/Trash/…, the Project library's
+   Active/Archived) — the "active" class variant, alongside aria-pressed above for chips used as toggles. */
+.admin-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.admin-tabs .admin-chip.active{background:var(--blue);border-color:var(--blue);color:#fff}
+.platform.dark .admin-tabs .admin-chip.active{background:#365cb1;border-color:#365cb1}
 
 /* Tables, pagination, export */
 .admin-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px;font-size:12px;color:var(--muted)}

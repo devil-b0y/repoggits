@@ -38,3 +38,30 @@
 .admin-panel .scope-menu [role=option]>span{flex:1;min-width:0;overflow-wrap:anywhere}
 .admin-panel .scope-menu-empty{padding:10px;font-size:11px;line-height:1.6;color:var(--muted)}
 @media(max-width:760px){.admin-panel .scope-add-row>.dropdown-select{flex-basis:100%}.admin-panel .scope-add-search{flex-basis:100%}}
+
+/* Delete User confirmation — same native <dialog> chrome as the photo cropper (AvatarEditor) and Media Manager's
+   detail panel: showModal(), Escape via onCancel, browser-native focus trap. */
+.delete-user-dialog{box-sizing:border-box;width:min(560px,calc(100vw - 24px));max-height:calc(100dvh - 24px);margin:auto;padding:22px 24px 24px;overflow:auto;border:0;border-radius:16px;background:var(--white);color:var(--ink);box-shadow:0 40px 100px -30px rgba(8,16,34,.7)}
+.delete-user-dialog::backdrop{background:rgba(14,24,44,.6);backdrop-filter:blur(5px)}
+.delete-user-head{margin-bottom:6px}
+.delete-user-head h2{display:flex;align-items:center;gap:9px;margin:0;font-size:20px;color:var(--bad-ink)}
+.delete-user-dialog>p{font-size:13px;line-height:1.6;color:var(--muted);margin:0 0 16px}
+.delete-user-dialog .admin-details{margin-bottom:16px}
+.delete-user-warning{margin:4px 0 16px;padding:12px 14px;border-radius:10px;background:#fff0ce;color:#73500d}
+.platform.dark .delete-user-warning{background:#46391c;color:#f5d08a}
+.delete-user-warning p{display:flex;align-items:flex-start;gap:8px;margin:0 0 10px;font-size:13px;line-height:1.5}
+.delete-user-warning .checkbox-label{font-size:12px;align-items:flex-start!important}
+.delete-user-dialog label:not(.checkbox-label){display:grid;gap:6px;margin-bottom:14px;font-size:12px;font-weight:600;color:var(--muted)}
+.delete-user-dialog textarea{min-height:60px;padding:9px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font:inherit;font-size:13px;resize:vertical}
+.delete-user-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:6px}
+.delete-user-confirm{color:#963c20;border-color:#e6bca8}
+.delete-user-confirm:hover:not(:disabled){background:#fff0e8}
+.platform.dark .delete-user-confirm{color:#f2b39c;border-color:#6b4a3a}
+.platform.dark .delete-user-confirm:hover:not(:disabled){background:#4a2a22}
+.delete-user-confirm:disabled{opacity:.5}
+
+/* The Delete/Restore row actions in the Users list and account detail page. */
+.admin-panel .admin-delete-user-trigger{color:#963c20}
+.admin-panel .admin-delete-user-trigger:hover{color:#963c20;background:#fff0e8}
+.platform.dark .admin-panel .admin-delete-user-trigger{color:#f2b39c}
+.platform.dark .admin-panel .admin-delete-user-trigger:hover{background:#4a2a22}

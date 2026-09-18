@@ -7,43 +7,47 @@ import { currentUser, requireUser, canReview, rateLimit, newToken } from './auth
 import { canEdit, fileReference, fileReferenceParams } from './projects';
 import { requireCondition } from './errors';
 import { readBody, json } from './http';
-import { MAX_UPLOAD, MAX_VIDEO_UPLOAD, safeFilename, validateImage, validateVideo, validateZip } from './file-validation';
+import { MAX_UPLOAD, MAX_VIDEO_UPLOAD, safeFilename, validateImage, validateOfficeDoc, validatePdf, validateVideo, validateZip } from './file-validation';
 import { openBytes, openText, sealBytes, sealText } from './encryption';
 import { IMAGE_WIDTHS } from './images';
-
-// Photos are stored up to 2400px wide, far more than a card or thumbnail shows. Scaled copies are made on first
-// request and kept per process up to this many bytes, the least recently used dropped first.
-const SCALED_CACHE_BYTES=32*1024*1024;
-const scaled=new Map<string,Buffer>();let scaledBytes=0;
-async function scaledImage(id:string,width:number,original:()=>Promise<Buffer>) {
-  const key=`${id}:${width}`,hit=scaled.get(key);
-  if(hit){scaled.delete(key);scaled.set(key,hit);return hit;}
-  const image=await sharp(await original(),{limitInputPixels:25_000_000}).resize({width,withoutEnlargement:true}).webp({quality:80}).toBuffer();
-  const previous=scaled.get(key);if(previous)scaledBytes-=previous.length;
-  scaled.delete(key);scaled.set(key,image);scaledBytes+=image.length;
-  for(const [oldest,bytes] of scaled){if(scaledBytes<=SCALED_CACHE_BYTES)break;scaled.delete(oldest);scaledBytes-=bytes.length;}
-  return image;
-}
+import { hashContent, scaledImage } from './media';
 
 async function downloadSecret() {
   if(process.env.DOWNLOAD_SECRET)return process.env.DOWNLOAD_SECRET;
   await db.query("INSERT INTO r.settings(key,value) VALUES('downloadSecret',$1) ON CONFLICT DO NOTHING",[JSON.stringify(newToken())]);
   const [row]=await db.query("SELECT value FROM r.settings WHERE key='downloadSecret'");return row.value as string;
 }
+const DOCUMENT_MIME:Record<string,string>={pdf:'application/pdf',doc:'application/msword',docx:'application/vnd.openxmlformats-officedocument.wordprocessingml.document',ppt:'application/vnd.ms-powerpoint',pptx:'application/vnd.openxmlformats-officedocument.presentationml.presentation'};
+const ACCEPTED_EXTENSIONS=['zip','png','jpg','jpeg','webp','mp4','webm','pdf','doc','docx','ppt','pptx'];
 export async function upload(request:NextRequest) {
   const user=await requireUser(request);await rateLimit(`upload:${user.id}`,15,3600);
   const name=safeFilename(request.headers.get('x-filename')||'');
-  const extension=name.split('.').pop()?.toLowerCase();
-  requireCondition(['zip','png','jpg','jpeg','webp','mp4','webm'].includes(extension||''),400,'Only ZIP, PNG, JPEG, WebP, MP4, and WebM files are accepted.');
+  const extension=(name.split('.').pop()?.toLowerCase())||'';
+  requireCondition(ACCEPTED_EXTENSIONS.includes(extension),400,'Only ZIP, PNG, JPEG, WebP, MP4, WebM, PDF, DOC(X), and PPT(X) files are accepted.');
   const isVideo=extension==='mp4'||extension==='webm';
+  const isDocument=extension in DOCUMENT_MIME;
   const max=isVideo?MAX_VIDEO_UPLOAD:MAX_UPLOAD;
   const original=await readBody(request,max);requireCondition(original.length>0,400,'The file is empty.');
-  let content=original,mime='application/zip',filename=name;
+  let content=original,mime='application/zip',filename=name,width:number|null=null,height:number|null=null,pageCount:number|null=null;
   if(extension==='zip')await validateZip(original);
   else if(isVideo){await validateVideo(original,extension as 'mp4'|'webm');mime=extension==='mp4'?'video/mp4':'video/webm';}
-  else {content=await validateImage(original);mime='image/webp';filename=name.replace(/\.[^.]+$/,'.webp');}
+  else if(isDocument){
+    if(extension==='pdf'){const result=await validatePdf(original);pageCount=result.pageCount;}
+    else await validateOfficeDoc(original,extension as 'doc'|'docx'|'ppt'|'pptx');
+    mime=DOCUMENT_MIME[extension];
+  }
+  else {
+    content=await validateImage(original);mime='image/webp';filename=name.replace(/\.[^.]+$/,'.webp');
+    const meta=await sharp(content).metadata();width=meta.width??null;height=meta.height??null;
+  }
+  const hash=hashContent(content);
+  if(request.headers.get('x-allow-duplicate')!=='true') {
+    const [existing]=await db.query<{id:string;filename:string}>('SELECT id,filename FROM r.files WHERE content_hash=$1 AND owner_id=$2 AND deleted_at IS NULL LIMIT 1',[hash,user.id]);
+    if(existing)return json({duplicate:true,existingId:existing.id,existingFilename:openText(existing.filename,'files.filename')},409);
+  }
   const id=randomUUID();
-  await db.query("INSERT INTO r.files(id,owner_id,filename,mime,size,content,scan_status) VALUES($1,$2,$3,$4,$5,$6,'validated_internal')",[id,user.id,sealText(filename,'files.filename'),mime,content.length,sealBytes(content,'files.content')]);
+  await db.query("INSERT INTO r.files(id,owner_id,filename,display_name,mime,size,content,scan_status,content_hash,width,height,page_count) VALUES($1,$2,$3,$4,$5,$6,$7,'validated_internal',$8,$9,$10,$11)",
+    [id,user.id,sealText(filename,'files.filename'),filename,mime,content.length,sealBytes(content,'files.content'),hash,width,height,pageCount]);
   return json({id,filename,mime,size:content.length,url:`/api/files/${id}`},201);
 }
 async function accessibleFile(request:NextRequest,id:string) {

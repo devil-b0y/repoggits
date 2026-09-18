@@ -1,0 +1,96 @@
+/* Media Manager: grid tiles, upload/detail dialogs, the media picker, and small toolbar pieces layered on top of
+   the shared admin panel tokens (--paper,--white,--ink,--line,--blue,--muted,--admin-shadow-1/2). No new colors
+   are introduced — everything here is composed from admin-panel.css's existing token set. */
+
+.media-toolbar{margin-top:12px}
+.media-toolbar-actions{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.media-view-toggle{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.media-view-toggle button{display:grid;place-items:center;width:34px;height:34px;color:var(--muted);transition:background-color .14s,color .14s}
+.media-view-toggle button[aria-pressed=true]{background:var(--blue);color:#fff}
+.media-view-toggle button:not([aria-pressed=true]):hover{background:var(--paper);color:var(--ink)}
+
+.media-stat-grid{margin-bottom:16px}
+
+.media-bulk-bar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;padding:12px 16px;margin-bottom:14px;box-shadow:var(--admin-shadow-1)}
+.media-bulk-actions{display:flex;gap:8px;flex-wrap:wrap}
+.platform .media-bulk-actions .button.bad,.platform .media-detail-actions .button.bad{color:var(--bad-ink);border-color:color-mix(in srgb,var(--bad-ink) 40%,var(--line))}
+.platform .media-bulk-actions .button.bad:hover,.platform .media-detail-actions .button.bad:hover{background:var(--bad-wash)}
+
+/* Grid view */
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:14px;margin-bottom:14px}
+.media-grid-empty{padding:48px 16px;text-align:center;color:var(--muted)}
+.media-tile{position:relative;display:grid;gap:0;padding:0;border-radius:9px;overflow:hidden;box-shadow:var(--admin-shadow-1);transition:box-shadow .15s,border-color .15s}
+.media-tile.is-selected{box-shadow:0 0 0 2px var(--blue),var(--admin-shadow-2)}
+.media-tile-check{position:absolute;top:8px;left:8px;z-index:2;display:grid;place-items:center;width:26px;height:26px;border-radius:6px;background:color-mix(in srgb,var(--white) 85%,transparent);backdrop-filter:blur(2px)}
+.media-tile-preview{display:grid;place-items:center;width:100%;height:120px;background:var(--paper);border:0;color:var(--muted)}
+.media-tile-preview img{width:100%;height:100%;object-fit:cover}
+.media-tile-body{display:grid;gap:4px;padding:10px 12px 12px}
+.media-tile-name{text-align:left;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.media-tile-meta{font-size:11px;color:var(--muted)}
+
+.media-name-cell{text-align:left;font-weight:600}
+
+/* Upload dialog */
+.media-upload-dialog{box-sizing:border-box;width:min(640px,calc(100vw - 24px));max-height:calc(100dvh - 24px);margin:auto;padding:22px 24px 24px;overflow:auto;border:0;border-radius:16px;background:var(--white);color:var(--ink);box-shadow:0 40px 100px -30px rgba(8,16,34,.7)}
+.media-upload-dialog::backdrop,.media-detail-dialog::backdrop,.media-picker-dialog::backdrop{background:rgba(14,24,44,.6);backdrop-filter:blur(5px)}
+.media-upload-head,.media-detail-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:14px}
+.media-upload-head h2,.media-detail-head h2{margin:0}
+.media-dropzone{display:grid;justify-items:center;gap:8px;padding:30px 16px;border:1.5px dashed var(--line);border-radius:12px;text-align:center;color:var(--muted);cursor:pointer;transition:border-color .15s,background-color .15s}
+.media-dropzone.is-dragging{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 6%,transparent)}
+.media-dropzone small{display:block;margin-top:2px;font-size:11px}
+.media-dropzone input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.media-upload-queue{list-style:none;margin:16px 0 0;padding:0;display:grid;gap:8px;max-height:280px;overflow:auto}
+.media-upload-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:12px}
+.media-upload-row progress{grid-column:1/-1;width:100%;height:6px}
+.media-upload-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.media-upload-status{display:inline-flex;align-items:center;gap:4px;font-size:11px;grid-column:1/-1}
+.media-upload-status.good{color:var(--good-ink)}
+.media-upload-status.bad{color:var(--bad-ink)}
+.media-upload-status.warn{color:var(--warn-ink)}
+.media-upload-row-actions{display:flex;gap:8px;grid-column:1/-1}
+.media-upload-actions{display:flex;justify-content:flex-end;margin-top:16px}
+
+/* Detail dialog */
+.media-detail-dialog{box-sizing:border-box;width:min(920px,calc(100vw - 24px));max-height:calc(100dvh - 24px);margin:auto;padding:22px 24px 24px;overflow:auto;border:0;border-radius:16px;background:var(--white);color:var(--ink);box-shadow:0 40px 100px -30px rgba(8,16,34,.7)}
+.media-detail-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:24px}
+.media-detail-preview{display:grid;place-items:center;min-height:220px;background:var(--paper);border-radius:12px;overflow:hidden}
+.media-detail-preview img,.media-detail-preview video{width:100%;max-height:420px;object-fit:contain}
+.media-doc-preview{display:grid;place-items:center;gap:10px;padding:32px}
+.media-detail-info h3{margin:18px 0 8px;font-size:15px}
+.media-detail-info label{display:grid;gap:5px;margin-bottom:10px;font-size:12px;font-weight:600;color:var(--muted)}
+.media-detail-info input,.media-detail-info textarea{min-height:38px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font-size:13px;font-family:inherit}
+.media-detail-info textarea{min-height:70px;resize:vertical}
+.media-detail-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.media-usage-list{list-style:none;margin:0;padding:0;display:grid;gap:6px;font-size:12px}
+.media-tag-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.media-confirm-block{margin-top:12px;padding:12px 14px;border-radius:10px;background:var(--warn-wash);color:var(--warn-ink)}
+.media-confirm-block p{display:flex;align-items:flex-start;gap:8px;margin:0 0 10px;font-size:13px}
+.media-replace-panel{margin-top:16px;padding:16px}
+
+/* Folders tab */
+.media-folders h2{margin-bottom:12px}
+.media-folder-create{display:flex;gap:8px;margin-bottom:14px}
+.media-folder-create input{flex:1;min-height:40px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;background:var(--paper);color:var(--ink);font-size:13px}
+.media-folder-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.media-folder-list li{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;font-size:13px}
+.media-folder-list li>span:first-child{flex:1;font-weight:600}
+
+/* Media picker */
+.media-picker-dialog{box-sizing:border-box;width:min(760px,calc(100vw - 24px));max-height:calc(100dvh - 24px);margin:auto;padding:22px 24px 24px;overflow:auto;border:0;border-radius:16px;background:var(--white);color:var(--ink);box-shadow:0 40px 100px -30px rgba(8,16,34,.7)}
+.media-picker-search{display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px solid var(--line);border-radius:8px;margin-bottom:10px}
+.media-picker-search input{flex:1;border:0;background:transparent;font-size:13px;color:var(--ink)}
+.media-picker-upload{display:inline-flex;align-items:center;gap:6px;margin-bottom:14px;font-size:12px;color:var(--blue);cursor:pointer}
+.media-picker-upload input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.media-picker-error{margin:0 0 10px;font-size:12px;color:var(--bad-ink)}
+.media-picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;max-height:420px;overflow:auto}
+.media-picker-tile{display:grid;gap:4px;padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;text-align:left;transition:border-color .14s}
+.media-picker-tile:hover{border-color:var(--blue)}
+.media-picker-tile img{width:100%;height:90px;object-fit:cover}
+.media-picker-tile-type{display:grid;place-items:center;height:90px;background:var(--paper);color:var(--muted);font-size:11px;text-transform:uppercase}
+.media-picker-tile-name{padding:0 8px;font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.media-picker-tile-meta{padding:0 8px 8px;font-size:11px;color:var(--muted)}
+
+@media(max-width:760px){
+  .media-detail-body{grid-template-columns:minmax(0,1fr)}
+  .media-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+}

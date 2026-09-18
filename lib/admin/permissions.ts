@@ -16,6 +16,7 @@ export const ADMIN_PERMISSIONS={
   security:'Security logs',
   audit:'Admin audit log',
   system:'System health and data retention',
+  media:'Media library, uploads and trash',
 } as const;
 export type AdminPermission=keyof typeof ADMIN_PERMISSIONS;
 export const PERMISSION_NAMES=Object.keys(ADMIN_PERMISSIONS) as AdminPermission[];

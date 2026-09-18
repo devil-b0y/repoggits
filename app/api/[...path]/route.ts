@@ -31,7 +31,7 @@ async function adminData(user:User,exportAll=false) {
   const queue=projects.filter(p=>p.version.status==='pending'&&!p.archived);
   const targets=rows.flatMap(r=>[r.id,r.project_id]);
   const audits=user.role==='superadmin'?await db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id ORDER BY a.created_at DESC LIMIT 100'):await db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id WHERE target_id=ANY($1::text[]) ORDER BY a.created_at DESC LIMIT 100',[targets]);
-  const users=user.role==='superadmin'?(await db.query('SELECT id,email,name,role,scopes,verified,suspended FROM r.users ORDER BY created_at DESC LIMIT 500')).map(row=>({...row,email:openText(row.email,'users.email')})):[];
+  const users=user.role==='superadmin'?(await db.query('SELECT id,email,name,role,scopes,verified,suspended FROM r.users WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 500')).map(row=>({...row,email:openText(row.email,'users.email')})):[];
   return {queue,projects,audit:audits,users};
 }
 async function handler(request:NextRequest,context:Context) {
@@ -177,6 +177,36 @@ async function handler(request:NextRequest,context:Context) {
       const input=z.object({id:z.uuid(),featured:z.boolean().optional(),archived:z.boolean().optional()}).parse(await bodyJson(request));
       await transaction(async client=>{const [v]=await client.query('SELECT * FROM r.versions WHERE project_id=$1 ORDER BY number DESC LIMIT 1',[input.id]);requireCondition(v&&canReview(user,v.data),404,'Project not found.');await client.query('UPDATE r.projects SET featured=COALESCE($1,featured),archived=COALESCE($2,archived) WHERE id=$3',[input.featured??null,input.archived??null,input.id]);await audit(client,user.id,'project.managed',input.id,input);});invalidatePublicProjects();return json({ok:true});
     }
+    if(id==='projects'&&sub==='delete'&&method==='POST'){
+      // Deleting a project is this app's existing soft delete (archived=true, already excluded from every public
+      // listing) plus the reason/who/when bookkeeping the admin panel's moderation dialogs need. It never touches
+      // r.files, r.comments, r.reviews or r.audit — media stays intact (including if shared by another project's
+      // earlier version), and the review/audit trail is preserved exactly as reject already preserves it.
+      const input=z.object({id:z.uuid(),reason:z.string().trim().max(1000).default('')}).parse(await bodyJson(request));
+      await transaction(async client=>{
+        const [project]=await client.query('SELECT p.archived FROM r.projects p WHERE p.id=$1 FOR UPDATE',[input.id]);
+        requireCondition(project,404,'Project not found.');
+        requireCondition(!project.archived,409,'This project has already been removed.');
+        const [v]=await client.query('SELECT * FROM r.versions WHERE project_id=$1 ORDER BY number DESC LIMIT 1',[input.id]);
+        requireCondition(v&&canReview(user,v.data),404,'Project not found.');
+        await client.query('UPDATE r.projects SET archived=true,archived_at=now(),archived_by=$1,archived_reason=$2 WHERE id=$3',[user.id,input.reason,input.id]);
+        await audit(client,user.id,'project.deleted',input.id,{title:v.data.title,team:v.data.teamName,reason:input.reason});
+      });
+      invalidatePublicProjects();return json({ok:true});
+    }
+    if(id==='projects'&&sub==='restore'&&method==='POST'){
+      const input=z.object({id:z.uuid()}).parse(await bodyJson(request));
+      await transaction(async client=>{
+        const [project]=await client.query('SELECT p.archived FROM r.projects p WHERE p.id=$1 FOR UPDATE',[input.id]);
+        requireCondition(project,404,'Project not found.');
+        requireCondition(project.archived,400,'This project has not been removed.');
+        const [v]=await client.query('SELECT * FROM r.versions WHERE project_id=$1 ORDER BY number DESC LIMIT 1',[input.id]);
+        requireCondition(v&&canReview(user,v.data),404,'Project not found.');
+        await client.query("UPDATE r.projects SET archived=false,archived_at=NULL,archived_by=NULL,archived_reason='' WHERE id=$1",[input.id]);
+        await audit(client,user.id,'project.restored',input.id,{title:v.data.title});
+      });
+      invalidatePublicProjects();return json({ok:true});
+    }
     if(id==='users'&&method==='PATCH'){
       requireCondition(user.role==='superadmin',403,'Super Admin access required.');
       const input=z.object({id:z.uuid(),role:z.enum(roles),scopes:z.array(z.string().refine(scope=>/^(department|subject):.{1,100}$/.test(scope)||PERMISSION_NAMES.some(name=>scope===`permission:${name}`),'Use department:…, subject:… or permission:… entries.')).max(45),suspended:z.boolean()}).parse(await bodyJson(request));
@@ -188,6 +218,43 @@ async function handler(request:NextRequest,context:Context) {
         await client.query('DELETE FROM r.sessions WHERE user_id=$1',[input.id]);await audit(client,user.id,'user.updated',input.id,input);
       });
       // A suspension changes the star and like counts shown in the public list.
+      invalidatePublicProjects();return json({ok:true});
+    }
+    if(id==='users'&&sub==='delete'&&method==='POST'){
+      requireCondition(user.role==='superadmin',403,'Super Admin access required.');
+      const input=z.object({id:z.uuid(),reason:z.string().trim().max(500).default('')}).parse(await bodyJson(request));
+      requireCondition(input.id!==user.id,400,'You cannot delete your own account.');
+      await transaction(async client=>{
+        await client.query("SELECT pg_advisory_xact_lock(hashtext('repoggits-admin-roles'))");
+        const [target]=await client.query('SELECT id,name,email,role,suspended,deleted_at FROM r.users WHERE id=$1 FOR UPDATE',[input.id]);
+        requireCondition(target,404,'User not found.');
+        requireCondition(!target.deleted_at,409,'This user has already been deleted.');
+        if(target.role==='superadmin'){const [count]=await client.query("SELECT count(*)::int AS n FROM r.users WHERE role='superadmin' AND NOT suspended AND deleted_at IS NULL AND id<>$1",[input.id]);requireCondition(count.n>0,409,'Keep at least one active Super Admin. Transfer Super Admin access to someone else before deleting this account.');}
+        await client.query('UPDATE r.users SET suspended=true,deleted_at=now(),deleted_by=$1,deleted_reason=$2 WHERE id=$3',[user.id,input.reason,input.id]);
+        await client.query('DELETE FROM r.sessions WHERE user_id=$1',[input.id]);
+        // The target's own row context (name/role), not just the id, so the audit log is readable on its own even
+        // if the account is later purged for good — see lib/admin/activity-query.ts's safeDetails, which is what
+        // actually renders this entry in Admin › Logs › Admin audit log. wasSuspended lets a later restore only
+        // undo what deletion itself changed, not a suspension that predates it.
+        await audit(client,user.id,'user.deleted',input.id,{name:target.name,role:target.role,reason:input.reason,wasSuspended:!!target.suspended});
+      });
+      invalidatePublicProjects();return json({ok:true});
+    }
+    if(id==='users'&&sub==='restore'&&method==='POST'){
+      requireCondition(user.role==='superadmin',403,'Super Admin access required.');
+      const input=z.object({id:z.uuid()}).parse(await bodyJson(request));
+      await transaction(async client=>{
+        const [target]=await client.query('SELECT id,deleted_at FROM r.users WHERE id=$1 FOR UPDATE',[input.id]);
+        requireCondition(target,404,'User not found.');
+        requireCondition(target.deleted_at,400,'This user has not been deleted.');
+        // Only lift the suspension deletion itself applied — a suspension that predated the deletion (recorded on
+        // the delete audit entry) is left in place, since restoring an account should not silently overturn an
+        // unrelated moderation decision.
+        const [lastDelete]=await client.query<{details:{wasSuspended?:boolean}}>("SELECT details FROM r.audit WHERE target_id=$1 AND action='user.deleted' ORDER BY created_at DESC LIMIT 1",[input.id]);
+        const keepSuspended=!!lastDelete?.details?.wasSuspended;
+        await client.query("UPDATE r.users SET suspended=$1,deleted_at=NULL,deleted_by=NULL,deleted_reason='' WHERE id=$2",[keepSuspended,input.id]);
+        await audit(client,user.id,'user.restored',input.id,{});
+      });
       invalidatePublicProjects();return json({ok:true});
     }
     if(id==='settings'&&method==='PATCH'){

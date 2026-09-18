@@ -1,7 +1,9 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Notice, useSession } from '../shared';
+import { useRouter } from 'next/navigation';
+import { Trash2, Undo2 } from 'lucide-react';
+import { Notice, send, useSession } from '../shared';
 import { hasPermission } from '@/lib/admin/permissions';
 import { ACTIVITY_FILTERS, AI_FEATURES, DEVICE_TYPES, PROMPT_OUTCOMES, type ActivityRow, type Paged, type PromptRow } from '@/lib/admin/types';
 import type { IpHistoryEntry, UserDetail } from '@/lib/admin/users';
@@ -10,6 +12,7 @@ import { AdvancedFilters, Badge, DataTable, DetailList, IpAddress, Pager, Presen
 import { formatDateTime, formatDuration, formatNumber, formatTime, timeAgo } from './format';
 import { CurrentPath, EndSessionButton, sessionColumns, versioned } from './SessionsPage';
 import { ROLE_LABELS } from './UsersPage';
+import DeleteUserDialog from './DeleteUserDialog';
 import './admin-people.css';
 
 // Admin › Users › one account: device, current session, network, activity timeline, prompts and recent sessions.
@@ -54,11 +57,22 @@ function usePrefixedFilters(prefix:string,defaults:FilterValues) {
 
 function UserDetailView({id,onName}:{id:string;onName:(name:string)=>void}) {
   const {user:viewer}=useSession();
+  const router=useRouter();
   const {data,error,reload}=useAdminData<UserDetail>(`admin/users/${encodeURIComponent(id)}`);
   const now=useNow(5000);
+  const [deleting,setDeleting]=useState(false);
+  const [restoring,setRestoring]=useState(false);
+  const [actionError,setActionError]=useState('');
   useEffect(()=>{if(data)onName(data.user.name);},[data,onName]);
   if(!data)return error?<Notice error>{error}</Notice>:<p className="admin-note" role="status">Loading this account…</p>;
   const {user,presence,device,currentSession,sessions,network,counts}=data;
+  const canDelete=viewer?.role==='superadmin'&&viewer.id!==user.id;
+  async function restore() {
+    setRestoring(true);setActionError('');
+    try{await send('admin/users/restore',{id:user.id},'POST');await reload();}
+    catch(e){setActionError((e as Error).message);}
+    finally{setRestoring(false);}
+  }
   const ipColumns:Column<IpHistoryEntry>[]=[
     {key:'ip',label:'IP address',render:row=><IpAddress value={row.ip}/>},
     {key:'first',label:'First seen',render:row=><time dateTime={row.firstSeen}>{formatDateTime(row.firstSeen)}</time>},
@@ -71,17 +85,23 @@ function UserDetailView({id,onName}:{id:string;onName:(name:string)=>void}) {
       <Badge tone="info">{ROLE_LABELS[user.role]??user.role}</Badge>
       <PresenceBadge status={presence.status}/>
       {!user.verified&&<Badge tone="warn">Email not verified</Badge>}
-      {user.suspended&&<Badge tone="bad">Suspended</Badge>}
+      {user.deleted&&<Badge tone="bad">Deleted</Badge>}
+      {!user.deleted&&user.suspended&&<Badge tone="bad">Suspended</Badge>}
       {user.aiBlocked&&<Badge tone="warn">AI access paused</Badge>}
       <span>Last seen {presence.lastSeenAt?<time dateTime={presence.lastSeenAt} title={formatDateTime(presence.lastSeenAt)}>{timeAgo(presence.lastSeenAt,now)}</time>:'never'}</span>
     </div>
-    {error&&<Notice error>{error}</Notice>}
-    <Section title="Account">
+    {(error||actionError)&&<Notice error>{error||actionError}</Notice>}
+    {user.deleted&&<Notice>This account was deleted on {formatDateTime(user.deletedAt)}{user.deletedReason?`. Reason: ${user.deletedReason}`:'.'}</Notice>}
+    <Section title="Account" actions={canDelete?(user.deleted
+      ?<button type="button" className="button outline" disabled={restoring} onClick={restore}><Undo2 size={14} aria-hidden="true"/> {restoring?'Restoring…':'Restore user'}</button>
+      :<button type="button" className="button outline admin-delete-user-trigger" onClick={()=>setDeleting(true)}><Trash2 size={14} aria-hidden="true"/> Delete user</button>
+    ):undefined}>
       <DetailList items={[
         ['Email',user.email||'Unreadable'],['User ID',<code key="id">{user.id}</code>],['Joined',formatDateTime(user.createdAt)],
         ['Department',user.department||'—'],['Batch',user.batch||'—'],['Projects',formatNumber(counts.projects)],
         ['Events (7 days)',formatNumber(counts.events7d)],['Prompts (30 days)',formatNumber(counts.prompts30d)],
       ]}/>
+      {deleting&&<DeleteUserDialog target={{id:user.id,name:user.name,email:user.email,role:user.role,createdAt:user.createdAt}} onClose={()=>setDeleting(false)} onDeleted={()=>router.push('/admin/users')}/>}
     </Section>
     <div className="admin-grid-2">
       <Section title="Device information" description="From this account's most recent session.">

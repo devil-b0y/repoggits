@@ -1,9 +1,9 @@
-import { Archive, BarChart3, Bot, ClipboardList, Database, FolderKanban, HeartPulse, LayoutDashboard, LibraryBig, MessageSquareText, MonitorSmartphone, Radio, ScrollText, Settings, ShieldAlert, Sparkles, UserCog, Users, type LucideIcon } from 'lucide-react';
+import { Archive, BarChart3, Bot, ClipboardList, Database, FolderKanban, HeartPulse, Images, LayoutDashboard, LibraryBig, MessageSquareText, MonitorSmartphone, Radio, ScrollText, Settings, ShieldAlert, Sparkles, UserCog, Users, type LucideIcon } from 'lucide-react';
 import { hasPermission, type AdminPermission } from '@/lib/admin/permissions';
 import type { User } from '@/lib/schema';
 
 // The admin panel's sections. A link shows only to someone who can open it; the API enforces the same permission.
-export type AdminSection='overview'|'live'|'analytics'|'users'|'sessions'|'projects'|'library'|'people'|'logs'|'prompts'|'security'|'audit'|'ai'|'aiActivity'|'system'|'database'|'backups'|'settings';
+export type AdminSection='overview'|'live'|'analytics'|'users'|'sessions'|'projects'|'library'|'media'|'people'|'logs'|'prompts'|'security'|'audit'|'ai'|'aiActivity'|'system'|'database'|'backups'|'settings';
 export type AdminNavItem={key:AdminSection;label:string;href:string;icon:LucideIcon;group:string;permission?:AdminPermission;superadminOnly?:boolean};
 const item=(group:string,entries:Omit<AdminNavItem,'group'>[])=>entries.map(entry=>({...entry,group}));
 export const ADMIN_NAV:AdminNavItem[]=[
@@ -20,6 +20,7 @@ export const ADMIN_NAV:AdminNavItem[]=[
   ...item('Projects',[
     {key:'projects',label:'Project analytics',href:'/admin/projects',icon:FolderKanban,permission:'analytics'},
     {key:'library',label:'Project library',href:'/admin/library',icon:LibraryBig},
+    {key:'media',label:'Media Manager',href:'/admin/media',icon:Images,permission:'media'},
   ]),
   ...item('Logs',[
     {key:'logs',label:'Global activity',href:'/admin/logs',icon:ScrollText,permission:'activity'},

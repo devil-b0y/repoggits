@@ -92,3 +92,44 @@ export async function validateVideo(buffer:Buffer,extension:'mp4'|'webm') {
   // WebM is Matroska-based (EBML container), which always starts with this 4-byte magic number.
   if (buffer.length < 4 || buffer.readUInt32BE(0) !== 0x1a45dfa3) throw new HttpError(400, 'Upload a valid WebM video file.');
 }
+
+// PDF: a structural sanity check plus a page count for the Media Manager's document details, not a full parse of
+// the object graph. %PDF- opens every valid file; the page count is read from /Type /Page object occurrences,
+// which undercounts on exotic page trees but never overcounts in a way that misleads an administrator.
+export async function validatePdf(buffer:Buffer):Promise<{pageCount:number}> {
+  if (buffer.length < 5 || buffer.subarray(0,5).toString('ascii') !== '%PDF-') throw new HttpError(400, 'Upload a valid PDF file.');
+  const text = buffer.toString('latin1');
+  const pageCount = (text.match(/\/Type\s*\/Page(?!s)/g) || []).length;
+  return { pageCount: pageCount || 1 };
+}
+
+// Legacy .doc/.ppt are OLE Compound File binaries (magic bytes below); .docx/.pptx are ZIP containers whose entries
+// follow the Office Open XML layout. Either way this is the same "container-format sanity check only" philosophy
+// as validateVideo — never a parse of the document's own content.
+const OLE_MAGIC = Buffer.from([0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1]);
+export async function validateOfficeDoc(buffer:Buffer,extension:'doc'|'docx'|'ppt'|'pptx'):Promise<void> {
+  if (extension==='doc'||extension==='ppt') {
+    if (buffer.length < 8 || !buffer.subarray(0,8).equals(OLE_MAGIC)) throw new HttpError(400, `Upload a valid ${extension.toUpperCase()} file.`);
+    return;
+  }
+  if (buffer.length < 22 || buffer.readUInt32LE(0) !== 0x04034b50) throw new HttpError(400, `Upload a valid ${extension.toUpperCase()}X file.`);
+  await new Promise<void>((resolve, reject) => {
+    yauzl.fromBuffer(buffer, { lazyEntries:true, validateEntrySizes:true, strictFileNames:true }, (error, zip) => {
+      if (error || !zip) return reject(new HttpError(400, `Invalid ${extension.toUpperCase()}X file.`));
+      let sawContentTypes = false, ended = false;
+      const timer = setTimeout(() => fail('Document inspection timed out.'), 15000);
+      const fail = (message:string) => { if(ended)return; ended=true;clearTimeout(timer);zip.close();reject(new HttpError(400,message)); };
+      zip.on('error', () => fail(`The ${extension.toUpperCase()}X file is corrupt.`));
+      zip.on('entry', entry => {
+        if (entry.fileName === '[Content_Types].xml') sawContentTypes = true;
+        zip.readEntry();
+      });
+      zip.on('end', () => {
+        if(ended)return; ended=true;clearTimeout(timer);
+        if (!sawContentTypes) return reject(new HttpError(400, `Upload a valid ${extension.toUpperCase()}X file.`));
+        resolve();
+      });
+      zip.readEntry();
+    });
+  });
+}

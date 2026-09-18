@@ -35,6 +35,7 @@ const KEYWORDS:Record<AdminSection,string>={
   people:'roles permissions access control grants scopes admins staff teacher admin',
   projects:'project analytics popular most viewed downloads submissions departments tags',
   library:'projects catalog browse archive files versions submissions gallery',
+  media:'media manager library uploads images videos documents folders tags trash assets files',
   logs:'activity events history trail global log page views everything',
   prompts:'ai prompts gemini requests conversation log tokens model',
   security:'failed logins threats incidents server errors exceptions log breach',

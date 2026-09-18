@@ -13,11 +13,11 @@ import type { AdminContext } from './router';
 // GET /api/admin/users (Paged<UserSummary>) and GET /api/admin/users/:id (UserDetail) for Admin › Users.
 // Emails are stored encrypted, so search matches a name, an exact user ID or an exact email through its lookup hash.
 
-export type UserSummary={id:string;name:string;email:string;role:string;verified:boolean;suspended:boolean;createdAt:string;lastActiveAt:string|null;status:'online'|'offline';sessions:number;events7d:number};
+export type UserSummary={id:string;name:string;email:string;role:string;verified:boolean;suspended:boolean;deleted:boolean;createdAt:string;lastActiveAt:string|null;status:'online'|'offline';sessions:number;events7d:number};
 export type DeviceInfo=Pick<SessionRow,'deviceType'|'os'|'osVersion'|'browser'|'browserVersion'|'platform'|'userAgent'|'screenWidth'|'screenHeight'|'pixelRatio'|'touch'|'language'|'timezone'>;
 export type IpHistoryEntry={ip:string;firstSeen:string;lastSeen:string;sessions:number;events:number};
 export type UserDetail={
-  user:{id:string;name:string;email:string;role:string;verified:boolean;suspended:boolean;aiBlocked:boolean;createdAt:string;department:string;batch:string};
+  user:{id:string;name:string;email:string;role:string;verified:boolean;suspended:boolean;aiBlocked:boolean;createdAt:string;department:string;batch:string;deleted:boolean;deletedAt:string|null;deletedReason:string};
   presence:{status:'online'|'offline';lastSeenAt:string|null};
   device:DeviceInfo|null;currentSession:SessionRow|null;sessions:SessionRow[];
   network:{currentIp:string|null;ipHistory:IpHistoryEntry[]}|null;
@@ -49,18 +49,21 @@ async function listUsers(search:URLSearchParams) {
   if(status)where.add(`${status==='offline'?'NOT ':''}EXISTS(SELECT 1 FROM r.tracked_sessions s WHERE s.user_id=u.id AND ${onlineSql()})`);
   const verified=booleanParam(search,'verified');if(verified!==null)where.add('u.verified=?',verified);
   const suspended=booleanParam(search,'suspended');if(suspended!==null)where.add('u.suspended=?',suspended);
+  // Deleted accounts stay out of the directory by default; ?deleted=true is how the Deleted filter opts back in.
+  const deleted=booleanParam(search,'deleted');
+  where.add(deleted===true?'u.deleted_at IS NOT NULL':'u.deleted_at IS NULL');
   const sort=sortParam(search,USER_SORTS,'created'),request=pageRequest(search);
   const values=[...where.values,request.pageSize,request.offset];
   const [count,rows]=await Promise.all([
     cappedCount(`FROM r.users u ${where.sql}`,where.values),
-    db.query(`SELECT u.id,u.name,u.email,u.role,u.verified,u.suspended,u.created_at,la.last_active_at,COALESCE(la.online,false) AS online,COALESCE(la.sessions,0) AS sessions,
+    db.query(`SELECT u.id,u.name,u.email,u.role,u.verified,u.suspended,u.deleted_at,u.created_at,la.last_active_at,COALESCE(la.online,false) AS online,COALESCE(la.sessions,0) AS sessions,
         (SELECT count(*)::int FROM r.activity_events e WHERE e.user_id=u.id AND e.created_at>=now()-interval '7 days') AS events7d
       FROM r.users u
       LEFT JOIN LATERAL (SELECT max(s.last_seen_at) AS last_active_at,bool_or(${onlineSql()}) AS online,count(*)::int AS sessions FROM r.tracked_sessions s WHERE s.user_id=u.id) la ON true
       ${where.sql} ORDER BY ${sort.sql} NULLS LAST,u.id LIMIT $${values.length-1} OFFSET $${values.length}`,values),
   ]);
   const items:UserSummary[]=rows.map(row=>({
-    id:row.id,name:cleanText(row.name,120),email:readableEmail(row.email),role:String(row.role),verified:!!row.verified,suspended:!!row.suspended,
+    id:row.id,name:cleanText(row.name,120),email:readableEmail(row.email),role:String(row.role),verified:!!row.verified,suspended:!!row.suspended,deleted:!!row.deleted_at,
     createdAt:iso(row.created_at),lastActiveAt:row.last_active_at?iso(row.last_active_at):null,status:row.online?'online':'offline',
     sessions:Number(row.sessions)||0,events7d:Number(row.events7d)||0,
   }));
@@ -71,7 +74,7 @@ async function userDetail(context:AdminContext,id:string):Promise<UserDetail> {
   requireCondition(isUuid(id),400,'The user ID is not valid.');
   const userId=id.toLowerCase(),showIp=hasPermission(context.user,'network');
   const [[row],sessionRows,[counts],retention]=await Promise.all([
-    db.query('SELECT id,name,email,role,verified,suspended,ai_blocked,created_at,profile FROM r.users WHERE id=$1',[userId]),
+    db.query('SELECT id,name,email,role,verified,suspended,ai_blocked,created_at,profile,deleted_at,deleted_reason FROM r.users WHERE id=$1',[userId]),
     db.query(`SELECT ${sessionSelect()} ${SESSION_FROM} WHERE s.user_id=$1 ORDER BY s.last_seen_at DESC,s.id LIMIT 20`,[userId]),
     db.query<{events7d:number;prompts30d:number;projects:number}>(`SELECT (SELECT count(*)::int FROM r.activity_events WHERE user_id=$1 AND created_at>=now()-interval '7 days') AS events7d,
       (SELECT count(*)::int FROM r.ai_requests WHERE user_id=$1 AND created_at>=now()-interval '30 days') AS prompts30d,
@@ -104,7 +107,8 @@ async function userDetail(context:AdminContext,id:string):Promise<UserDetail> {
   const latest=sessions[0];
   return {
     user:{id:row.id,name:cleanText(row.name,120),email:readableEmail(row.email),role:String(row.role),verified:!!row.verified,suspended:!!row.suspended,aiBlocked:!!row.ai_blocked,
-      createdAt:iso(row.created_at),department:cleanText(profile.department,120),batch:cleanText(profile.batch,40)},
+      createdAt:iso(row.created_at),department:cleanText(profile.department,120),batch:cleanText(profile.batch,40),
+      deleted:!!row.deleted_at,deletedAt:row.deleted_at?iso(row.deleted_at):null,deletedReason:cleanText(row.deleted_reason,500)},
     presence:{status:sessions.some(session=>session.status==='online')?'online':'offline',lastSeenAt:latest?.lastSeenAt??null},
     device:latest?{deviceType:latest.deviceType,os:latest.os,osVersion:latest.osVersion,browser:latest.browser,browserVersion:latest.browserVersion,platform:latest.platform,userAgent:latest.userAgent,
       screenWidth:latest.screenWidth,screenHeight:latest.screenHeight,pixelRatio:latest.pixelRatio,touch:latest.touch,language:latest.language,timezone:latest.timezone}:null,

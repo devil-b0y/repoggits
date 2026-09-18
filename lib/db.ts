@@ -120,6 +120,14 @@ export async function applySchema(client:ClientBase, schema=schemaName()) {
           verified boolean NOT NULL DEFAULT false, suspended boolean NOT NULL DEFAULT false,
           scopes jsonb NOT NULL DEFAULT '[]', profile jsonb NOT NULL DEFAULT '{}', created_at timestamptz NOT NULL DEFAULT now()
         );
+        -- Deleting a user is a soft delete: it also sets suspended=true, so every existing suspended-account gate
+        -- (login, sessions, avatar visibility, star/like counts) already treats a deleted account as inactive
+        -- without a second set of checks. deleted_at/deleted_by/deleted_reason exist purely so the admin panel can
+        -- tell "deactivated" and "deleted" apart and show who removed the account and when.
+        ALTER TABLE r.users ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+        ALTER TABLE r.users ADD COLUMN IF NOT EXISTS deleted_by uuid REFERENCES r.users(id);
+        ALTER TABLE r.users ADD COLUMN IF NOT EXISTS deleted_reason text NOT NULL DEFAULT '';
+        CREATE INDEX IF NOT EXISTS users_deleted_idx ON r.users(deleted_at);
         CREATE TABLE IF NOT EXISTS r.sessions (hash text PRIMARY KEY,user_id uuid NOT NULL REFERENCES r.users(id) ON DELETE CASCADE,expires_at timestamptz NOT NULL);
         CREATE TABLE IF NOT EXISTS r.tokens (hash text PRIMARY KEY,user_id uuid NOT NULL REFERENCES r.users(id) ON DELETE CASCADE,purpose text NOT NULL,expires_at timestamptz NOT NULL);
         -- A short OTP code offered alongside the link for 'verify' and 'reset' tokens. Hashed the
@@ -131,6 +139,14 @@ export async function applySchema(client:ClientBase, schema=schemaName()) {
           archived boolean NOT NULL DEFAULT false,example boolean NOT NULL DEFAULT false,views integer NOT NULL DEFAULT 0,
           downloads integer NOT NULL DEFAULT 0,created_at timestamptz NOT NULL DEFAULT now()
         );
+        -- Archiving is this app's existing soft delete for projects (archived projects are already excluded from
+        -- every public listing — see the "AND NOT p.archived" filters throughout app/api/[...path]/route.ts).
+        -- These columns only add bookkeeping around that existing flag: who archived it, when, and why, for the
+        -- Admin panel's moderation dialogs and the admin audit log.
+        ALTER TABLE r.projects ADD COLUMN IF NOT EXISTS archived_at timestamptz;
+        ALTER TABLE r.projects ADD COLUMN IF NOT EXISTS archived_by uuid REFERENCES r.users(id);
+        ALTER TABLE r.projects ADD COLUMN IF NOT EXISTS archived_reason text NOT NULL DEFAULT '';
+        CREATE INDEX IF NOT EXISTS projects_archived_idx ON r.projects(archived);
         CREATE TABLE IF NOT EXISTS r.versions (
           id uuid PRIMARY KEY,project_id uuid NOT NULL REFERENCES r.projects(id) ON DELETE CASCADE,number integer NOT NULL,
           status text NOT NULL CHECK(status IN ('draft','pending','approved','rejected','changes_requested')),
@@ -259,5 +275,26 @@ export async function applySchema(client:ClientBase, schema=schemaName()) {
         CREATE INDEX IF NOT EXISTS projects_created_idx ON r.projects(created_at);
         INSERT INTO r.settings(key,value) VALUES ('retention','{"activityDays":90,"sessionDays":30,"securityDays":180}') ON CONFLICT DO NOTHING;
         INSERT INTO r.settings(key,value) VALUES ('ai','{"enabled":true,"hourlyLimit":10,"dailyLimit":40,"siteDailyLimit":300}'),('moderation','{"requiredApprovals":1,"allowedEmailDomains":[]}'),('categories','{"departments":["Computer Science Engineering (CSE)","Computer Science Engineering (AI & Machine Learning)","Computer Science Engineering (AI & Data Science)","Computer Science Engineering (Data Science)","Computer Science Engineering (IoT)","Computer Science Engineering (Cyber Security)","Computer Science & Business Systems (CSBS)","Computer Science & Design (CSD)","Electronics & Communication Engineering","Electronics & Computer Science (ECS)","Electrical Engineering","Mechanical Engineering","Civil Engineering","Information Technology","Chemical Engineering","Biotechnology Engineering","Automobile Engineering","Agriculture Engineering","Robotics and AI","Automation and Robotics","Electric Vehicles","3D Animation & Graphics","Advanced Computing Technology (ACT)","MBA (General)","MBA – Marketing Management","MBA – Financial Administration","MBA – Healthcare Management","MBA – Rural Management","MBA – Pharmaceutical Management","MBA Integrated"],"subjects":["Final Year Project","Mini Project","Research"],"tags":["Next.js","Python","Arduino","IoT","Robotics"]}') ON CONFLICT DO NOTHING;
+        -- ===== Media Manager: folders, tags and extra r.files metadata (lib/admin/media.ts, lib/media.ts) =====
+        CREATE TABLE IF NOT EXISTS r.media_folders (id uuid PRIMARY KEY,name text NOT NULL,created_by uuid REFERENCES r.users(id),created_at timestamptz NOT NULL DEFAULT now(),UNIQUE(name));
+        CREATE TABLE IF NOT EXISTS r.media_tags (id uuid PRIMARY KEY,name text NOT NULL UNIQUE);
+        CREATE TABLE IF NOT EXISTS r.media_tag_links (file_id uuid NOT NULL REFERENCES r.files(id) ON DELETE CASCADE,tag_id uuid NOT NULL REFERENCES r.media_tags(id) ON DELETE CASCADE,PRIMARY KEY(file_id,tag_id));
+        CREATE INDEX IF NOT EXISTS media_tag_links_tag_idx ON r.media_tag_links(tag_id);
+        ALTER TABLE r.files ADD COLUMN IF NOT EXISTS display_name text;
+        ALTER TABLE r.files ADD COLUMN IF NOT EXISTS alt_text text NOT NULL DEFAULT '';
+        ALTER TABLE r.files ADD COLUMN IF NOT EXISTS caption text NOT NULL DEFAULT '';
+        ALTER TABLE r.files ADD COLUMN IF NOT EXISTS description text NOT NULL DEFAULT '';
+        ALTER TABLE r.files ADD COLUMN IF NOT EXISTS folder_id uuid REFERENCES r.media_folders(id) ON DELETE SET NULL;
+        ALTER TABLE r.files ADD COLUMN IF NOT EXISTS width integer;
+        ALTER TABLE r.files ADD COLUMN IF NOT EXISTS height integer;
+        ALTER TABLE r.files ADD COLUMN IF NOT EXISTS page_count integer;
+        ALTER TABLE r.files ADD COLUMN IF NOT EXISTS content_hash text;
+        ALTER TABLE r.files ADD COLUMN IF NOT EXISTS deleted_at timestamptz;
+        ALTER TABLE r.files ADD COLUMN IF NOT EXISTS deleted_by uuid REFERENCES r.users(id);
+        ALTER TABLE r.files ADD COLUMN IF NOT EXISTS visibility text NOT NULL DEFAULT 'inherit' CHECK(visibility IN ('inherit','public','restricted'));
+        CREATE INDEX IF NOT EXISTS files_folder_idx ON r.files(folder_id);
+        CREATE INDEX IF NOT EXISTS files_deleted_idx ON r.files(deleted_at);
+        CREATE INDEX IF NOT EXISTS files_content_hash_idx ON r.files(content_hash);
+        CREATE INDEX IF NOT EXISTS files_owner_created_idx ON r.files(owner_id,created_at DESC);
       `, schema));
 }

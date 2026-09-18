@@ -11,6 +11,7 @@ import { securityRoute } from './security';
 import { auditRoute } from './audit';
 import { systemRoute } from './system';
 import { databaseRoute } from './database';
+import { mediaRoute } from './media';
 
 // /api/admin/<section>/… for the admin panel. The caller has already required a signed-in, verified, non-student
 // account; each handler then checks its own permission (lib/admin/permissions.ts) before reading anything.
@@ -18,5 +19,5 @@ import { databaseRoute } from './database';
 export type AdminContext={request:NextRequest;user:User;method:string;path:string[];search:URLSearchParams};
 export type AdminHandler=(context:AdminContext)=>Promise<Response>;
 
-const sections:Record<string,AdminHandler>={overview:overviewRoute,analytics:analyticsRoute,live:liveRoute,users:usersRoute,sessions:sessionsRoute,logs:logsRoute,prompts:promptsRoute,security:securityRoute,audit:auditRoute,system:systemRoute,database:databaseRoute};
+const sections:Record<string,AdminHandler>={overview:overviewRoute,analytics:analyticsRoute,live:liveRoute,users:usersRoute,sessions:sessionsRoute,logs:logsRoute,prompts:promptsRoute,security:securityRoute,audit:auditRoute,system:systemRoute,database:databaseRoute,media:mediaRoute};
 export const adminSection=(name:string|undefined)=>name&&Object.hasOwn(sections,name)?sections[name]:undefined;
