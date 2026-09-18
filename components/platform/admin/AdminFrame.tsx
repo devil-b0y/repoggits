@@ -31,7 +31,7 @@ function Frame({section,title,description,actions,children}:{section:AdminSectio
         <div><div className="eyebrow">ADMIN PANEL{current?` / ${current.group.toUpperCase()}`:''}</div><h1>{title}</h1>{description&&<p>{description}</p>}</div>
         {actions&&allowed&&<div className="admin-heading-actions">{actions}</div>}
       </header>
-      {allowed?children:<Notice error>You do not have permission to open this part of the admin panel. A Super Admin can grant access from Review desk › People.</Notice>}
+      {allowed?children:<Notice error>You do not have permission to open this part of the admin panel. A Super Admin can grant access from Admin panel › Roles & permissions.</Notice>}
     </div>
   </div>;
 }

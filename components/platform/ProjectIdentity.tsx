@@ -1,12 +1,18 @@
 'use client';
 import {useState,type ReactNode} from 'react';
 import {Code2,Layers,Users,GraduationCap,Building2,GitBranch,Hash,Cloud,Database,Globe,Server,Wrench,CalendarDays,Eye,Download,ShieldCheck,Clock3,ArrowUpRight,type LucideIcon} from 'lucide-react';
+import tagLogos from '@/lib/technology-tag-logos.json';
 import catalogue from '@/lib/programming-languages.json';
 import type {Project,ProjectData} from '@/lib/schema';
 import {imageUrl} from '@/lib/images';
 
-const technologies:Record<string,string>={react:'react','react.js':'react',reactjs:'react','next.js':'nextjs',nextjs:'nextjs','node.js':'nodejs',nodejs:'nodejs',postgresql:'postgresql',postgres:'postgresql',mongodb:'mongodb',firebase:'firebase',docker:'docker',git:'git',github:'github',figma:'figma','vs code':'vscode',vscode:'vscode','visual studio code':'vscode',arduino:'arduino','arduino ide':'arduino',tensorflow:'tensorflow',pytorch:'pytorch',fastapi:'fastapi',flask:'flask',redis:'redis',supabase:'supabase',vercel:'vercel',playwright:'playwright'};
-export function technologyLogo(name:string){const key=name.trim().toLowerCase();return catalogue.find(x=>x.name.toLowerCase()===key||x.aliases.some(a=>a.toLowerCase()===key))?.icon||(technologies[key]?`/images/technologies/${technologies[key]}.svg`:undefined);}
+const technologies:Record<string,string>={react:'react','react.js':'react',reactjs:'react','next.js':'nextjs',nextjs:'nextjs','node.js':'nodejs',nodejs:'nodejs',postgresql:'postgresql','postgresql (neon db)':'postgresql',postgres:'postgresql',mongodb:'mongodb',firebase:'firebase',docker:'docker',git:'git',github:'github',figma:'figma','vs code':'vscode',vscode:'vscode','visual studio code':'vscode',arduino:'arduino','arduino ide':'arduino',tensorflow:'tensorflow',pytorch:'pytorch',fastapi:'fastapi',flask:'flask',redis:'redis',supabase:'supabase',vercel:'vercel',playwright:'playwright'};
+export function technologyLogo(name:string){const key=name.trim().toLowerCase();const exact=Object.entries(tagLogos).find(([name])=>name.toLowerCase()===key)?.[1]||catalogue.find(x=>x.name.toLowerCase()===key||x.aliases.some(a=>a.toLowerCase()===key))?.icon||(technologies[key]?`/images/technologies/${technologies[key]}.svg`:undefined);if(exact)return exact;
+ // Recognize common descriptive entries without assigning a logo to "No backend".
+ if(/^(?:none|no\b)/i.test(key))return undefined;
+ const language=/\bhtml5?\b/i.test(key)?'HTML':/\bcss3?\b/i.test(key)?'CSS':undefined;
+ return language?catalogue.find(x=>x.name===language)?.icon:undefined;
+}
 export function TechnologyMark({name,icon:Icon=Code2}:{name:string;icon?:LucideIcon}){
  const logo=technologyLogo(name),[failed,setFailed]=useState(false);
  return <span className="pd-logo-orbit" aria-hidden="true">{logo&&!failed?<img src={logo} width={28} height={28} alt="" loading="lazy" onError={()=>setFailed(true)}/>:<Icon size={25} strokeWidth={1.5}/>}</span>;
@@ -24,7 +30,12 @@ export function ProjectSummary({project}:{project:Project}){
   <div className={`pd-summary-status is-${status}`}><span className="pd-summary-label">Review status</span><span className="pd-review-badge"><StatusIcon size={17} aria-hidden="true"/>{status.replaceAll('_',' ')}</span></div>
  </section>;
 }
-export function StackDetails({stack}:{stack:ProjectData['stack']}){return <dl className="pd-stack-details">{Object.entries(stack).filter(([,value])=>value).map(([key,value])=>{const Icon=stackIcons[key]||Code2;const names=value.split(',').map(v=>v.trim()).filter(Boolean);return <div key={key}><dt><Icon size={16}/><span className="capitalize">{key}</span></dt><dd>{names.length<=8&&names.every(n=>technologyLogo(n))?<div className="pd-stack-tokens">{names.map((name,i)=><TechnologyToken name={name} key={`${name}-${i}`}/>)}</div>:value}</dd></div>;})}</dl>;}
+function stackItems(value:string){
+ let depth=0,part='';const items:string[]=[];
+ for(const char of value){if(char==='(')depth++;if(char===')')depth=Math.max(0,depth-1);if(char===','&&depth===0){if(part.trim())items.push(part.trim());part='';}else part+=char;}
+ if(part.trim())items.push(part.trim());return items;
+}
+export function StackDetails({stack}:{stack:ProjectData['stack']}){return <dl className="pd-stack-details">{Object.entries(stack).filter(([,value])=>value).map(([key,value])=>{const Icon=stackIcons[key]||Code2;const names=stackItems(value);return <div key={key}><dt><Icon size={18}/><span className="capitalize">{key}</span></dt><dd><div className="pd-stack-tokens">{names.map((name,i)=><TechnologyToken name={name} icon={Icon} key={`${name}-${i}`}/>)}</div></dd></div>;})}</dl>;}
 export function TeamProfile({member,index}:{member:ProjectData['team'][number];index:number}){
  const [failed,setFailed]=useState(false);
  const initials=member.name.trim().split(/\s+/).slice(0,2).map(s=>s[0]).join('').toUpperCase();

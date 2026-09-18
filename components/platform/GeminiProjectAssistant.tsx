@@ -20,9 +20,10 @@ function readable(value:unknown):string{
 }
 export default function GeminiProjectAssistant({data,storageKey,onApply}:{data:ProjectData;storageKey:string;onApply:(draft:AiDraft,fields:Field[])=>void}){
  const [prompt,setPrompt]=useState(''),[draft,setDraft]=useState<AiDraft|null>(null),[selected,setSelected]=useState<Field[]>([]),[busy,setBusy]=useState(false),[error,setError]=useState(''),[message,setMessage]=useState(''),[restored,setRestored]=useState(false);
- const request=useRef<AbortController|null>(null),result=useRef<HTMLDivElement>(null),reduced=useReducedMotion();
+ const request=useRef<AbortController|null>(null),result=useRef<HTMLDivElement>(null),textareaRef=useRef<HTMLTextAreaElement>(null),reduced=useReducedMotion();
  useEffect(()=>{setRestored(false);try{const saved=localStorage.getItem(storageKey);setPrompt(saved&&saved.length<=12000?saved:'');}catch{}setRestored(true);return()=>request.current?.abort();},[storageKey]);
  useEffect(()=>{if(!restored)return;try{if(prompt)localStorage.setItem(storageKey,prompt);else localStorage.removeItem(storageKey);}catch{/* Form recovery has its own status indicator. */}},[prompt,storageKey,restored]);
+ useEffect(()=>{const el=textareaRef.current;if(!el)return;el.style.height='auto';const natural=el.scrollHeight;el.style.height=Math.min(natural,320)+'px';el.style.overflowY=natural>320?'auto':'hidden';},[prompt]);
  async function generate(){
   if(busy||prompt.trim().length<20)return;
   setBusy(true);setError('');setMessage('');setDraft(null);
@@ -38,10 +39,12 @@ export default function GeminiProjectAssistant({data,storageKey,onApply}:{data:P
  return <section className="gemini-assistant" aria-labelledby="gemini-title">
   <div className="gemini-heading"><span className="gemini-mark" aria-hidden="true"><Sparkles size={24}/></span><div><span className="gemini-eyebrow">YOUR IDEA, WITH A LITTLE HELP</span><h2 id="gemini-title">Tell Gemini what you built.</h2><p>Rough notes are enough. Turn your idea into a project story you can make your own.</p></div><span className="gemini-badge">GEMINI AI</span></div>
   <label className="gemini-prompt-label" htmlFor="gemini-prompt">Describe your project</label>
-  <textarea id="gemini-prompt" rows={6} maxLength={12000} disabled={busy} value={prompt} onChange={e=>{setPrompt(e.target.value);setMessage('');}} onKeyDown={e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();void generate();}}} placeholder="What did you build, how does it work, and which technologies did you use? Add team names, roll numbers, colleges, semesters, contributions, exact dates and costs if you have them. English, Hindi or Hinglish all work."/>
-  <div className="gemini-prompt-meta"><span>Include real details. Gemini will flag what’s missing.</span><span>{prompt.length.toLocaleString()} / 12,000</span></div>
-  <div className="gemini-examples"><span>Need a starting point?</span>{examples.map(example=><button key={example.name} type="button" disabled={busy||!!prompt.trim()} onClick={()=>setPrompt(example.text)}>{example.name} <ArrowUpRight size={13}/></button>)}</div>
-  <div className="gemini-actions"><button type="button" className="button blue" disabled={busy||prompt.trim().length<20} onClick={()=>void generate()}>{busy?<LoaderCircle size={17} className="gemini-spinner"/>:<Sparkles size={17}/>} {busy?'Writing your draft…':'Generate project details'}</button>{busy&&<button type="button" className="text-button" onClick={cancel}><X size={16}/> Cancel</button>}<small>Review first. Apply only what you want.</small></div>
+  <div className="gemini-composer">
+   <textarea ref={textareaRef} id="gemini-prompt" rows={3} maxLength={12000} disabled={busy} value={prompt} onChange={e=>{setPrompt(e.target.value);setMessage('');}} onKeyDown={e=>{if((e.ctrlKey||e.metaKey)&&e.key==='Enter'){e.preventDefault();void generate();}}} placeholder="What did you build, how does it work, and which technologies did you use? Add team names, roll numbers, colleges, semesters, contributions, exact dates and costs if you have them. English, Hindi or Hinglish all work."/>
+   <div className="gemini-prompt-meta"><span>Include real details. Gemini will flag what’s missing.</span><span>{prompt.length.toLocaleString()} / 12,000</span></div>
+   <div className="gemini-examples"><span>Need a starting point?</span>{examples.map(example=><button key={example.name} type="button" disabled={busy||!!prompt.trim()} onClick={()=>setPrompt(example.text)}>{example.name} <ArrowUpRight size={13}/></button>)}</div>
+   <div className="gemini-actions"><button type="button" className="button blue gemini-generate" disabled={busy||prompt.trim().length<20} onClick={()=>void generate()}><span className={`gemini-generate-icon${busy?' is-busy':''}`} aria-hidden="true"><Sparkles size={17} className="gemini-icon-idle"/><span className="gemini-icon-busy"><LoaderCircle size={17} className="gemini-spinner"/></span></span> {busy?'Writing your draft…':'Generate project details'}</button>{busy&&<button type="button" className="text-button" onClick={cancel}><X size={16}/> Cancel</button>}<small>Review first. Apply only what you want.</small></div>
+  </div>
   <p className="gemini-disclosure">Your prompt is sent to Google Gemini and saved with your account so administrators can prevent misuse; saved prompts are deleted after 180 days. The rest of this form and your uploaded files are not sent. Photos and source ZIP uploads are always manual.</p>
   {busy&&<p role="status" className="gemini-status">Organising your notes into project fields. This can take up to 45 seconds.</p>}
   {error&&<Notice error>{error}</Notice>}{message&&<p role="status" className="gemini-status">{message}</p>}

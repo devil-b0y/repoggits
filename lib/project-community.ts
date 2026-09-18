@@ -31,14 +31,15 @@ export async function modifyProject(user:User,parentId:string,parentVersionId?:s
     const data=projectSchema.parse({...original,title:`${original.title.slice(0,100)} — modified`,teamName:`${user.name.slice(0,85)}'s team`,team:[teamMemberSchema.parse({name:user.name,email:user.email,contribution:'Modification author',branch:user.profile.department})],coverId:'',galleryIds:[],sourceId:'',videoUrl:'',github:'',liveUrl:'',startDate:'',endDate:'',purchaseDate:'',hardwareCosts:[],softwareCosts:[],services:[]});
     const id=randomUUID(),versionId=randomUUID();
     await client.query('INSERT INTO r.projects(id,owner_id,parent_project_id,parent_version_id) VALUES($1,$2,$3,$4)',[id,user.id,parentId,version.id]);
-    await client.query("INSERT INTO r.versions(id,project_id,number,status,data,changelog) VALUES($1,$2,1,'draft',$3,'')",[versionId,id,JSON.stringify(data)]);
+    // Numbering continues the pinned original's, so a modification of version 1 reads as version 2 in its own notebook.
+    await client.query("INSERT INTO r.versions(id,project_id,number,status,data,changelog) VALUES($1,$2,$3,'draft',$4,'')",[versionId,id,Number(version.number)+1,JSON.stringify(data)]);
     await audit(client,user.id,'project.modified',id,{parentId,parentVersionId:version.id});
     return {id,versionId};
   });
 }
 
 export async function projectLineage(parentId:string|null,parentVersionId:string|null,id:string) {
-  const [original]=parentId?await db.query("SELECT p.id,v.id AS version_id,v.number,v.data->>'title' AS title,v.data->>'teamName' AS team_name FROM r.projects p JOIN r.versions v ON v.project_id=p.id WHERE p.id=$1 AND v.id=$2 AND v.status='approved' AND NOT p.archived",[parentId,parentVersionId]):[];
+  const [original]=parentId?await db.query("SELECT p.id,v.id AS version_id,v.number,v.changelog,v.created_at,v.data->>'title' AS title,v.data->>'teamName' AS team_name FROM r.projects p JOIN r.versions v ON v.project_id=p.id WHERE p.id=$1 AND v.id=$2 AND v.status='approved' AND NOT p.archived",[parentId,parentVersionId]):[];
   const modifications=await db.query("SELECT p.id,v.data->>'title' AS title,v.data->>'teamName' AS team_name FROM r.projects p JOIN r.versions v ON v.project_id=p.id WHERE p.parent_project_id=$1 AND NOT p.archived AND v.status='approved' AND v.number=(SELECT max(v2.number) FROM r.versions v2 WHERE v2.project_id=p.id AND v2.status='approved') ORDER BY v.created_at DESC LIMIT 50",[id]);
   return {original:original||null,modifications};
 }

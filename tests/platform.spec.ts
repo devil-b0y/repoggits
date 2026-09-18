@@ -50,8 +50,7 @@ test('website backup is restricted to Super Admin and downloads from the panel',
   expect((await teacher.post('/api/admin/backup')).status()).toBe(403);
   expect((await admin.post('/api/admin/backup',{headers:{origin:'https://other.example'}})).status()).toBe(403);
   await page.context().addCookies((await admin.storageState()).cookies);
-  await page.goto('/admin');
-  await page.getByRole('tab',{name:'Backups',exact:true}).click();
+  await page.goto('/admin/backups');
   const downloadPromise=page.waitForEvent('download');
   await page.getByRole('button',{name:'Download website backup',exact:true}).click();
   const download=await downloadPromise;expect(download.suggestedFilename()).toMatch(/^repoggits-website-.*\.zip$/);
@@ -607,9 +606,7 @@ test('admin page renders scoped queue and exports audit-ready CSV',async({page})
   await ensurePublishedProject();
   await page.goto('/auth');await page.getByLabel('Email address').fill('admin@example.test');await page.getByLabel('Password',{exact:true}).fill(password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page).toHaveURL(/workspace/);
   await page.getByRole('link',{name:'Review desk',exact:true}).click();await expect(page.getByRole('tab',{name:/Review queue/})).toBeVisible();
-  await page.getByRole('tab',{name:'Activity',exact:true}).click();await expect(page.locator('.audit-row').first()).toBeVisible();
   const report=await admin.get('/api/admin/export');expect(report.status()).toBe(200);expect(await report.text()).toContain('Accessible campus navigator');
-  await page.getByRole('tab',{name:/Review queue/}).click();
   await page.screenshot({path:'test-results/admin-desktop.png',fullPage:true});
   await page.setViewportSize({width:375,height:812});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
@@ -625,8 +622,7 @@ test('admin library uses the newest version and CSV includes history beyond the 
   const report=await admin.get('/api/admin/export');expect(report.status()).toBe(200);
   const csv=await report.text();expect(csv.split('\r\n').filter(row=>row.includes('Export fixture v'))).toHaveLength(1001);
   await page.goto('/auth');await page.getByLabel('Email address').fill('admin@example.test');await page.getByLabel('Password',{exact:true}).fill(password);await page.getByRole('button',{name:'Sign in',exact:true}).click();await expect(page).toHaveURL(/workspace/);
-  await page.getByRole('link',{name:'Review desk',exact:true}).click();
-  await page.getByRole('tab',{name:'Project library',exact:true}).click();
+  await page.goto('/admin/library');
   await expect(page.getByRole('heading',{name:'Projects by subject',exact:true})).toBeVisible();
   await expect(page.locator('table').getByRole('link',{name:'Export fixture v1001',exact:true})).toBeVisible();
   await expect(page.locator('table').getByRole('link',{name:'Export fixture v2',exact:true})).toHaveCount(0);

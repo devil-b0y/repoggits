@@ -54,3 +54,25 @@
  .platform .tech-label-row>span{font-size:10px;white-space:nowrap}
  .platform .submission-studio .studio-sidebar-inner{padding-right:0}
 }
+
+/* Reuse project identity marks in the technology picker. */
+.platform .technology-fields .pd-logo-orbit{display:inline-flex;align-items:center;justify-content:center;flex:0 0 30px;width:30px;height:30px;min-width:30px;border-radius:50%;background:#f7faff;border:1px solid #dce5f3;color:#3059b5;overflow:hidden;box-sizing:border-box}
+.platform .technology-fields .pd-logo-orbit img{display:block;width:20px;height:20px;object-fit:contain}
+.platform .technology-fields .pd-logo-orbit svg{width:19px;height:19px;opacity:1}
+.platform .tech-options .tech-option-name{flex:1;min-width:0}
+.platform .tech-chip{padding-left:6px}
+.platform .tech-chip .pd-logo-orbit,.platform .tech-quick .pd-logo-orbit{flex-basis:24px;width:24px;height:24px;min-width:24px}
+.platform .tech-chip .pd-logo-orbit img,.platform .tech-quick .pd-logo-orbit img{width:16px;height:16px}
+.platform .tech-chip .pd-logo-orbit svg,.platform .tech-quick .pd-logo-orbit svg{width:16px;height:16px}
+
+.platform .tech-stack-field>label{display:flex;align-items:center;gap:9px;margin:0}
+.platform .stack-presets-control{display:flex;align-items:center;gap:6px;min-width:0}
+.platform .stack-presets-control input{min-width:0;flex:1}
+.platform .stack-presets-control>button{display:grid;place-items:center;flex:0 0 44px;min-height:46px;border:1px solid var(--line);background:var(--white);color:var(--blue);border-radius:8px;cursor:pointer}
+.platform .stack-selected-logos{display:flex;flex-wrap:wrap;gap:8px}
+.platform .stack-selected-logos>span{display:inline-flex;align-items:center;gap:7px;max-width:100%;font-size:13px;overflow-wrap:anywhere}
+.platform .stack-presets-menu{display:flex;flex-direction:column;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--white);padding:5px;scrollbar-width:thin;scrollbar-color:var(--muted) transparent;overscroll-behavior:contain}
+.platform .stack-presets-menu button{display:flex;align-items:center;gap:10px;text-align:left;padding:8px;min-height:44px;color:var(--ink);background:transparent;border:0;border-radius:5px;cursor:pointer;font:inherit;font-size:14px}
+.platform .stack-presets-menu button>span:nth-child(2){flex:1}
+.platform .stack-presets-menu button:hover,.platform .stack-presets-menu button[aria-pressed=true]{background:var(--paper);color:var(--blue)}
+.platform .stack-presets-menu button:focus-visible,.platform .stack-presets-control>button:focus-visible{outline:2px solid var(--blue);outline-offset:2px}

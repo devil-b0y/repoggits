@@ -13,10 +13,10 @@ async function mockSession(page:Page){
 test('starter kits preserve custom answers and the downloadable draft matches recovered work',async({page})=>{
  await mockSession(page);await page.goto('/submit');
  await page.getByLabel('Project title',{exact:true}).fill('Smart garden notebook');
- await page.getByLabel('Frontend',{exact:false}).fill('My custom interface');
+ await page.getByLabel('Frontend',{exact:true}).fill('My custom interface');
  await page.locator('.starter-details > summary').click();
  await page.getByRole('button',{name:/ESP32 \/ connected device/}).click();
- await expect(page.getByLabel('Frontend',{exact:false})).toHaveValue('My custom interface');
+ await expect(page.getByLabel('Frontend',{exact:true})).toHaveValue('My custom interface');
  await expect(page.locator('.language-chip')).toHaveCount(2);
  await page.getByRole('button',{name:'Use writing outline'}).click();
  await expect(page.getByLabel('Full story',{exact:true})).toHaveValue(/The problem/);
@@ -180,4 +180,30 @@ test('mobile studio keeps all form fields accessible and navigation fits',async(
  await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/Under the hood/}).click();await expect(page.getByLabel('Demo video URL',{exact:false})).toBeVisible();
  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
  await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/This chapter/}).click();await expect(page.getByRole('button',{name:'Submit for review'})).toBeVisible();
+});
+
+
+test('stack presets preserve custom values, show icons and save after refresh',async({page})=>{
+ await mockSession(page);await page.setViewportSize({width:390,height:844});await page.goto('/submit');
+ await page.getByLabel('Project title',{exact:true}).fill('Stack preset testing project');
+ await page.getByLabel('Frontend',{exact:true}).fill('Existing custom interface');
+ await page.getByRole('button',{name:'Choose frontend technologies',exact:true}).click();
+ const menu=page.locator('.stack-presets-menu');
+ await expect(menu.getByRole('button',{name:'React',exact:true}).locator('img')).toHaveAttribute('src','/images/technologies/react.svg');
+ await menu.getByRole('button',{name:'React',exact:true}).click();
+ await menu.getByRole('button',{name:'React',exact:true}).click();
+ await expect(page.getByLabel('Frontend',{exact:true})).toHaveValue('Existing custom interface, React');
+ await menu.getByRole('button',{name:'Other / type custom',exact:true}).click();
+ await expect(page.getByLabel('Frontend',{exact:true})).toBeFocused();
+ await page.getByLabel('Database',{exact:true}).fill('PostgreSQL (Neon DB)');
+ const dbField=page.locator('.tech-stack-field').filter({has:page.getByLabel('Database',{exact:true})});
+ await expect(dbField.locator('.stack-selected-logos img')).toHaveAttribute('src','/images/technologies/postgresql.svg');
+ const frontend=page.locator('.tech-stack-field').filter({has:page.getByLabel('Frontend',{exact:true})});
+ await expect(frontend.locator('.stack-selected-logos .pd-logo-orbit svg')).toHaveCount(1);
+ await page.reload();await expect(page.getByLabel('Frontend',{exact:true})).toHaveValue('Existing custom interface, React');
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+ let saved:any;await page.route('**/api/projects',async r=>{saved=r.request().postDataJSON();await r.fulfill({json:{id:'stack-project',versionId:'stack-version'}});});
+ await page.getByRole('button',{name:'Save draft',exact:true}).click();
+ await expect(page.getByText('Draft saved to your account.',{exact:false})).toBeVisible();
+ expect(saved.data.stack.frontend).toBe('Existing custom interface, React');expect(saved.data.stack.database).toBe('PostgreSQL (Neon DB)');
 });

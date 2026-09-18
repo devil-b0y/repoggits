@@ -29,7 +29,7 @@ function AiInsights() {
     {error&&<Notice error>{error}</Notice>}
     <div className="admin-toolbar">
       <span aria-live="polite">{data?data.range.label:loading?'Loading AI usage…':''}</span>
-      <span className="admin-section-links"><Link className="inline-link" href="/admin?tab=ai">AI access requests</Link><Link className="inline-link" href="/admin/logs?event=prompt">Prompt activity</Link></span>
+      <span className="admin-section-links"><Link className="inline-link" href="/admin/ai-activity">AI access requests</Link><Link className="inline-link" href="/admin/logs?event=prompt">Prompt activity</Link></span>
     </div>
     {data&&<>
       <StatGrid cards={data.cards} label="AI usage statistics"/>

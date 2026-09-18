@@ -1,0 +1,38 @@
+.admin-page .review-card.rq-card{padding:0;border-radius:20px;overflow:hidden;border:1px solid var(--line);background:var(--white);margin-bottom:26px;box-shadow:0 10px 35px #13274906;transition:border-color .25s,box-shadow .25s}
+.admin-page .rq-card.is-selected{border-color:var(--blue);box-shadow:0 0 0 1px var(--blue),0 12px 32px #1327490a}
+.rq-card .rq-top{padding:25px 30px 0;display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap}
+.rq-card .rq-selection{display:flex;align-items:center;gap:11px;min-height:44px;font-size:13px;color:var(--muted);cursor:pointer}
+.rq-card .rq-selection input{width:19px;height:19px;margin:0;accent-color:var(--blue)}
+.rq-card .rq-pending{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:500;color:#80601c;background:#fff3d7;border:1px solid #e9d8ad;padding:7px 10px;border-radius:30px}
+.rq-card .rq-pending>span{border-left:1px solid currentColor;padding-left:9px;margin-left:3px;font-variant-numeric:tabular-nums}
+.dark .rq-card .rq-pending{color:#efd59a;background:#3c3529;border-color:#68583a}
+.rq-card .rq-intro{padding:24px 30px 0}
+.rq-card .rq-eyebrow{font-size:10px;font-weight:500;letter-spacing:1.7px;text-transform:uppercase;color:var(--blue)}
+.admin-page .rq-card .rq-intro h2{font:500 clamp(28px,3vw,38px)/1.16 'Space Grotesk',sans-serif;letter-spacing:-1px;margin:12px 0 15px;overflow-wrap:anywhere;text-wrap:balance}
+.admin-page .rq-card .rq-intro p{font-size:16px;line-height:1.85;max-width:100ch;color:var(--muted);margin:0;overflow-wrap:anywhere}
+.rq-card .rq-facts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr)) minmax(150px,.65fr);gap:22px;margin:28px 30px;padding:24px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.rq-card .rq-fact{display:flex;gap:12px;align-items:center;min-width:0}
+.rq-card .rq-fact-icon{width:42px;height:42px;flex:0 0 42px;border-radius:13px;background:color-mix(in srgb,var(--blue) 7%,var(--white));color:var(--blue);border:1px solid var(--line);display:grid;place-items:center}
+.rq-card .rq-fact>div{display:grid;gap:5px;min-width:0}
+.rq-card .rq-fact div>span{font-size:11px;color:var(--muted)}
+.rq-card .rq-fact strong{font-size:14px;font-weight:500;line-height:1.5;overflow-wrap:anywhere}
+.rq-card .rq-approval{display:flex;align-items:center;gap:12px;border-left:1px solid var(--line);padding-left:20px;color:var(--blue)}
+.rq-card .rq-approval>div{display:grid;gap:3px}
+.rq-card .rq-approval strong{font:500 24px/1.2 'Space Grotesk',sans-serif;font-variant-numeric:tabular-nums}
+.rq-card .rq-approval strong span{font-size:17px;color:var(--muted)}
+.rq-card .rq-approval div>span{font-size:11px;color:var(--muted)}
+.admin-page .rq-card .rq-changelog{display:flex;gap:16px;margin:0 30px 28px;padding:21px 23px;border:1px solid var(--line);border-radius:13px;background:var(--paper)}
+.rq-card .rq-change-icon{color:var(--blue);padding-top:1px;flex-shrink:0}
+.rq-card .rq-changelog>div{min-width:0}
+.rq-card .rq-changelog strong{font:500 16px/1.4 'Space Grotesk',sans-serif}
+.admin-page .rq-card .rq-changelog p{font-size:15px;line-height:1.75;margin:9px 0 0;color:var(--muted);white-space:pre-wrap;overflow-wrap:anywhere}
+.rq-card>.notice{margin:0 30px 25px}
+.rq-card .rq-actions{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:18px;padding:22px 30px;background:color-mix(in srgb,var(--blue) 3%,var(--white));border-top:1px solid var(--line)}
+.admin-page .rq-card .rq-inspect{font-size:14px;min-height:44px;gap:10px}
+.rq-card .rq-inspect svg{transition:transform .25s}
+.rq-card .rq-inspect:hover svg{transform:translate(2px,-2px)}
+.admin-page .rq-card .rq-approve{font-size:15px;min-height:50px;padding:13px 22px;border-radius:11px;gap:10px}
+.rq-card :focus-visible{outline:2px solid var(--blue);outline-offset:4px}
+@media(max-width:1000px){.rq-card .rq-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.rq-card .rq-approval{border-left:0;padding-left:9px}}
+@media(max-width:560px){.rq-card .rq-top{padding:18px 20px 0;gap:5px}.rq-card .rq-intro{padding:18px 20px 0}.admin-page .rq-card .rq-intro p{font-size:15px;line-height:1.75}.rq-card .rq-facts{margin:24px 20px;gap:22px 14px}.rq-card .rq-fact{align-items:flex-start;flex-direction:column;gap:9px}.rq-card .rq-fact strong{font-size:13px}.rq-card .rq-approval{align-items:flex-start;flex-direction:column;justify-content:center;padding-left:0}.admin-page .rq-card .rq-changelog{margin:0 20px 24px;padding:18px;gap:12px}.rq-card .rq-actions{padding:20px;gap:13px}.admin-page .rq-card .rq-approve{width:100%;justify-content:center}.rq-card .rq-selection{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.admin-page .review-card.rq-card,.rq-card .rq-inspect svg{transition:none}.rq-card .rq-inspect:hover svg{transform:none}.admin-page .rq-card,.rq-card .rq-intro,.rq-card .rq-facts,.rq-card .rq-changelog{opacity:1!important;transform:none!important}}

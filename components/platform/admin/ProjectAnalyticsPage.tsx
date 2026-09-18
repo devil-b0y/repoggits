@@ -15,7 +15,7 @@ const DEFAULTS:FilterValues={date:'30d',from:'',to:''};
 const FIELDS:FilterField[]=[{type:'dateRange'}];
 
 export default function ProjectAnalyticsPage() {
-  return <AdminPage section="projects" title="Project analytics" description="Which projects people view, share and download, who is building them, and what the library is made of." actions={<Link className="button outline" href="/admin?tab=library">Project library</Link>}><ProjectInsights/></AdminPage>;
+  return <AdminPage section="projects" title="Project analytics" description="Which projects people view, share and download, who is building them, and what the library is made of." actions={<Link className="button outline" href="/admin/library">Project library</Link>}><ProjectInsights/></AdminPage>;
 }
 
 /** A ranked project row: its count in this range, and its all-time total where the API reports one. */
@@ -45,7 +45,7 @@ function ProjectInsights() {
     {data&&<>
       <FactGrid label="Projects" facts={[
         {key:'created',label:'Created in this range',value:formatNumber(data.createdInRange),hint:data.range.label},
-        {key:'total',label:'Projects in total',value:formatNumber(data.totalProjects),hint:'Every project, archived or not',href:'/admin?tab=library'},
+        {key:'total',label:'Projects in total',value:formatNumber(data.totalProjects),hint:'Every project, archived or not',href:'/admin/library'},
         {key:'top',label:'Most viewed project',value:topProject?topProject.project.title:'—',hint:topProject?`${formatNumber(topProject.count)} views in this range`:'No project views in this range',href:topProject?`/projects/${topProject.project.id}`:undefined},
         {key:'builder',label:'Most active person',value:topUser?topUser.user.name:'—',hint:topUser?`${formatNumber(topUser.total)} tracked actions`:'No activity in this range',href:topUser?`/admin/users/${topUser.user.id}`:undefined},
       ]}/>

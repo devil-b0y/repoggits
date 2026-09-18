@@ -1,0 +1,22 @@
+.platform .dropdown-select{position:relative;min-width:0}
+.platform .dropdown-select-trigger{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;padding:11px 14px;background:var(--white);border:1px solid var(--line);border-radius:6px;color:var(--ink);font-size:14px;text-align:left;cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.platform .dropdown-select-trigger:hover{border-color:#9fb0cc}
+.platform .dropdown-select-trigger[aria-expanded=true]{border-color:var(--blue);box-shadow:0 0 0 3px #3059b51f}
+.platform .dropdown-select-trigger:disabled{cursor:not-allowed;opacity:.5}
+.platform .dropdown-select-value{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.platform .dropdown-select-chevron{flex-shrink:0;color:var(--muted);transition:transform .2s}
+.platform .dropdown-select-trigger[aria-expanded=true] .dropdown-select-chevron{transform:rotate(180deg);color:var(--blue)}
+.platform .dropdown-select-menu{position:absolute;top:calc(100% + 7px);left:0;right:0;z-index:20;border:1px solid var(--line);border-radius:10px;background:var(--white);box-shadow:0 15px 40px #08192e30;padding:6px;max-height:320px;overflow:auto;scrollbar-width:thin;scrollbar-color:var(--muted) transparent;overscroll-behavior:contain}
+.platform .dropdown-select-menu [role=option]{display:flex;align-items:center;gap:11px;padding:10px 11px;min-height:44px;border-radius:6px;cursor:pointer;color:var(--ink);font-size:14px}
+.platform .dropdown-select-menu [role=option]:hover,.platform .dropdown-select-menu [data-active=true]{background:#3059b513}
+.platform .dropdown-select-menu [aria-selected=true]{color:var(--blue);font-weight:500}
+.platform .dropdown-select-label{flex:1;min-width:0;overflow-wrap:anywhere}
+.platform .dropdown-select-check{flex-shrink:0;color:var(--blue)}
+.platform .dropdown-select-icon{flex-shrink:0;width:26px;height:26px;display:inline-grid;place-items:center;border-radius:7px;background:#3059b513;color:var(--blue)}
+.platform .dropdown-select-icon svg{width:16px;height:16px}
+.platform .dropdown-select-icon img{width:16px;height:16px;object-fit:contain}
+.platform .dropdown-select-trigger .dropdown-select-icon{background:transparent;padding:0}
+@media(max-width:760px){
+ .platform .dropdown-select-trigger{min-height:46px;font-size:16px}
+ .platform .dropdown-select-menu{left:0;right:0}
+}

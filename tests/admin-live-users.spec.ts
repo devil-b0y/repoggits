@@ -243,7 +243,7 @@ test('the users page links each account, keeps sorting and search in the address
  await page.goto('/admin/users');
  await expect(page.getByRole('link',{name:'Riya Sharma'})).toHaveAttribute('href',`/admin/users/${id}`);
  await expect(page.locator('.admin-table')).toContainText('riya@example.test');
- await expect(page.getByRole('link',{name:'Edit roles in Review desk'})).toHaveAttribute('href','/admin?tab=people');
+ await expect(page.getByRole('link',{name:'Edit roles in Admin panel'})).toHaveAttribute('href','/admin/people');
  await page.getByRole('button',{name:'Name',exact:true}).click();
  await expect(page).toHaveURL(/sort=name/);
  await expect.poll(()=>lastRequest).toContain('sort=name');

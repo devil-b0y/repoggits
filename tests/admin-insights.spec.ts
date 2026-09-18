@@ -363,7 +363,7 @@ test('every admin panel section is reachable from the navigation',async({page})=
   await page.goto('/admin/overview');
   const nav=page.locator('#admin-navigation');
   for(const [label,href] of [['Overview','/admin/overview'],['Live monitoring','/admin/live'],['Analytics','/admin/analytics'],['Users','/admin/users'],
-    ['Sessions','/admin/sessions'],['Project analytics','/admin/projects'],['Review desk','/admin'],['Global activity','/admin/logs'],
+    ['Sessions','/admin/sessions'],['Project analytics','/admin/projects'],['Global activity','/admin/logs'],
     ['Prompt logs','/admin/logs/prompts'],['Security logs','/admin/logs/security'],['Admin audit log','/admin/logs/audit'],
     ['AI usage','/admin/ai'],['System health','/admin/system'],['Settings','/admin/settings']] as const)
     await expect(nav.getByRole('link',{name:label,exact:true}),label).toHaveAttribute('href',href);

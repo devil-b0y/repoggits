@@ -80,30 +80,34 @@
 .detail-page .pd-sidebar-heading{display:flex;align-items:center;gap:10px;margin-bottom:22px;color:var(--blue)}
 .detail-page .pd-sidebar-heading h3,.detail-page .pd-sidebar-heading h2{font-size:20px;margin:0;color:var(--ink)}
 .detail-page .pd-sidebar-heading>span{margin-left:auto;font:11px monospace;padding:4px 8px;background:var(--pd-soft);border:1px solid var(--line);border-radius:7px}
-.detail-page .tech-badges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px;margin:0 0 24px}
-.detail-page .tech-badges .pd-tech-token{flex-direction:column;align-items:center;text-align:center;padding:15px 8px;background:var(--pd-soft);border:1px solid var(--line);border-radius:14px;gap:10px;transition:transform .2s,border-color .2s}
+.detail-page .tech-badges{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 25px}
+.detail-page .tech-badges .pd-tech-token{flex-direction:row;align-items:center;text-align:left;padding:7px 14px 7px 7px;background:var(--pd-soft);border:1px solid var(--line);border-radius:30px;gap:10px;font-size:14px;line-height:1.5;transition:transform .2s,border-color .2s}
 .detail-page .tech-badges .pd-tech-token:hover{transform:translateY(-2px);border-color:var(--blue)}
-.detail-page .tech-badges .pd-logo-orbit{width:49px;height:49px;flex-basis:49px}
+.detail-page .tech-badges .pd-logo-orbit{width:42px;height:42px;flex-basis:42px}
 .detail-page .pd-stack-details{margin:0}
 .detail-page .pd-stack-details>div{display:block;padding:17px 0;border-top:1px solid var(--line);border-bottom:0}
-.detail-page .pd-stack-details dt{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--muted);margin-bottom:9px}
+.detail-page .pd-stack-details dt{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);margin-bottom:13px}
 .detail-page .pd-stack-details dt svg{color:var(--blue)}
 .detail-page .pd-stack-details dd{margin:0;text-align:left;font-size:12px;line-height:1.8}
-.detail-page .pd-stack-tokens{display:flex;flex-wrap:wrap;gap:9px 14px}
-.detail-page .pd-stack-tokens .pd-logo-orbit{width:27px;height:27px;flex-basis:27px;box-shadow:none}
-.detail-page .pd-stack-tokens img{width:17px;height:17px}
-.detail-page .pd-stack-tokens .pd-tech-token{font-size:11px;gap:6px}
+.detail-page .pd-stack-tokens{display:flex;flex-wrap:wrap;gap:12px 16px}
+.detail-page .pd-stack-tokens .pd-logo-orbit{width:38px;height:38px;flex-basis:38px;box-shadow:none}
+.detail-page .pd-stack-tokens img{width:23px;height:23px}
+.detail-page .pd-stack-tokens .pd-tech-token{font-size:14px;gap:10px;line-height:1.65;align-items:center}.detail-page .pd-stack-tokens .pd-logo-orbit svg{width:21px;height:21px}
 .detail-page .history details{padding:17px 0;border-top:1px solid var(--line)}
 .detail-page .history summary{font-size:13px;line-height:1.7;cursor:pointer}
 .detail-page .history details p{font-size:12px;line-height:1.8;color:var(--muted)}
 .detail-page .history .status-tag{font-size:8px;margin-left:8px}
+.pd-version-badge{display:inline-flex;align-items:center;gap:7px;vertical-align:middle;margin-left:16px;font:600 13px 'DM Sans',sans-serif;letter-spacing:0;color:var(--orange);background:color-mix(in srgb,var(--orange) 14%,transparent);border:1px solid color-mix(in srgb,var(--orange) 40%,transparent);border-radius:999px;padding:6px 14px 6px 11px}
+/* The pinned original's release, listed under this build's own versions so the lineage reads as one history. */
+.detail-page .history .pd-inherited-version{position:relative;padding-left:16px;border-top:1px dashed var(--line)}
+.detail-page .history .pd-inherited-version::before{content:'';position:absolute;left:0;top:22px;bottom:19px;width:2px;border-radius:2px;background:var(--orange);opacity:.5}
 .detail-page .modification-list>a{border-radius:14px;padding:20px}
 .detail-page .modification-list>a>svg{color:var(--blue);flex-shrink:0}
 .detail-page .discussion textarea{border-radius:13px;background:var(--white)}
 .detail-page .discussion .comment{padding:24px 0}
 .detail-page .discussion .comment-avatar{width:43px;height:43px;border:3px solid var(--white);outline:1px solid var(--pd-accent-line)}
 @media(max-width:760px){
- .detail-page>.page-title h1{font-size:38px;letter-spacing:-1.6px}.detail-page>.page-title p{font-size:14px}
+ .detail-page>.page-title h1{font-size:38px;letter-spacing:-1.6px}.detail-page>.page-title p{font-size:14px}.pd-version-badge{margin-left:0;margin-top:10px;font-size:11px;padding:5px 12px 5px 9px}
  .detail-page .pd-section-heading{gap:12px}.detail-page .pd-section-heading h2{font-size:24px}.detail-page .pd-section-icon{width:42px;height:42px;border-radius:12px}
  .detail-page .key-features{padding:22px 18px}.detail-page .pd-facts>div{padding:17px}.detail-page .pd-facts>div>strong{font-size:18px}
  .detail-page .pd-logo-orbit{width:36px;height:36px;flex-basis:36px}.detail-page .pd-logo-orbit img{width:23px;height:23px}

@@ -1,0 +1,20 @@
+import {test,expect} from '@playwright/test';
+import {emptyProject} from '../lib/schema';
+for(const width of [390,1440])test(`review card preserves approval and selection at ${width}px`,async({page})=>{
+ await page.setViewportSize({width,height:1000});if(width===390)await page.emulateMedia({reducedMotion:'reduce'});
+ await page.addInitScript(()=>localStorage.setItem('repoggits-theme','dark'));
+ const project={id:'review-project',version:{id:'review-version',number:1,status:'pending',approvals:0,requiredApprovals:1,changelog:'Initial version\nAdded live parking status.',data:{...emptyProject,title:'SmartparkX',summary:'An autonomous IoT parking management system built with ESP32. Track live slot occupancy and control the gate from a local dashboard.',teamName:'Campus Engineers',subject:'IoT'}}};
+ let queue=[project];let submitted:unknown;
+ await page.route('**/api/auth/me',r=>r.fulfill({json:{user:{id:'teacher',role:'teacher',name:'Teacher',verified:true,scopes:[],profile:{}},emailVerificationRequired:false}}));
+ await page.route('**/api/admin',r=>r.fulfill({json:{queue,projects:[project],users:[],audit:[]}}));
+ await page.route('**/api/admin/reviews',r=>{submitted=r.request().postDataJSON();queue=[];return r.fulfill({json:{ok:true}});});
+ await page.goto('/admin?tab=queue');await page.getByRole('button',{name:'Reject non-essential',exact:true}).click();
+ const card=page.getByRole('article',{name:'Review SmartparkX'});await card.scrollIntoViewIfNeeded();await expect(card).toHaveCSS('opacity','1');
+ await expect(card.getByRole('heading',{name:'SmartparkX'})).toHaveCSS('font-size',width===390?'28px':'38px');
+ await expect(card.getByRole('link',{name:'Inspect full submission'})).toHaveAttribute('href','/projects/review-project?version=review-version');
+ await page.getByRole('checkbox',{name:'Select SmartparkX'}).check();await expect(card).toHaveClass(/is-selected/);
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+ await card.screenshot({path:`test-results/review-card-${width}.png`});
+ if(width===390)expect(await card.evaluate(el=>el.getAnimations({subtree:true}).filter(a=>a.playState==='running').length)).toBe(0);
+ await card.getByRole('button',{name:'Approve version',exact:true}).click();await expect(page.getByText('Review saved. The project team has been notified.')).toBeVisible();expect(submitted).toEqual({ids:['review-version'],action:'approve',reason:''});await expect(card).toHaveCount(0);
+});

@@ -8,7 +8,7 @@ import { AdvancedFilters, Badge, DataTable, Pager, PresenceBadge, adminQuery, op
 import { formatDateTime, formatNumber, timeAgo } from './format';
 import './admin-people.css';
 
-// Admin › Users: the account directory with presence and recent activity. Roles are edited in Review desk › People.
+// Admin › Users: the account directory with presence and recent activity. Roles are edited in Admin panel › Roles & permissions.
 
 export const ROLE_LABELS:Record<string,string>={student:'Student',teacher:'Teacher-Admin',superadmin:'Super Admin'};
 const DEFAULTS:FilterValues={q:'',role:'',status:'',verified:'',suspended:'',sort:'created',dir:'desc',page:'1'};
@@ -21,7 +21,7 @@ const FIELDS:FilterField[]=[
 ];
 
 export default function UsersPage() {
-  return <AdminPage section="users" title="Users" description="Every account with its presence, sessions and recent activity. Emails are encrypted, so search by name, user ID or the exact email address." actions={<Link className="button outline" href="/admin?tab=people">Edit roles in Review desk</Link>}><UserDirectory/></AdminPage>;
+  return <AdminPage section="users" title="Users" description="Every account with its presence, sessions and recent activity. Emails are encrypted, so search by name, user ID or the exact email address." actions={<Link className="button outline" href="/admin/people">Edit roles in Admin panel</Link>}><UserDirectory/></AdminPage>;
 }
 
 function UserDirectory() {

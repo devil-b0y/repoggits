@@ -80,7 +80,7 @@ async function overview(search:URLSearchParams):Promise<OverviewResponse> {
     {key:'active_sessions',label:'Active sessions',value:totals.auth_sessions,format:'number',current:totals.auth_sessions,previous:null,change:null,hint:'Signed-in sessions not yet expired',trend:trend('sessions'),href:'/admin/sessions'},
     card('visitors_today',"Today's visitors",activity.visitors_today,compare(activity.visitors_today,activity.visitors_yesterday,daysCovered),series(row=>row.visitors),'/admin/analytics?view=visitors'),
     card('page_views_today',"Today's page views",activity.page_views_today,compare(activity.page_views_today,activity.page_views_yesterday,daysCovered),pageViews,'/admin/logs?event=page_view&date=today'),
-    card('projects','Total projects',totals.projects,compare(totals.projects_current,totals.projects_previous),projects,'/admin?tab=library'),
+    card('projects','Total projects',totals.projects,compare(totals.projects_current,totals.projects_previous),projects,'/admin/library'),
     card('projects_today','Projects created today',totals.projects_today,compare(totals.projects_today,totals.projects_yesterday),projects,'/admin/projects'),
     card('project_views','Total project views',totals.project_views,compare(activity.project_views_current,activity.project_views_previous,periodCovered),projectViews,'/admin/projects'),
     card('project_shares','Total project shares',totals.shares_all,compare(activity.shares_current,activity.shares_previous,periodCovered),series(row=>row.shares),'/admin/projects'),
