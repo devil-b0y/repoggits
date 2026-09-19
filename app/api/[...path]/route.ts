@@ -7,7 +7,7 @@ import { authRoute } from '@/lib/api-auth';
 import { upload, fileRoute } from '@/lib/api-files';
 import { bodyJson, originCheck, json, failure, revalidatedJson, compressed } from '@/lib/http';
 import { requireCondition, HttpError } from '@/lib/errors';
-import { createProject, updateVersion, newVersion, reviewVersions, publicProjects, invalidatePublicProjects, projectSelect, reviewSelect, projectView, versionView, canEdit } from '@/lib/projects';
+import { createProject, updateVersion, withdrawVersion, newVersion, reviewVersions, publicProjects, invalidatePublicProjects, projectSelect, reviewSelect, projectView, versionView, canEdit } from '@/lib/projects';
 import { roles, type ProjectData, type User } from '@/lib/schema';
 import { queueMail } from '@/lib/mail';
 import { reactToProject, modifyProject, projectLineage } from '@/lib/project-community';
@@ -151,6 +151,10 @@ async function handler(request:NextRequest,context:Context) {
   if(resource==='versions'&&id&&method==='PATCH'){
     const user=await requireUser(request);const input=z.object({data:z.unknown(),submit:z.boolean().default(false),changelog:z.string().trim().max(5000)}).parse(await bodyJson(request));
     return json(await updateVersion(user,uuid(id),input.data,input.submit,input.changelog));
+  }
+  if(resource==='versions'&&id&&sub==='withdraw'&&method==='POST'){
+    const user=await requireUser(request);
+    return json(await withdrawVersion(user,uuid(id)));
   }
   if(resource==='workspace'&&method==='GET'){
     const user=await requireUser(request,false);

@@ -20,6 +20,26 @@
 .platform .admin-panel .admin-end-session .button{min-height:34px;padding:0 12px;font-size:12px}
 .admin-panel .admin-inline-error{font-size:11px;font-weight:600;color:var(--bad-ink)}
 
+/* Roles & permissions: the admin panel permissions granted to a Teacher-Admin, grouped into the same four sections
+   the admin sidebar itself uses (see admin/nav.ts), each permission a bordered icon+label toggle card rather than
+   a bare native checkbox in a flat list. */
+.user-row .admin-permissions{grid-column:1/-1;margin:0;padding-top:14px;border-top:1px solid var(--line)}
+.platform .user-row .admin-permissions legend{float:left;width:100%;margin-bottom:10px;padding:0;font-size:11px;font-weight:500}
+.user-row .admin-permission-groups{clear:both;display:flex;flex-direction:column;gap:14px}
+.user-row .admin-permission-group{padding:12px 14px 14px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
+.user-row .admin-permission-group h4{margin:0 0 10px;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
+.user-row .admin-permission-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+.platform .user-row .admin-permission-toggle{display:flex!important;flex-direction:row!important;align-items:center;gap:9px;padding:9px 11px;border:1px solid var(--line);border-radius:8px;background:var(--white);font-size:12.5px;line-height:1.35;color:var(--ink);cursor:pointer;transition:border-color .15s,background-color .15s}
+.platform .user-row .admin-permission-toggle:hover{border-color:#3059b555}
+.platform .user-row .admin-permission-toggle svg{flex-shrink:0;color:var(--muted);transition:color .15s}
+.platform .user-row .admin-permission-toggle span:first-of-type{flex:1;min-width:0}
+.platform .user-row .admin-permission-toggle.is-checked{border-color:#3059b555;background:#3059b514}
+.platform .user-row .admin-permission-toggle.is-checked svg{color:var(--blue)}
+.platform .user-row .admin-permission-toggle input{width:15px;height:15px;min-width:15px;accent-color:var(--blue)}
+.platform .user-row .admin-permission-toggle .status-tag{padding:3px 6px;font-size:9px}
+.platform .user-row .admin-permissions>small{display:block;margin-top:6px}
+@media(max-width:760px){.user-row .admin-permission-grid{grid-template-columns:minmax(0,1fr)}}
+
 /* Roles & permissions: the department/subject review-assignment picker. */
 .admin-panel .scope-picker{display:flex;flex-direction:column;gap:8px}
 .admin-panel .scope-chips{display:flex;flex-wrap:wrap;gap:6px}

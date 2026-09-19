@@ -138,28 +138,44 @@ The page shows warnings for `TRUSTED_PROXY_HOPS=0`, a non-https `APP_ORIGIN`, a 
 ## URL filter parameters
 
 Page URLs and API calls use the same names, so a filtered view can be bookmarked or shared with another administrator.
+Prompt text, passwords, tokens and other secrets never appear in URLs.
+
+**Search & identity**
 
 | Parameter | Meaning |
 | --- | --- |
 | `q` | Search by person name or project title; an exact id (event, user, session, visitor, project or prompt) matches that id. |
 | `user`, `session`, `project` | Exact ids. |
 | `owner` | Project owner id or name. |
+| `role` | `student`, `teacher` or `superadmin` where people are listed. |
+| `visitor` | `authenticated` or `anonymous`. |
+| `ip` | Exact IP address. Requires `network` scope (403 otherwise). |
+
+**Event & outcome filters**
+
+| Parameter | Meaning |
+| --- | --- |
 | `event` | Activity filter (`login`, `logout`, `page_view`, `project_view`, …, `prompt`, `security`, `admin`) or an exact event type. |
 | `prompt` | Prompt activity: `all`, `submitted`, `completed`, `failed`, `cancelled`, `rate_limited`. |
 | `status` | `success`/`failure` on activity; prompt outcome (`success`, `failed`, `cancelled`, `rate_limited`, `timeout`, `refused`, `pending`) on prompt logs; HTTP status for `source=errors`. |
 | `feature`, `model` | Prompt logs: AI feature (`project_draft`) and model name. |
 | `device`, `os`, `browser` | `desktop\|mobile\|tablet\|bot\|unknown`; OS and browser families from `lib/admin/types.ts` (`Other` matches the rest). |
-| `ip` | Exact IP address. Requires `network` (403 otherwise). |
-| `visitor` | `authenticated` or `anonymous`. |
-| `role` | `student`, `teacher` or `superadmin` where people are listed. |
+
+**Time range**
+
+| Parameter | Meaning |
+| --- | --- |
 | `date` | `today`, `yesterday`, `7d`, `30d`, `90d` or `custom` with `from` and `to` (`YYYY-MM-DD` or `YYYY-MM-DDTHH:mm`, at most one year). On log endpoints a missing `date` means all retained history; dashboards default to `7d`. |
 | `tz` | The viewer's IANA time zone for days and chart buckets (UTC when unknown). |
+
+**Sort, paging & output**
+
+| Parameter | Meaning |
+| --- | --- |
 | `sort`, `dir` | Sort column from each endpoint's allow-list (for example `time`, `event`, `user`) and `asc`/`desc`. |
 | `page`, `pageSize`, `cursor` | Numbered pages (page size up to 100) or keyset paging through very large logs. |
 | `view` | Analytics view. |
 | `format` | `csv` or `json` on `/export` endpoints. |
-
-Prompt text, passwords, tokens and other secrets never appear in URLs.
 
 ## Exports
 

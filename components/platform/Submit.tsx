@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { Plus, Trash2, Upload, ArrowUpRight, Code2, Cpu, Cog, Zap, Database, Building2, GraduationCap, Layers, ShieldCheck, Wifi, Brain, LineChart, BarChart3, Handshake, Palette, CircuitBoard, ServerCog, Bot, Factory, BatteryCharging, Clapperboard, FlaskConical, Dna, CarFront, Tractor, HeartPulse, TrendingUp, PiggyBank, Wheat, Stethoscope, Layers3, Briefcase } from 'lucide-react';
+import { Plus, Trash2, Upload, ArrowUpRight, Code2, Cpu, Cog, Zap, Database, Building2, GraduationCap, Layers, ShieldCheck, Wifi, Brain, LineChart, BarChart3, Handshake, Palette, CircuitBoard, ServerCog, Bot, Factory, BatteryCharging, Clapperboard, FlaskConical, Dna, CarFront, Tractor, Briefcase, Blocks, Pill } from 'lucide-react';
 import { emptyProject, projectSchema, projectCost, teamMemberSchema, type ProjectData, type Project } from '@/lib/schema';
 import { FilePicker, COVER_ASPECT } from './FilePicker';
 export { FilePicker } from './FilePicker';
@@ -19,40 +19,48 @@ import { Shell, Gate, Notice, api, send, useData, useSession } from './shared';
 import Select from './Select';
 
 // A department name's icon is picked heuristically, similar in spirit to tagIconFor in Detail.tsx.
-// Covers every branch/specialization in the RGPV catalog (see the department catalog in AdminSettings.tsx) — most
-// specific patterns first, since the generic "computer science"/"electronics"/"mba" rules below would otherwise
-// swallow their own specializations. New department names not covered fall back to GraduationCap.
+// Covers every branch in the catalog (see lib/branches.ts, sourced from GGITS's and GGCT's own sites) plus a few
+// extra patterns useful for an admin's free-typed custom department text — most specific patterns first, since the
+// generic "computer science"/"electronics"/"mba" rules below would otherwise swallow their own specializations.
+// New department names not covered fall back to GraduationCap.
 const departmentIconRules:[RegExp,typeof GraduationCap][]=[
  [/cyber\s*security/i,ShieldCheck],
+ [/blockchain/i,Blocks],
  [/\biot\b/i,Wifi],
- [/machine learning/i,Brain],
- [/ai\s*(?:&|and)\s*data science/i,LineChart],
+ [/machine learning|ai\s*(?:&|and)\s*ml\b/i,Brain],
+ [/ai\s*(?:&|and)\s*(?:data science|ds\b)/i,LineChart],
  [/\bdata science\b/i,BarChart3],
  [/business systems|\bcsbs\b/i,Handshake],
  [/computer science\s*(?:&|and)\s*design|\bcsd\b/i,Palette],
  [/electronics\s*(?:&|and)\s*computer science|\becs\b/i,CircuitBoard],
  [/advanced computing|\bact\b/i,ServerCog],
- [/robotics\s*(?:&|and)\s*ai/i,Bot],
- [/automation\s*(?:&|and)\s*robotics/i,Factory],
- [/electric vehicles?/i,BatteryCharging],
+ [/(?:ai|artificial intelligence)\s*(?:&|and)\s*robotics|robotics\s*(?:&|and)\s*(?:ai|artificial intelligence)/i,Bot],
+ [/automation\s*(?:&|and)\s*robotics|robotics\s*(?:and|&)\s*automation/i,Factory],
+ [/electric vehicles?|\bev\b/i,BatteryCharging],
+ [/energy technology/i,BatteryCharging],
  [/animation|graphics/i,Clapperboard],
  [/chemical/i,FlaskConical],
  [/biotechnology/i,Dna],
  [/automobile/i,CarFront],
  [/agriculture/i,Tractor],
- [/mba.*healthcare|healthcare management/i,HeartPulse],
- [/mba.*marketing|marketing management/i,TrendingUp],
- [/mba.*financial|financial administration/i,PiggyBank],
- [/mba.*rural|rural management/i,Wheat],
- [/mba.*pharmaceutical|pharmaceutical management/i,Stethoscope],
- [/mba integrated/i,Layers3],
+ [/\bpharm/i,Pill],
+ [/vlsi|digital communication/i,CircuitBoard],
+ [/power (?:electronics|system)/i,BatteryCharging],
+ [/cad\s*\/?\s*cam/i,Cog],
+ [/thermal engineering/i,FlaskConical],
+ [/production\s*(?:&|and)\s*industrial/i,Factory],
+ [/structural engineering/i,Building2],
+ [/environmental engineering/i,Tractor],
+ [/software engineering/i,Code2],
+ [/^mca\b/i,Code2],
  [/^mba\b/i,Briefcase],
+ [/electrical\s*(?:&|and)\s*electronics|\beee\b/i,CircuitBoard],
  [/computer science|computer engineering|\bcse\b/i,Code2],
  [/electronics|electronic|\bece\b/i,Cpu],
- [/mechanical/i,Cog],
- [/electrical/i,Zap],
+ [/mechanical|\bme\b/i,Cog],
+ [/electrical|\bee\b/i,Zap],
  [/information technology|\bit\b/i,Database],
- [/civil/i,Building2],
+ [/civil|\bce\b/i,Building2],
 ];
 export const departmentIconFor=(name:string)=>departmentIconRules.find(([pattern])=>pattern.test(name))?.[1]??GraduationCap;
 
@@ -89,7 +97,7 @@ function Editor(){
    return()=>{flush();window.removeEventListener('pagehide',flush);document.removeEventListener('visibilitychange',hidden);};
  },[]);
  const update=<K extends keyof ProjectData>(key:K,value:ProjectData[K])=>setData(d=>({...d,[key]:value}));
- useEffect(()=>{const q=new URLSearchParams(window.location.search);const id=q.get('project'),version=q.get('version');if(id&&version){setLoading(true);api<{project:Project;editable:boolean;original:{id:string;version_id:string;title:string;team_name:string}|null}>(`projects/${id}?version=${version}`).then(result=>{if(!result.editable||!['draft','changes_requested'].includes(result.project.version.status))throw new Error('This version is locked for review.');restore(result.project.version.data,result.project.version.changelog,version);setOriginal(result.original);setProjectId(id);setVersionId(version);}).catch(e=>setError(e.message)).finally(()=>setLoading(false));}else if(user){restore({...emptyProject,title:'',teamName:user.name.split(' ')[0]+"'s team",department:user.profile.department||emptyProject.department,team:[teamMemberSchema.parse({name:user.name,email:user.email,contribution:'Project lead',branch:user.profile.department})]},'Initial version');}},[user]);
+ useEffect(()=>{const q=new URLSearchParams(window.location.search);const id=q.get('project'),version=q.get('version');if(id&&version){setLoading(true);api<{project:Project;editable:boolean;original:{id:string;version_id:string;title:string;team_name:string}|null}>(`projects/${id}?version=${version}`).then(result=>{if(!result.editable||!['draft','changes_requested','pending'].includes(result.project.version.status))throw new Error('This version is locked for review.');restore(result.project.version.data,result.project.version.changelog,version);setOriginal(result.original);setProjectId(id);setVersionId(version);}).catch(e=>setError(e.message)).finally(()=>setLoading(false));}else if(user){restore({...emptyProject,title:'',teamName:user.name.split(' ')[0]+"'s team",department:user.profile.department||emptyProject.department,team:[teamMemberSchema.parse({name:user.name,email:user.email,contribution:'Project lead',branch:user.profile.department})]},'Initial version');}},[user]);
  async function save(event:FormEvent<HTMLFormElement>){event.preventDefault();pendingRecovery.current?.();setError('');setNotice('');setBusy(true);const submit=(event.nativeEvent as SubmitEvent).submitter?.getAttribute('value')==='submit';try{if(submit&&submissionIssues(data,changelog).length){setError('Finish the highlighted details in your submission checklist.');document.getElementById('submission-review')?.focus();return;}const payload={data,changelog,submit};const result=versionId?await send<{id:string;versionId:string}>(`versions/${versionId}`,payload,'PATCH'):await send<{id:string;versionId:string}>('projects',payload);try{localStorage.removeItem(recovery.current.key);}catch{}
  recovery.current={key:draftKey(user!.id,result.versionId),baseline:JSON.stringify({data:projectSchema.parse(data),changelog:changelog.trim()}),active:!submit};
  setVersionId(result.versionId);setProjectId(result.id);if(submit){window.location.href='/workspace';return;}setNotice('Draft saved to your account. You can continue here or return from My workspace.');window.scrollTo({top:0,behavior:'instant'});window.history.replaceState({},'',`/submit?project=${result.id}&version=${result.versionId}`);}catch(e){setError((e as Error).message);document.getElementById('editor-errors')?.focus();}finally{setBusy(false);}}

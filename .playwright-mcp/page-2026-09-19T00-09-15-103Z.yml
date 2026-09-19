@@ -1,0 +1,514 @@
+- generic [ref=e2]:
+  - generic [ref=e5]:
+    - list [ref=e7]:
+      - listitem [ref=e8]:
+        - link "Screen Reader" [ref=e9] [cursor=pointer]:
+          - /url: ../Support/ScreenReader.aspx
+      - listitem [ref=e10]:
+        - link "Skip to main content" [ref=e11] [cursor=pointer]:
+          - /url: "#section-01"
+      - listitem [ref=e12]: A- | A | A+
+    - list [ref=e14]:
+      - listitem [ref=e15]:
+        - link [ref=e16] [cursor=pointer]:
+          - /url: https://www.rgpv.ac.in/Institutions/DownloadMyDiaryApp.html
+      - listitem [ref=e17]:
+        - link "YouTube" [ref=e18] [cursor=pointer]:
+          - /url: https://youtube.com/@RGPVofficial?si=LUqu4BmUHGh5wocD
+      - listitem [ref=e20]:
+        - link [ref=e21] [cursor=pointer]:
+          - /url: ../RecordVerification/EmployerRegistration.aspx
+      - listitem [ref=e22]:
+        - link "Collaborations" [ref=e23] [cursor=pointer]:
+          - /url: ../AboutRGTU/rgpv_collaboration.aspx
+      - listitem [ref=e24]:
+        - link "RTI" [ref=e25] [cursor=pointer]:
+          - /url: ../campus/rti17.pdf
+      - listitem [ref=e26]:
+        - link "IQAC" [ref=e27] [cursor=pointer]:
+          - /url: ../AboutRGTU/rgpv_accreditation_ranking.aspx
+      - listitem [ref=e28]:
+        - link "Alumni" [ref=e29] [cursor=pointer]:
+          - /url: ../AboutRGTU/rgpv_alumni.aspx
+  - generic [ref=e31]:
+    - img "RGPV University Bhopal (M.P)" [ref=e33]
+    - list [ref=e36]:
+      - listitem [ref=e37]:
+        - link "Home" [ref=e38] [cursor=pointer]:
+          - /url: ../Index.aspx
+      - listitem [ref=e40]:
+        - link "The University" [ref=e41] [cursor=pointer]:
+          - /url: "#"
+      - listitem [ref=e43]:
+        - link "Academics" [ref=e44] [cursor=pointer]:
+          - /url: "#"
+      - listitem [ref=e46]:
+        - link "Admissions" [ref=e47] [cursor=pointer]:
+          - /url: "#"
+      - listitem [ref=e49]:
+        - link "Student's Life" [ref=e50] [cursor=pointer]:
+          - /url: "#"
+      - listitem [ref=e52]:
+        - link "Governance" [ref=e53] [cursor=pointer]:
+          - /url: "#"
+      - listitem [ref=e55]:
+        - link "Research & Innovation" [ref=e56] [cursor=pointer]:
+          - /url: "#"
+      - listitem [ref=e58]:
+        - link "Affiliated Institutions" [ref=e59] [cursor=pointer]:
+          - /url: "#"
+      - listitem [ref=e61]:
+        - link "Contact Us" [ref=e62] [cursor=pointer]:
+          - /url: ../AboutRGTU/howtoreach.aspx
+  - generic [ref=e66]:
+    - list:
+      - listitem [ref=e67]:
+        - link "Home" [ref=e68] [cursor=pointer]:
+          - /url: ../Index.aspx
+      - listitem [ref=e69]:
+        - link "Students" [ref=e70] [cursor=pointer]:
+          - /url: "#"
+      - listitem [ref=e71]: Scheme/Syllabus
+  - generic [ref=e76]:
+    - generic [ref=e77]: View Scheme/Syllabus
+    - table [ref=e80]:
+      - rowgroup [ref=e81]:
+        - row [ref=e82]:
+          - cell [ref=e83]:
+            - link "Search" [ref=e84] [cursor=pointer]:
+              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$lnkSearch','')
+        - row:
+          - cell
+        - row [ref=e447]:
+          - cell [ref=e448]:
+            - table [ref=e88]:
+              - rowgroup [ref=e89]:
+                - row [ref=e449]:
+                  - cell "Upload Type" [ref=e91]
+                  - cell "Scheme" [ref=e92]:
+                    - combobox [ref=e93]:
+                      - option "Scheme" [selected]
+                      - option "Syllabus"
+                  - cell "Program" [ref=e94]
+                  - cell "B.Tech" [ref=e450]:
+                    - combobox [ref=e96]:
+                      - option "MBA"
+                      - option "M.Arch"
+                      - option "B.Tech" [selected]
+                      - option "B.Design"
+                      - option "BE"
+                      - option "BE-PTDC"
+                      - option "B.Tech.-PTDC"
+                      - option "B.Pharm.(PCI)"
+                      - option "B.Pharm"
+                      - option "B.Arch"
+                      - option "M.E."
+                      - option "M.Tech."
+                      - option "M.Tech.(Part Time)"
+                      - option "M.Pharm"
+                      - option "M.Plan"
+                      - option "M.Pharm. PCI"
+                      - option "MCA 2 Year"
+                      - option "MCA"
+                      - option "MCA Dual Degree"
+                      - option "MBA Integrated"
+                      - option "DDI-PG"
+                      - option "Diploma"
+                      - option "Ph.D."
+                      - option "Ph.D. Entrance"
+                      - option "PGCMB"
+                      - option "Pharm D."
+                  - cell "System Type" [ref=e97]
+                  - cell "Grading System" [ref=e98]:
+                    - combobox [ref=e99]:
+                      - option "Grading System" [selected]
+                      - option "Non Grading System"
+                      - option "Lateral Entry"
+                      - option "CBCS"
+                      - option "CBGS"
+                      - option "As per COA"
+        - row [ref=e100]:
+          - cell [ref=e101]
+        - row [ref=e102]:
+          - cell [ref=e103]:
+            - table [ref=e106]:
+              - rowgroup [ref=e107]:
+                - row [ref=e108]:
+                  - columnheader [ref=e109]
+                - row [ref=e110]:
+                  - cell [ref=e111]:
+                    - table [ref=e112]:
+                      - rowgroup [ref=e113]:
+                        - row "1 st Semester" [ref=e114]:
+                          - cell [ref=e115]
+                          - cell "1 st Semester" [ref=e117]
+                        - row [ref=e118]:
+                          - cell [ref=e119]:
+                            - link "MBA I Semester Scheme" [ref=e120] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl02$Lbtn','')
+                - row [ref=e121]:
+                  - cell [ref=e122]:
+                    - table [ref=e123]:
+                      - rowgroup [ref=e124]:
+                        - row [ref=e125]:
+                          - cell [ref=e126]
+                          - cell [ref=e127]
+                        - row [ref=e128]:
+                          - cell [ref=e129]:
+                            - link "Scheme Financial Administration MBA I Semester" [ref=e130] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl03$Lbtn','')
+                - row [ref=e131]:
+                  - cell [ref=e132]:
+                    - table [ref=e133]:
+                      - rowgroup [ref=e134]:
+                        - row [ref=e135]:
+                          - cell [ref=e136]
+                          - cell [ref=e137]
+                        - row [ref=e138]:
+                          - cell [ref=e139]:
+                            - link "Scheme Marketing Management MBA I Semester" [ref=e140] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl04$Lbtn','')
+                - row [ref=e141]:
+                  - cell [ref=e142]:
+                    - table [ref=e143]:
+                      - rowgroup [ref=e144]:
+                        - row [ref=e145]:
+                          - cell [ref=e146]
+                          - cell [ref=e147]
+                        - row [ref=e148]:
+                          - cell [ref=e149]:
+                            - link "Scheme MBA Pharmaceutical Management I Semester" [ref=e150] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl05$Lbtn','')
+                - row [ref=e151]:
+                  - cell [ref=e152]:
+                    - table [ref=e153]:
+                      - rowgroup [ref=e154]:
+                        - row [ref=e155]:
+                          - cell [ref=e156]
+                          - cell [ref=e157]
+                        - row [ref=e158]:
+                          - cell [ref=e159]:
+                            - link "Scheme MBA Healthcare management I Semester" [ref=e160] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl06$Lbtn','')
+                - row [ref=e161]:
+                  - cell [ref=e162]:
+                    - table [ref=e163]:
+                      - rowgroup [ref=e164]:
+                        - row [ref=e165]:
+                          - cell [ref=e166]
+                          - cell [ref=e167]
+                        - row [ref=e168]:
+                          - cell [ref=e169]:
+                            - link "Scheme MBA Rural management I Semester" [ref=e170] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl07$Lbtn','')
+                - row [ref=e171]:
+                  - cell [ref=e172]:
+                    - table [ref=e173]:
+                      - rowgroup [ref=e174]:
+                        - row "2 nd Semester" [ref=e175]:
+                          - cell [ref=e176]
+                          - cell "2 nd Semester" [ref=e178]
+                        - row [ref=e179]:
+                          - cell [ref=e180]:
+                            - link "Master in Business Administration Scheme" [ref=e181] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl08$Lbtn','')
+                - row [ref=e182]:
+                  - cell [ref=e183]:
+                    - table [ref=e184]:
+                      - rowgroup [ref=e185]:
+                        - row [ref=e186]:
+                          - cell [ref=e187]
+                          - cell [ref=e188]
+                        - row [ref=e189]:
+                          - cell [ref=e190]:
+                            - link "Scheme Financial Administration MBA II Semester" [ref=e191] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl09$Lbtn','')
+                - row [ref=e192]:
+                  - cell [ref=e193]:
+                    - table [ref=e194]:
+                      - rowgroup [ref=e195]:
+                        - row [ref=e196]:
+                          - cell [ref=e197]
+                          - cell [ref=e198]
+                        - row [ref=e199]:
+                          - cell [ref=e200]:
+                            - link "Scheme Marketing Management MBA II Semester" [ref=e201] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl10$Lbtn','')
+                - row [ref=e202]:
+                  - cell [ref=e203]:
+                    - table [ref=e204]:
+                      - rowgroup [ref=e205]:
+                        - row [ref=e206]:
+                          - cell [ref=e207]
+                          - cell [ref=e208]
+                        - row [ref=e209]:
+                          - cell [ref=e210]:
+                            - link "Scheme Pharmaceutical Management MBA II Semester" [ref=e211] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl11$Lbtn','')
+                - row [ref=e212]:
+                  - cell [ref=e213]:
+                    - table [ref=e214]:
+                      - rowgroup [ref=e215]:
+                        - row [ref=e216]:
+                          - cell [ref=e217]
+                          - cell [ref=e218]
+                        - row [ref=e219]:
+                          - cell [ref=e220]:
+                            - link "Scheme MBA Healthcare management II Semester" [ref=e221] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl12$Lbtn','')
+                - row [ref=e222]:
+                  - cell [ref=e223]:
+                    - table [ref=e224]:
+                      - rowgroup [ref=e225]:
+                        - row [ref=e226]:
+                          - cell [ref=e227]
+                          - cell [ref=e228]
+                        - row [ref=e229]:
+                          - cell [ref=e230]:
+                            - link "Scheme MBA Rural management II Semester" [ref=e231] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl13$Lbtn','')
+                - row [ref=e232]:
+                  - cell [ref=e233]:
+                    - table [ref=e234]:
+                      - rowgroup [ref=e235]:
+                        - row "3 rd Semester" [ref=e236]:
+                          - cell [ref=e237]
+                          - cell "3 rd Semester" [ref=e239]
+                        - row [ref=e240]:
+                          - cell [ref=e241]:
+                            - link "MBA III Semester Scheme" [ref=e242] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl14$Lbtn','')
+                - row [ref=e243]:
+                  - cell [ref=e244]:
+                    - table [ref=e245]:
+                      - rowgroup [ref=e246]:
+                        - row [ref=e247]:
+                          - cell [ref=e248]
+                          - cell [ref=e249]
+                        - row [ref=e250]:
+                          - cell [ref=e251]:
+                            - link "Scheme Financial Administration MBA III Semester" [ref=e252] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl15$Lbtn','')
+                - row [ref=e253]:
+                  - cell [ref=e254]:
+                    - table [ref=e255]:
+                      - rowgroup [ref=e256]:
+                        - row [ref=e257]:
+                          - cell [ref=e258]
+                          - cell [ref=e259]
+                        - row [ref=e260]:
+                          - cell [ref=e261]:
+                            - link "Scheme Marketing Management MBA III Semester" [ref=e262] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl16$Lbtn','')
+                - row [ref=e263]:
+                  - cell [ref=e264]:
+                    - table [ref=e265]:
+                      - rowgroup [ref=e266]:
+                        - row [ref=e267]:
+                          - cell [ref=e268]
+                          - cell [ref=e269]
+                        - row [ref=e270]:
+                          - cell [ref=e271]:
+                            - link "Scheme MBA Pharmaceutical Management III Semester" [ref=e272] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl17$Lbtn','')
+                - row [ref=e273]:
+                  - cell [ref=e274]:
+                    - table [ref=e275]:
+                      - rowgroup [ref=e276]:
+                        - row [ref=e277]:
+                          - cell [ref=e278]
+                          - cell [ref=e279]
+                        - row [ref=e280]:
+                          - cell [ref=e281]:
+                            - link "SchemScheme MBA Healthcare management III Semester" [ref=e282] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl18$Lbtn','')
+                - row [ref=e283]:
+                  - cell [ref=e284]:
+                    - table [ref=e285]:
+                      - rowgroup [ref=e286]:
+                        - row [ref=e287]:
+                          - cell [ref=e288]
+                          - cell [ref=e289]
+                        - row [ref=e290]:
+                          - cell [ref=e291]:
+                            - link "Scheme MBA Rural management III Semester" [ref=e292] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl19$Lbtn','')
+                - row [ref=e293]:
+                  - cell [ref=e294]:
+                    - table [ref=e295]:
+                      - rowgroup [ref=e296]:
+                        - row "4 th Semester" [ref=e297]:
+                          - cell [ref=e298]
+                          - cell "4 th Semester" [ref=e300]
+                        - row [ref=e301]:
+                          - cell [ref=e302]:
+                            - link "MBA IV Semester Scheme" [ref=e303] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl20$Lbtn','')
+                - row [ref=e304]:
+                  - cell [ref=e305]:
+                    - table [ref=e306]:
+                      - rowgroup [ref=e307]:
+                        - row [ref=e308]:
+                          - cell [ref=e309]
+                          - cell [ref=e310]
+                        - row [ref=e311]:
+                          - cell [ref=e312]:
+                            - link "Scheme Marketing Management MBA IV Semeter" [ref=e313] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl21$Lbtn','')
+                - row [ref=e314]:
+                  - cell [ref=e315]:
+                    - table [ref=e316]:
+                      - rowgroup [ref=e317]:
+                        - row [ref=e318]:
+                          - cell [ref=e319]
+                          - cell [ref=e320]
+                        - row [ref=e321]:
+                          - cell [ref=e322]:
+                            - link "Scheme Financial Administration MBA IV Semester" [ref=e323] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl22$Lbtn','')
+                - row [ref=e324]:
+                  - cell [ref=e325]:
+                    - table [ref=e326]:
+                      - rowgroup [ref=e327]:
+                        - row [ref=e328]:
+                          - cell [ref=e329]
+                          - cell [ref=e330]
+                        - row [ref=e331]:
+                          - cell [ref=e332]:
+                            - link "Scheme MBA Pharmaceutical Management IV Semester" [ref=e333] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl23$Lbtn','')
+                - row [ref=e334]:
+                  - cell [ref=e335]:
+                    - table [ref=e336]:
+                      - rowgroup [ref=e337]:
+                        - row [ref=e338]:
+                          - cell [ref=e339]
+                          - cell [ref=e340]
+                        - row [ref=e341]:
+                          - cell [ref=e342]:
+                            - link "Scheme MBA Healthcare management IV Semester" [ref=e343] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl24$Lbtn','')
+                - row [ref=e344]:
+                  - cell [ref=e345]:
+                    - table [ref=e346]:
+                      - rowgroup [ref=e347]:
+                        - row [ref=e348]:
+                          - cell [ref=e349]
+                          - cell [ref=e350]
+                        - row [ref=e351]:
+                          - cell [ref=e352]:
+                            - link "Scheme MBA Rural management IV Semester" [ref=e353] [cursor=pointer]:
+                              - /url: javascript:__doPostBack('ctl00$ContentPlaceHolder1$gvViewAct$ctl25$Lbtn','')
+  - generic [ref=e356]:
+    - list [ref=e359]:
+      - listitem [ref=e360]:
+        - link "Distance Learning-EDUSAT" [ref=e361] [cursor=pointer]:
+          - /url: ../Departments/DistanceLearning-EDUSAT.aspx
+      - listitem [ref=e362]:
+        - link "Download Forms" [ref=e363] [cursor=pointer]:
+          - /url: ../Exam/DownloadForms.aspx
+      - listitem [ref=e364]:
+        - link "Result" [ref=e365] [cursor=pointer]:
+          - /url: http://result.rgpv.ac.in/result/programselect.aspx?id=$%
+      - listitem [ref=e366]:
+        - link "Time Table" [ref=e367] [cursor=pointer]:
+          - /url: ../Uni/frm_ViewTT.aspx?id=$%
+      - listitem [ref=e368]:
+        - link "FAQ" [ref=e369] [cursor=pointer]:
+          - /url: ../Support/StudentFAQ.aspx
+      - listitem [ref=e370]:
+        - link "E-Library" [ref=e371] [cursor=pointer]:
+          - /url: https://rgpv.refread.com/#/home
+      - listitem [ref=e372]:
+        - link "Research Centers" [ref=e373] [cursor=pointer]:
+          - /url: ../gallery/PaperGallery.aspx
+      - listitem [ref=e374]:
+        - link "Centers & Facilities" [ref=e375] [cursor=pointer]:
+          - /url: ../AboutRGTU/CentersandFacility.aspx
+    - list [ref=e378]:
+      - listitem [ref=e379]:
+        - link "The Executives Council" [ref=e380] [cursor=pointer]:
+          - /url: ../AboutRGTU/ExecutiveCouncil.aspx
+      - listitem [ref=e381]:
+        - link "The Finance Committee" [ref=e382] [cursor=pointer]:
+          - /url: ../AboutRGTU/FinCommittee.aspx
+      - listitem [ref=e383]:
+        - link "Board of Studies" [ref=e384] [cursor=pointer]:
+          - /url: ../Academics/BoardofStudies.aspx?id=$@
+      - listitem [ref=e385]:
+        - link "Ordinance" [ref=e386] [cursor=pointer]:
+          - /url: ../AboutRGTU/frm_ViewOrdinance.aspx
+      - listitem [ref=e387]:
+        - link "Scheme/Syllabus" [ref=e388] [cursor=pointer]:
+          - /url: ../Uni/frm_ViewScheme.aspx
+      - listitem [ref=e389]:
+        - link "Anti-Ragging" [ref=e390] [cursor=pointer]:
+          - /url: ../Stu/StudentWelfare.aspx
+      - listitem [ref=e391]:
+        - link "Student WelFare" [ref=e392] [cursor=pointer]:
+          - /url: ../Stu/StudentWelfare.aspx
+      - listitem [ref=e393]:
+        - link "Office Login" [ref=e394] [cursor=pointer]:
+          - /url: ../Login/UniversityLogin.aspx
+    - list [ref=e397]:
+      - listitem [ref=e398]:
+        - link "The Campus" [ref=e399] [cursor=pointer]:
+          - /url: ../AboutRGTU/Campus.aspx
+      - listitem [ref=e400]:
+        - link "Vision" [ref=e401] [cursor=pointer]:
+          - /url: ../AboutRGTU/VisionRGTU.aspx
+      - listitem [ref=e402]:
+        - link "University Mascot" [ref=e403] [cursor=pointer]:
+          - /url: ../AboutRGTU/Logo.aspx
+      - listitem [ref=e404]:
+        - link "Statutes" [ref=e405] [cursor=pointer]:
+          - /url: ../AboutRGTU/Statutes.aspx?id=$@
+      - listitem [ref=e406]:
+        - link "Tenders" [ref=e407] [cursor=pointer]:
+          - /url: ../Tender/Viewtender.aspx
+      - listitem [ref=e408]:
+        - link "Parents" [ref=e409] [cursor=pointer]:
+          - /url: ../Parents/Parents.aspx
+      - listitem [ref=e410]:
+        - link "Check Mail" [ref=e411] [cursor=pointer]:
+          - /url: http://mail.google.com/a/rgtu.net
+      - listitem [ref=e412]:
+        - link "Archive" [ref=e413] [cursor=pointer]:
+          - /url: ../Uni/ImpNoticeArchive.aspx
+      - listitem [ref=e414]:
+        - link "Photo Gallery" [ref=e415] [cursor=pointer]:
+          - /url: "#"
+    - generic [ref=e416]:
+      - generic [ref=e417]: Contact Us
+      - list [ref=e419]:
+        - listitem [ref=e420]: Rajiv Gandhi Proudyogiki Vishwavidyalaya, Airport Road Bhopal-462033, Madhya Pradesh
+        - listitem [ref=e421]: "0755 - 2678891-92, Fax No. : 0755 - 2742006"
+        - listitem [ref=e422]: egov[at]rgpv[dot]ac[dot]in
+  - generic [ref=e425]:
+    - contentinfo:
+      - paragraph [ref=e427]:
+        - text: Copyright © RGPV Bhopal 2018. All Rights Reserved. Designed, Developed & Maintained by
+        - link "CRISP" [ref=e428] [cursor=pointer]:
+          - /url: https://www.crispindia.com/
+      - paragraph [ref=e430]: The Portal is Running on Beta Version. For Best view use IE 9 and above, Google Chrome and Mozilla Firefox at Resolution 1366 X 768.
+  - generic [ref=e431] [cursor=pointer]:
+    - generic [ref=e432]:
+      - generic [ref=e433]: Help and Support
+      - generic [ref=e434]:
+        - paragraph [ref=e435]:
+          - generic [ref=e436]:
+            - generic [ref=e437]: 
+            - text: Call
+          - text: 0755-4944401
+        - separator [ref=e438]
+        - generic [ref=e439]:
+          - generic [ref=e440]: 
+          - text: Timing
+        - text: 09:30 am-05:30 pm
+        - separator [ref=e441]
+        - generic [ref=e442]:
+          - generic [ref=e443]: 
+          - text: Email
+        - text: egov[at]rgpv[dot]ac[dot]in
+        - paragraph
+    - generic [ref=e444]: Help and Support

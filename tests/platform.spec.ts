@@ -252,6 +252,62 @@ test('teammates listed by email only gain access once their account email is ver
   await client.dispose();
 });
 
+test('a Super Admin, and a Teacher-Admin scoped to its department, can edit a project they do not own',async()=>{
+  // Same project shape as the teammate-access test above, but owned by the student and never touched by the
+  // editing admin's own account — this exercises canEdit's new canReview-based branch, not ownership or team email.
+  const otherId=randomUUID();
+  await db.query('INSERT INTO r.projects(id,owner_id) VALUES($1,$2)',[otherId,studentId]);
+  const draftVersionId=randomUUID();
+  await db.query("INSERT INTO r.versions(id,project_id,number,status,data,changelog) VALUES($1,$2,1,'draft',$3,'Draft awaiting edits')",[draftVersionId,otherId,JSON.stringify(data)]);
+  // A teacher scoped to a different department has no review/edit rights here.
+  expect((await otherTeacher.get('/api/projects/'+otherId)).status()).toBe(404);
+  // The department-scoped teacher can see and edit it, same as canReview would let them approve it.
+  const scoped=await (await teacher.get('/api/projects/'+otherId)).json();
+  expect(scoped.editable).toBe(true);
+  const scopedSave=await teacher.patch(`/api/versions/${draftVersionId}`,{data:{data:{...data,summary:data.summary+' Edited by a scoped Teacher-Admin.'},submit:false,changelog:'Teacher-Admin correction'}});
+  expect(scopedSave.status()).toBe(200);
+  // Super Admin can edit regardless of department scope.
+  const asAdmin=await (await admin.get('/api/projects/'+otherId)).json();
+  expect(asAdmin.editable).toBe(true);
+  const adminSave=await admin.patch(`/api/versions/${draftVersionId}`,{data:{data:{...data,summary:data.summary+' Edited by a Super Admin.'},submit:false,changelog:'Admin correction'}});
+  expect(adminSave.status()).toBe(200);
+});
+
+test('a pending submission can be edited (resubmitting for fresh approval) or withdrawn back to draft',async()=>{
+  const created=await student.post('/api/projects',{data:{data,submit:true,changelog:'Initial submission for approval-flow checks'}});
+  expect(created.status()).toBe(201);
+  const {versionId:pendingVersionId}=await created.json();
+  expect((await db.query('SELECT status FROM r.versions WHERE id=$1',[pendingVersionId]))[0].status).toBe('pending');
+  // Editing a still-pending submission (before any reviewer has acted) and resubmitting keeps it in the queue —
+  // and clears out any reviews already cast, so a partial approval never silently carries over to the new content.
+  const resubmit=await student.patch(`/api/versions/${pendingVersionId}`,{data:{data:{...data,summary:data.summary+' Revised before review.'},submit:true,changelog:'A small correction before anyone reviewed it'}});
+  expect(resubmit.status()).toBe(200);
+  expect((await db.query('SELECT status FROM r.versions WHERE id=$1',[pendingVersionId]))[0].status).toBe('pending');
+  // Now a reviewer approves it (this suite's default requiredApprovals is 1, so this fully approves it) — then a
+  // further edit must reopen review from scratch: back to pending, with the earlier approval vote cleared.
+  expect((await teacher.post('/api/admin/reviews',{data:{ids:[pendingVersionId],action:'approve',reason:''}})).status()).toBe(200);
+  expect((await db.query('SELECT status FROM r.versions WHERE id=$1',[pendingVersionId]))[0].status).toBe('approved');
+  await db.query("UPDATE r.versions SET status='pending' WHERE id=$1",[pendingVersionId]);
+  const resubmitAfterApproval=await student.patch(`/api/versions/${pendingVersionId}`,{data:{data:{...data,summary:data.summary+' Revised after a reviewer already approved it.'},submit:true,changelog:'Fixed the issue a reviewer flagged'}});
+  expect(resubmitAfterApproval.status()).toBe(200);
+  const afterEdit=await db.query('SELECT status FROM r.versions WHERE id=$1',[pendingVersionId]);
+  expect(afterEdit[0].status).toBe('pending');
+  expect((await db.query('SELECT count(*)::int AS n FROM r.reviews WHERE version_id=$1',[pendingVersionId]))[0].n).toBe(0);
+  // Withdrawing a pending submission by mistake pulls it back to draft without touching its data or changelog;
+  // only the owning student (not an unrelated account) may do it, and any cast votes are cleared.
+  expect((await teacher.post('/api/admin/reviews',{data:{ids:[pendingVersionId],action:'approve',reason:''}})).status()).toBe(200);
+  await db.query("UPDATE r.versions SET status='pending' WHERE id=$1",[pendingVersionId]);
+  expect((await outsider.post(`/api/versions/${pendingVersionId}/withdraw`)).status()).toBe(404);
+  const withdrawn=await student.post(`/api/versions/${pendingVersionId}/withdraw`);
+  expect(withdrawn.status()).toBe(200);
+  const afterWithdraw=await db.query('SELECT status,data->>\'summary\' AS summary FROM r.versions WHERE id=$1',[pendingVersionId]);
+  expect(afterWithdraw[0].status).toBe('draft');
+  expect(afterWithdraw[0].summary).toBe(data.summary+' Revised after a reviewer already approved it.');
+  expect((await db.query('SELECT count(*)::int AS n FROM r.reviews WHERE version_id=$1',[pendingVersionId]))[0].n).toBe(0);
+  // Already back to draft — withdrawing again has nothing pending to pull back.
+  expect((await student.post(`/api/versions/${pendingVersionId}/withdraw`)).status()).toBe(409);
+});
+
 test('authorization and origin checks reject forged requests',async({request})=>{
   expect((await request.post('/api/projects',{headers,data:{data}})).status()).toBe(401);
   expect((await student.post('/api/projects',{headers:{origin:'https://evil.example'},data:{data}})).status()).toBe(403);
@@ -259,7 +315,7 @@ test('authorization and origin checks reject forged requests',async({request})=>
   expect((await student.patch('/api/admin/users',{data:{id:studentId,role:'superadmin',scopes:[],suspended:false}})).status()).toBe(403);
 });
 
-test('drafts are private, validated and immutable once submitted',async({request})=>{
+test('drafts are private, validated, and stay pending (not draft) when the owner re-saves while under review',async({request})=>{
   expect((await student.post('/api/projects',{data:{data:{...data,sourceId:foreignSourceId},submit:false}})).status()).toBe(403);
   const created=await student.post('/api/projects',{data:{data,submit:false,changelog:'Initial accessible campus prototype'}});expect(created.status()).toBe(201);
   ({id:projectId,versionId}=await created.json());
@@ -268,7 +324,10 @@ test('drafts are private, validated and immutable once submitted',async({request
   expect((await outsider.patch(`/api/versions/${versionId}`,{data:{data,submit:true,changelog:'Attempted unauthorized update'}})).status()).toBe(404);
   expect((await student.patch(`/api/versions/${versionId}`,{data:{data:{...data,summary:'Too short'},submit:true,changelog:'Initial prototype'}})).status()).toBe(400);
   expect((await student.patch(`/api/versions/${versionId}`,{data:{data,submit:true,changelog:'Initial accessible campus prototype'}})).status()).toBe(200);
-  expect((await student.patch(`/api/versions/${versionId}`,{data:{data,submit:false,changelog:'Bypass moderation'}})).status()).toBe(409);
+  // A pending submission stays editable by its owner (see the dedicated pending-edit/withdraw test above) — it is
+  // resolved statuses (approved/rejected) that are locked. Re-saving while pending keeps it pending, not draft.
+  expect((await student.patch(`/api/versions/${versionId}`,{data:{data,submit:true,changelog:'A small wording pass before review'}})).status()).toBe(200);
+  expect((await db.query('SELECT status FROM r.versions WHERE id=$1',[versionId]))[0].status).toBe('pending');
   // Pending (not yet approved) submissions must never leak into public discovery. The sample
   // project seeded earlier in this file is legitimately public, so assert absence, not emptiness.
   const {projects:publicList}=await (await outsider.get('/api/projects')).json();
@@ -590,7 +649,8 @@ test('student UI can save and reopen a real Neon-backed draft',async({page})=>{
   await page.getByRole('option',{name:'GGCT',exact:true}).click();
   await page.getByRole('combobox',{name:'Semester',exact:true}).click();
   await page.getByRole('option',{name:'5',exact:true}).click();
-  await page.getByLabel('Branch',{exact:true}).fill('Electronics');
+  await page.getByRole('combobox',{name:'Branch',exact:true}).click();
+  await page.getByRole('option',{name:'B.Tech ECE',exact:true}).click();
   await expect(page.getByLabel('Member 1 photo',{exact:true})).toBeVisible();
   await page.getByRole('button',{name:'Add service',exact:true}).click();
   await page.getByLabel('Service name',{exact:true}).fill('Neon');
@@ -605,7 +665,7 @@ test('student UI can save and reopen a real Neon-backed draft',async({page})=>{
   await expect(page.getByLabel('Project title',{exact:true})).toHaveValue('UI-created persistent draft');
   await expect(page.getByRole('combobox',{name:'College',exact:true})).toHaveText('GGCT');
   await expect(page.getByRole('combobox',{name:'Semester',exact:true})).toHaveText('5');
-  await expect(page.getByLabel('Branch',{exact:true})).toHaveValue('Electronics');
+  await expect(page.getByRole('combobox',{name:'Branch',exact:true})).toHaveText('B.Tech ECE');
   await expect(page.getByLabel('Service name',{exact:true})).toHaveValue('Neon');
   await page.screenshot({path:'test-results/submission-desktop.png',fullPage:true});
   await page.setViewportSize({width:375,height:812});

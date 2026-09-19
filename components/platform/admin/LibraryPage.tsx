@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Check, RotateCcw, Trash2, X } from 'lucide-react';
+import { Check, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 import type { Project } from '@/lib/schema';
 import { Notice, ShowMore, useData, usePaged, send } from '../shared';
 import { AdminPage } from './AdminFrame';
@@ -62,7 +62,8 @@ function Library(){
       <td><Badge tone={p.version.status==='approved'?'good':p.version.status==='rejected'?'bad':'neutral'}>{STATUS_LABELS[p.version.status]??p.version.status}</Badge></td>
       {tab==='active'&&<td><button className="text-button" disabled={busy} onClick={async()=>{setBusy(true);try{await send('admin/projects',{id:p.id,featured:!p.featured},'PATCH');await reload();}catch(e){setActionError((e as Error).message);}finally{setBusy(false);}}}>{p.featured?'Remove staff pick':'Feature project'}</button></td>}
       <td>{tab==='active'
-        ?<button type="button" className="text-button admin-delete-user-trigger" disabled={busy} onClick={()=>setDeleting({id:p.id,title:p.version.data.title,team:p.version.data.teamName,status:p.version.status,createdAt:p.version.createdAt})}><Trash2 size={14} aria-hidden="true"/> Delete</button>
+        ?<><Link className="text-button" href={`/submit?project=${p.id}&version=${p.version.id}`}><Pencil size={14} aria-hidden="true"/> Edit</Link>
+        <button type="button" className="text-button admin-delete-user-trigger" disabled={busy} onClick={()=>setDeleting({id:p.id,title:p.version.data.title,team:p.version.data.teamName,status:p.version.status,createdAt:p.version.createdAt})}><Trash2 size={14} aria-hidden="true"/> Delete</button></>
         :<button type="button" className="text-button" disabled={busy} onClick={()=>restore(p.id)}><RotateCcw size={14} aria-hidden="true"/> Restore</button>}
       </td>
     </tr>)}</tbody>

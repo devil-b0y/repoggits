@@ -1,31 +1,20 @@
 'use client';
 import { useEffect, useId, useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { ArrowUpRight, ChevronDown, Check, Plus, Search, GraduationCap, Briefcase } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, Check, Plus, Search, GraduationCap, Briefcase, FlaskConical } from 'lucide-react';
 import { Notice, useData, send } from './shared';
 import { AdminPage } from './admin/AdminFrame';
 import Select from './Select';
+import { branchCatalog } from '@/lib/branches';
 import './admin/admin-system.css';
 import './admin-settings-departments.css';
 type Settings={moderation:{requiredApprovals:1|2;allowedEmailDomains?:string[]};categories:{departments:string[];subjects:string[];tags:string[]};ai?:{enabled:boolean;hourlyLimit:number;dailyLimit:number;siteDailyLimit:number}};
 
-// The vetted RGPV branch/specialization catalog (B.Tech + MBA), used by the "Add from catalog" picker below.
-// One representative icon per group is shown on every row, mirroring StackPicker's preset-menu pattern in
-// TechnologyFields.tsx (a single field Icon reused for each preset button) rather than a per-branch icon lookup.
-const departmentCatalog:{group:string;icon:typeof GraduationCap;items:string[]}[]=[
- {group:'B.Tech branches',icon:GraduationCap,items:[
-   'Computer Science Engineering (CSE)','Computer Science Engineering (AI & Machine Learning)','Computer Science Engineering (AI & Data Science)',
-   'Computer Science Engineering (Data Science)','Computer Science Engineering (IoT)','Computer Science Engineering (Cyber Security)',
-   'Computer Science & Business Systems (CSBS)','Computer Science & Design (CSD)','Electronics & Communication Engineering',
-   'Electronics & Computer Science (ECS)','Electrical Engineering','Mechanical Engineering','Civil Engineering','Information Technology',
-   'Chemical Engineering','Biotechnology Engineering','Automobile Engineering','Agriculture Engineering','Robotics and AI',
-   'Automation and Robotics','Electric Vehicles','3D Animation & Graphics','Advanced Computing Technology (ACT)',
- ]},
- {group:'MBA specializations',icon:Briefcase,items:[
-   'MBA (General)','MBA – Marketing Management','MBA – Financial Administration','MBA – Healthcare Management',
-   'MBA – Rural Management','MBA – Pharmaceutical Management','MBA Integrated',
- ]},
-];
+// The branch catalog itself lives in lib/branches.ts, shared with the per-team-member Branch dropdown so the two can
+// never drift apart. Only the group icons are chosen here: one representative icon per group is shown on every row,
+// mirroring StackPicker's preset-menu pattern in TechnologyFields.tsx rather than a per-branch icon lookup.
+const groupIcons:Record<string,typeof GraduationCap>={'B.Tech':GraduationCap,'M.Tech':FlaskConical,'Postgraduate & Diploma':Briefcase};
+const departmentCatalog=branchCatalog.map(({group,items})=>({group,items,icon:groupIcons[group]??GraduationCap}));
 
 /** "Pick from catalog" affordance for the free-text departments list: a button that opens a searchable menu and
  *  appends chosen branch names as new lines. The textarea stays the editable source of truth (other institutions

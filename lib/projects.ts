@@ -45,6 +45,10 @@ export async function canEdit(client:Db,user:User,projectId:string) {
   const [project]=await client.query('SELECT owner_id,example FROM r.projects WHERE id=$1',[projectId]);
   if(!project||project.example)return false;
   if(project.owner_id===user.id)return true;
+  const [latest]=await client.query('SELECT data FROM r.versions WHERE project_id=$1 ORDER BY number DESC LIMIT 1',[projectId]);
+  // A Super Admin, or a Teacher-Admin scoped to this project's own department/subject, edits like they review —
+  // same rule as canReview, so anyone who can approve a submission can also fix it directly.
+  if(latest?.data&&canReview(user,latest.data as ProjectData))return true;
   // Team membership is claimed by email address, so it only counts once the account has proven it owns that address.
   if(!user.verified)return false;
   const [approved]=await client.query("SELECT data FROM r.versions WHERE project_id=$1 AND status='approved' ORDER BY number DESC LIMIT 1",[projectId]);
@@ -86,12 +90,29 @@ export async function updateVersion(user:User,versionId:string,input:unknown,sub
   return transaction(async client=>{
     const [version]=await client.query('SELECT * FROM r.versions WHERE id=$1 FOR UPDATE',[versionId]);
     requireCondition(version&&await canEdit(client,user,version.project_id),404,'Project version not found.');
-    requireCondition(['draft','changes_requested'].includes(version.status),409,'This version is locked. Create a new version after review.');
+    // Pending is editable too: saving resets it to a fresh review (submit=true) or pulls it back to a draft
+    // (submit=false), either way clearing the votes cast so far below. Only a resolved version (approved/rejected)
+    // is locked — that one needs "Start new version" instead.
+    requireCondition(['draft','changes_requested','pending'].includes(version.status),409,'This version is locked. Create a new version after review.');
     await validateFiles(client,user,data,version.project_id);
     const [setting]=await client.query("SELECT value FROM r.settings WHERE key='moderation'");
     await client.query('UPDATE r.versions SET data=$1,status=$2,changelog=$3,required_approvals=$4,updated_at=now() WHERE id=$5',[JSON.stringify(data),submit?'pending':'draft',changelog,setting.value.requiredApprovals,versionId]);
     await client.query('DELETE FROM r.reviews WHERE version_id=$1',[versionId]);
     await audit(client,user.id,submit?'version.submitted':'version.saved',versionId);
+    return {id:version.project_id,versionId};
+  });
+}
+// Pulls a pending submission out of the review queue by mistake or change of mind — back to draft, data and
+// changelog untouched, no reviewer notification (nothing was decided). Distinct from deleting the project: the
+// student keeps everything and can resubmit whenever they are ready.
+export async function withdrawVersion(user:User,versionId:string) {
+  return transaction(async client=>{
+    const [version]=await client.query('SELECT * FROM r.versions WHERE id=$1 FOR UPDATE',[versionId]);
+    requireCondition(version&&await canEdit(client,user,version.project_id),404,'Project version not found.');
+    requireCondition(version.status==='pending',409,'Only a submission awaiting review can be withdrawn.');
+    await client.query("UPDATE r.versions SET status='draft',updated_at=now() WHERE id=$1",[versionId]);
+    await client.query('DELETE FROM r.reviews WHERE version_id=$1',[versionId]);
+    await audit(client,user.id,'version.withdrawn',versionId);
     return {id:version.project_id,versionId};
   });
 }

@@ -27,14 +27,5 @@
   .platform .admin-retention-actions .button{flex:1 1 100%;justify-content:center}
 }
 
-/* Review desk › People: the admin panel permissions granted to a Teacher-Admin. */
-.user-row .admin-permissions{grid-column:1/-1;margin:0;padding-top:14px;border-top:1px solid var(--line)}
-.platform .user-row .admin-permissions legend{float:left;width:100%;margin-bottom:8px;padding:0;font-size:11px;font-weight:500}
-.user-row .admin-permissions>div{clear:both;display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 18px}
-.platform .user-row .admin-permissions .checkbox-label{font-size:12px;line-height:1.4}
-.platform .user-row .admin-permissions .status-tag{padding:3px 6px;font-size:9px}
-.platform .user-row .admin-permissions>small{display:block;margin-top:6px}
-@media(max-width:760px){.user-row .admin-permissions>div{grid-template-columns:minmax(0,1fr)}}
-
 /* Admin › Settings: where data retention and the admin panel live. */
 .platform .admin-settings-links{margin:-10px 0 24px;font-size:13px;line-height:1.6}

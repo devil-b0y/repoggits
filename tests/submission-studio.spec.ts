@@ -289,3 +289,28 @@ test('department dropdown offers the RGPV branch catalog with a distinct icon pe
  await expect(select).toContainText('Computer Science Engineering (IoT)');
  await expect(select.locator('svg.lucide-wifi')).toBeVisible();
 });
+
+test('a team member\'s branch lists the shipped GGITS/GGCT catalog, not the admin department list',async({page})=>{
+ await mockSession(page);
+ // mockSession's settings only offer 'Computer Science'/'Electronics' as DEPARTMENTS. A member's branch is a
+ // different thing: it comes from lib/branches.ts, so these catalog entries appear even though settings never list them.
+ await page.goto('/submit');
+ await page.getByRole('navigation',{name:'Project form sections'}).getByRole('link',{name:/People & process/}).click();
+ const branch=page.getByRole('combobox',{name:'Branch'});
+ await branch.click();
+ const menu=page.locator('.dropdown-select-menu');
+ await expect(menu.getByRole('option',{name:'B.Tech CSE (IoT, Cyber Security & Blockchain)',exact:true})).toBeVisible();
+ await expect(menu.getByRole('option',{name:'M.Tech Energy Technology',exact:true})).toBeVisible();
+ // 'Electronics' is one of mockSession's DEPARTMENTS but not a catalog branch, so it must not appear here. ('Computer
+ // Science' does appear, but only because it is this member's seeded current branch, which is always kept selectable.)
+ await expect(menu.getByRole('option',{name:'Electronics',exact:true})).toHaveCount(0);
+ // Abbreviated names still resolve to their own logo rather than the generic GraduationCap fallback, and EEE
+ // (Electrical & Electronics, a distinct GGITS branch) gets its own icon rather than plain EE's.
+ await expect(menu.getByRole('option',{name:'B.Tech CSE (IoT, Cyber Security & Blockchain)',exact:true}).locator('svg.lucide-shield-check')).toBeVisible();
+ await expect(menu.getByRole('option',{name:'B.Tech EEE (Electrical & Electronics)',exact:true}).locator('svg.lucide-circuit-board')).toBeVisible();
+ await expect(menu.getByRole('option',{name:'B.Tech EE',exact:true}).locator('svg.lucide-zap')).toBeVisible();
+ await expect(menu.getByRole('option',{name:'B.Tech ME',exact:true}).locator('svg.lucide-cog')).toBeVisible();
+ await menu.getByRole('option',{name:'B.Tech EE',exact:true}).click();
+ await expect(branch).toContainText('B.Tech EE');
+ await expect(branch.locator('svg.lucide-zap')).toBeVisible();
+});
