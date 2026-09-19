@@ -134,19 +134,27 @@
 /* Section-aware physical objects, contained within the existing studio hero. */
 .platform .submission-studio .studio-chapter-art{display:block;min-width:0;align-self:stretch;min-height:380px;position:relative}
 .studio-step-object{position:relative;height:100%;min-height:380px;width:100%;isolation:isolate}
-.studio-object-stage{position:absolute;inset:0 0 30px;min-width:0;display:flex;align-items:center;justify-content:center;perspective:1000px;background:radial-gradient(circle at var(--tilt-glow-x,50%) var(--tilt-glow-y,38%),rgba(242,126,81,calc(var(--tilt-glow-strength,0)*.32)) 0%,rgba(48,89,181,calc(var(--tilt-glow-strength,0)*.22)) 42%,transparent 70%)}
-.studio-3d-card{position:relative;width:min(74%,250px);aspect-ratio:.86;transform-style:preserve-3d;transition:transform .3s ease-out,box-shadow .3s ease-out;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;border-radius:20px;border:1px solid var(--line);background:var(--white);box-shadow:0 20px 45px #17243518,0 2px 8px #17243510;padding:24px}
-.studio-3d-card:hover{box-shadow:0 30px 60px var(--card-accent-shadow,#17243528),0 4px 14px #17243514}
-.studio-3d-card.accent-blue{--card-accent:#3059b5;--card-accent-shadow:#3059b53d}
-.studio-3d-card.accent-orange{--card-accent:#f27e51;--card-accent-shadow:#f27e513d}
-.studio-3d-card.accent-green{--card-accent:#164e45;--card-accent-shadow:#164e453d}
-.studio-3d-card.accent-dark{--card-accent:#172435;--card-accent-shadow:#17243530}
-.studio-3d-card-icon{display:grid;place-items:center;width:92px;height:92px;border-radius:20px;background:color-mix(in srgb,var(--card-accent) 12%,var(--white));color:var(--card-accent)}
-.studio-3d-card-label{font:600 11px/1.4 monospace;letter-spacing:1.5px;color:var(--card-accent);text-align:center}
-.studio-3d-card-seal{position:absolute;top:-10px;right:-10px;width:22px;height:22px;border-radius:50%;background:#dca15b;box-shadow:0 4px 10px #dca15b55}
+.studio-object-stage{position:absolute;inset:0 0 30px;min-width:0;display:flex;align-items:center;justify-content:center}
+/* Flat 2D card (see StudioStepObject.tsx): the border is a hand-drawn SVG path that draws itself on, so the card
+   itself carries no border/perspective/3D transform. Aspect ratio matches the border SVG's 250x290 viewBox. */
+.studio-2d-card{position:relative;width:min(74%,250px);aspect-ratio:250/290;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border-radius:18px;background:var(--white);box-shadow:0 20px 45px #17243518,0 2px 8px #17243510;padding:24px;transition:box-shadow .3s ease-out}
+.studio-2d-card:hover{box-shadow:0 26px 52px var(--card-accent-shadow,#17243528),0 4px 14px #17243514}
+.studio-2d-card.accent-blue{--card-accent:#3059b5;--card-accent-shadow:#3059b53d}
+.studio-2d-card.accent-orange{--card-accent:#f27e51;--card-accent-shadow:#f27e513d}
+.studio-2d-card.accent-green{--card-accent:#164e45;--card-accent-shadow:#164e453d}
+.studio-2d-card.accent-dark{--card-accent:#172435;--card-accent-shadow:#17243530}
+/* The green and dark accents are near-black on the dark theme's navy card, so they lift to lighter tints there. */
+.platform.dark .studio-2d-card.accent-blue{--card-accent:#7fa2ff;--card-accent-shadow:#7fa2ff30}
+.platform.dark .studio-2d-card.accent-green{--card-accent:#4fb39f;--card-accent-shadow:#4fb39f30}
+.platform.dark .studio-2d-card.accent-dark{--card-accent:#c9d6ea;--card-accent-shadow:#c9d6ea22}
+.studio-2d-card-border{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.studio-2d-card-icon{position:relative;display:grid;place-items:center;width:104px;height:104px;border-radius:20px;background:color-mix(in srgb,var(--card-accent) 12%,var(--white));color:var(--card-accent)}
+.studio-2d-card-label{position:relative;font:600 11px/1.4 monospace;letter-spacing:1.5px;color:var(--card-accent);text-align:center}
+.studio-2d-card-lines{position:relative;display:grid;justify-items:center;gap:6px;width:100%}
+.studio-2d-card-lines i{display:block;height:5px;border-radius:999px;background:color-mix(in srgb,var(--card-accent) 40%,transparent)}
+.studio-2d-card-seal{position:absolute;top:-10px;right:-10px;width:22px;height:22px;border-radius:50%;background:#dca15b;box-shadow:0 4px 10px #dca15b55}
 .studio-object-caption{position:absolute;bottom:0;left:0;right:0;text-align:center;color:var(--muted);font:10px/1.6 monospace;letter-spacing:2px;text-transform:uppercase}
-@media(prefers-reduced-motion:reduce){.studio-3d-card{transition:box-shadow .3s ease-out}}
-@media(max-width:760px){.platform .submission-studio .studio-chapter-art{display:block;min-height:250px;grid-row:auto}.studio-step-object{min-height:250px;height:250px}.studio-3d-card{width:min(80%,210px)}.studio-3d-card-icon{width:76px;height:76px}.studio-object-caption{font-size:9px}.submission-studio .studio-hero{min-width:0}.submission-studio .studio-hero-copy{min-width:0}}
+@media(max-width:760px){.platform .submission-studio .studio-chapter-art{display:block;min-height:250px;grid-row:auto}.studio-step-object{min-height:250px;height:250px}.studio-2d-card{width:min(80%,210px);gap:10px;padding:18px}.studio-2d-card-icon{width:84px;height:84px}.studio-object-caption{font-size:9px}.submission-studio .studio-hero{min-width:0}.submission-studio .studio-hero-copy{min-width:0}}
 
 .platform .submission-studio .studio-chapter-art{padding-bottom:88px}
 .studio-tool-examples{position:absolute;bottom:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--muted)}
