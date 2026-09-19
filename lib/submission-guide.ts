@@ -6,10 +6,12 @@ export const starterKits=[
  {name:'Data & machine learning',description:'Experiments, models & notebooks',languages:'Python',frontend:'',backend:'',database:'',frameworks:'scikit-learn',tools:'Jupyter Notebook',tags:['Python','Machine learning']},
  {name:'Mobile application',description:'An app that goes everywhere',languages:'Dart',frontend:'Flutter',backend:'',database:'',frameworks:'Flutter',tools:'Android Studio',tags:['Flutter','Dart']},
 ];
+/** The technology answers a starter kit can suggest. The AI questions are always the maker's own answer. */
+export const buildStackKeys=['languages','frontend','backend','database','frameworks','tools'] as const;
 export function applyStarter(data:ProjectData,index:number):ProjectData{
  const kit=starterKits[index];if(!kit)return data;
  const stack={...data.stack};
- for(const key of Object.keys(stack) as (keyof ProjectData['stack'])[])if(!stack[key].trim())stack[key]=kit[key];
+ for(const key of buildStackKeys)if(!stack[key].trim())stack[key]=kit[key];
  return {...data,stack,tags:data.tags.length?data.tags:[...kit.tags]};
 }
 const sectionFor:Record<string,number>={title:1,subject:1,department:1,summary:1,description:1,type:1,features:1,teamName:2,team:2,startDate:2,endDate:2,year:2,tags:3,stack:3,github:3,liveUrl:3,videoUrl:3,services:3,coverId:4,galleryIds:4,sourceId:4,hardwareCosts:5,softwareCosts:5,currency:5,purchaseDate:5};

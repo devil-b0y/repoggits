@@ -18,7 +18,7 @@ export const projectSchema = z.object({
   type: z.enum(['Software', 'Hardware', 'Hybrid']), features: z.array(text(300).min(1)).max(30).default([]),
   teamName: text(100).min(2), team: z.array(teamMemberSchema).max(20).default([]),
   tags: z.array(text(40).min(1)).max(40).default([]),
-  stack: z.object({ frontend: text(300).default(''), backend: text(300).default(''), database: text(300).default(''), languages: text(300).default(''), frameworks: text(300).default(''), tools: text(300).default('') }).default({ frontend:'', backend:'', database:'', languages:'', frameworks:'', tools:'' }),
+  stack: z.object({ frontend: text(300).default(''), backend: text(300).default(''), database: text(300).default(''), languages: text(300).default(''), frameworks: text(300).default(''), tools: text(300).default(''), aiTools: text(300).default(''), aiCoding: text(300).default('') }).default({ frontend:'', backend:'', database:'', languages:'', frameworks:'', tools:'', aiTools:'', aiCoding:'' }),
   github: optionalUrl, liveUrl: optionalUrl, videoUrl: optionalUrl,
   videoId: z.string().uuid().or(z.literal('')).default(''),
   videoRotation: z.union([z.literal(0),z.literal(90),z.literal(180),z.literal(270)]).default(0),

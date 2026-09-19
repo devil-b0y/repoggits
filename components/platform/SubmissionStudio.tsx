@@ -6,6 +6,7 @@ import {motion,useReducedMotion} from 'framer-motion';
 const StudioStepObject=dynamic(()=>import('./StudioStepObject'),{ssr:false});
 import {ArrowLeft,ArrowUpRight,Check,Code2,Image as ImageIcon,Layers,Sparkles,Users,NotebookPen,ShieldCheck} from 'lucide-react';
 import type {ProjectData} from '@/lib/schema';
+import {buildStackKeys} from '@/lib/submission-guide';
 import './submission-studio.css';
 import './submission-polish.css';
 
@@ -22,7 +23,7 @@ const chapterCopy=[
 export default function SubmissionStudio({data,editing,children}:{data:ProjectData;editing:boolean;children:ReactNode}){
   const [step,setStep]=useState(1);
   const copy=chapterCopy[step-1],reduced=useReducedMotion();
-  const checklist=[['A memorable title',data.title.trim().length>=3],['The idea in a few words',data.summary.trim().length>=20],['The people behind it',data.team.some(m=>m.name.trim()&&m.contribution.trim())],['Tools & technologies',data.tags.some(t=>t.trim())||Object.values(data.stack).some(v=>v.trim())],['A cover worth clicking',!!data.coverId],['Source for the next maker',!!data.sourceId]] as const;
+  const checklist=[['A memorable title',data.title.trim().length>=3],['The idea in a few words',data.summary.trim().length>=20],['The people behind it',data.team.some(m=>m.name.trim()&&m.contribution.trim())],['Tools & technologies',data.tags.some(t=>t.trim())||buildStackKeys.some(key=>data.stack[key].trim())],['A cover worth clicking',!!data.coverId],['Source for the next maker',!!data.sourceId]] as const;
   const complete=checklist.filter(([,done])=>done).length;
   return <div className="submission-studio">
     <header className="studio-hero">

@@ -1,13 +1,14 @@
 'use client';
 import {useState,type ReactNode} from 'react';
-import {Code2,Layers,Users,GraduationCap,Building2,GitBranch,Hash,Cloud,Database,Globe,Server,Wrench,CalendarDays,Eye,Download,ShieldCheck,Clock3,ArrowUpRight,type LucideIcon} from 'lucide-react';
+import {Ban,Bot,Sparkles,Code2,Layers,Users,GraduationCap,Building2,GitBranch,Hash,Cloud,Database,Globe,Server,Wrench,CalendarDays,Eye,Download,ShieldCheck,Clock3,ArrowUpRight,type LucideIcon} from 'lucide-react';
 import tagLogos from '@/lib/technology-tag-logos.json';
 import catalogue from '@/lib/programming-languages.json';
 import type {Project,ProjectData} from '@/lib/schema';
 import {imageUrl} from '@/lib/images';
+import {findAiTool,isNoAi} from '@/lib/ai-tools';
 
 const technologies:Record<string,string>={react:'react','react.js':'react',reactjs:'react','next.js':'nextjs',nextjs:'nextjs','node.js':'nodejs',nodejs:'nodejs',postgresql:'postgresql','postgresql (neon db)':'postgresql',postgres:'postgresql',mongodb:'mongodb',firebase:'firebase',docker:'docker',git:'git',github:'github',figma:'figma','vs code':'vscode',vscode:'vscode','visual studio code':'vscode',arduino:'arduino','arduino ide':'arduino',tensorflow:'tensorflow',pytorch:'pytorch',fastapi:'fastapi',flask:'flask',redis:'redis',supabase:'supabase',vercel:'vercel',playwright:'playwright'};
-export function technologyLogo(name:string){const key=name.trim().toLowerCase();const exact=Object.entries(tagLogos).find(([name])=>name.toLowerCase()===key)?.[1]||catalogue.find(x=>x.name.toLowerCase()===key||x.aliases.some(a=>a.toLowerCase()===key))?.icon||(technologies[key]?`/images/technologies/${technologies[key]}.svg`:undefined);if(exact)return exact;
+export function technologyLogo(name:string){const key=name.trim().toLowerCase();const exact=Object.entries(tagLogos).find(([name])=>name.toLowerCase()===key)?.[1]||catalogue.find(x=>x.name.toLowerCase()===key||x.aliases.some(a=>a.toLowerCase()===key))?.icon||(technologies[key]?`/images/technologies/${technologies[key]}.svg`:undefined)||findAiTool(key)?.icon;if(exact)return exact;
  // Recognize common descriptive entries without assigning a logo to "No backend".
  if(/^(?:none|no\b)/i.test(key))return undefined;
  const language=/\bhtml5?\b/i.test(key)?'HTML':/\bcss3?\b/i.test(key)?'CSS':undefined;
@@ -19,7 +20,8 @@ export function TechnologyMark({name,icon:Icon=Code2}:{name:string;icon?:LucideI
 }
 export function TechnologyToken({name,icon}:{name:string;icon?:LucideIcon}){return <span className="pd-tech-token"><TechnologyMark name={name} icon={icon}/><span>{name}</span></span>;}
 export function DetailHeading({title,kicker,icon:Icon,children}:{title:string;kicker:string;icon:LucideIcon;children?:ReactNode}){return <div className="pd-section-heading"><span className="pd-section-icon"><Icon size={23} strokeWidth={1.5}/></span><div><span className="pd-kicker">{kicker}</span><h2>{title}</h2>{children&&<p>{children}</p>}</div></div>;}
-const stackIcons:Record<string,LucideIcon>={frontend:Globe,backend:Server,database:Database,languages:Code2,frameworks:Layers,tools:Wrench};
+const stackIcons:Record<string,LucideIcon>={frontend:Globe,backend:Server,database:Database,languages:Code2,frameworks:Layers,tools:Wrench,aiTools:Sparkles,aiCoding:Bot};
+const stackLabels:Record<string,string>={aiTools:'AI in project',aiCoding:'AI for coding'};
 export function ProjectSummary({project}:{project:Project}){
  const {data,number,status}=project.version;
  const StatusIcon=status==='approved'?ShieldCheck:Clock3;
@@ -35,7 +37,7 @@ function stackItems(value:string){
  for(const char of value){if(char==='(')depth++;if(char===')')depth=Math.max(0,depth-1);if(char===','&&depth===0){if(part.trim())items.push(part.trim());part='';}else part+=char;}
  if(part.trim())items.push(part.trim());return items;
 }
-export function StackDetails({stack}:{stack:ProjectData['stack']}){return <dl className="pd-stack-details">{Object.entries(stack).filter(([,value])=>value).map(([key,value])=>{const Icon=stackIcons[key]||Code2;const names=stackItems(value);return <div key={key}><dt><Icon size={18}/><span className="capitalize">{key}</span></dt><dd><div className="pd-stack-tokens">{names.map((name,i)=><TechnologyToken name={name} icon={Icon} key={`${name}-${i}`}/>)}</div></dd></div>;})}</dl>;}
+export function StackDetails({stack}:{stack:ProjectData['stack']}){return <dl className="pd-stack-details">{Object.entries(stack).filter(([,value])=>value).map(([key,value])=>{const Icon=stackIcons[key]||Code2;const names=stackItems(value);return <div key={key}><dt><Icon size={18}/><span className={stackLabels[key]?undefined:'capitalize'}>{stackLabels[key]||key}</span></dt><dd><div className="pd-stack-tokens">{names.map((name,i)=><TechnologyToken name={name} icon={isNoAi(name)?Ban:Icon} key={`${name}-${i}`}/>)}</div></dd></div>;})}</dl>;}
 export function TeamProfile({member,index}:{member:ProjectData['team'][number];index:number}){
  const [failed,setFailed]=useState(false);
  const initials=member.name.trim().split(/\s+/).slice(0,2).map(s=>s[0]).join('').toUpperCase();

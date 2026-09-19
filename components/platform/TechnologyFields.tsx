@@ -1,10 +1,11 @@
 'use client';
 
 import {useEffect,useId,useRef,useState} from 'react';
-import {Brain,ShieldCheck,Cloud,BarChart3,Radio,Smartphone,Leaf,Heart,GraduationCap,ShoppingCart,MapPin,TestTube,Palette,ChevronDown,Bot,Cpu,Wifi,ScanFace,ClipboardCheck,Tag,Code2,Database,Globe,Layers,Link2,Plus,Server,Terminal,Wrench,X} from 'lucide-react';
+import {Brain,ShieldCheck,Cloud,BarChart3,Radio,Smartphone,Sparkles,Leaf,Heart,GraduationCap,ShoppingCart,MapPin,TestTube,Palette,ChevronDown,Bot,Cpu,Wifi,ScanFace,ClipboardCheck,Tag,Code2,Database,Globe,Layers,Link2,Plus,Server,Terminal,Wrench,X} from 'lucide-react';
 import {technologyTags,tagMatches} from '@/lib/technology-tags';
 import type {ProjectData} from '@/lib/schema';
 import LanguagePicker from './LanguagePicker';
+import AiToolPicker from './AiToolPicker';
 import VideoField from './VideoField';
 import {TechnologyMark} from './ProjectIdentity';
 import './technology-fields.css';
@@ -88,6 +89,8 @@ export default function TechnologyFields({data,onChange,suggestions}:{data:Proje
     <TechnologyTags value={data.tags} onChange={tags=>onChange({tags})} suggestions={suggestions}/>
     <div className="tech-group-heading"><span><Layers size={18}/>Your build stack</span><p>Add the details that apply to your project. Leave the rest blank.</p></div>
     <div className="tech-stack-grid"><LanguagePicker value={data.stack.languages} onChange={languages=>onChange({stack:{...data.stack,languages}})}/>{fields.map(field=><StackPicker key={field.key} field={field} value={data.stack[field.key]} onChange={value=>onChange({stack:{...data.stack,[field.key]:value}})}/>)}</div>
+    <div className="tech-group-heading"><span><Sparkles size={18}/>AI in your build</span><p>Tell us where AI helped, or mark that you built it without any.</p></div>
+    <div className="ai-tool-grid"><AiToolPicker scope="project" value={data.stack.aiTools} onChange={aiTools=>onChange({stack:{...data.stack,aiTools}})}/><AiToolPicker scope="coding" value={data.stack.aiCoding} onChange={aiCoding=>onChange({stack:{...data.stack,aiCoding}})}/></div>
     <div className="tech-group-heading"><span><Link2 size={18}/>See it in action</span><p>Connect your repository and working demos.</p></div>
     <div className="form-row"><label>GitHub repository URL (optional)<input type="url" value={data.github} onChange={e=>onChange({github:e.target.value})} placeholder="https://github.com/your-team/project"/></label><label>Live demo URL<input type="url" value={data.liveUrl} onChange={e=>onChange({liveUrl:e.target.value})} placeholder="https://your-project.com"/></label></div>
     <VideoField data={data} onChange={onChange}/>

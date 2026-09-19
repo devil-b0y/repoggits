@@ -1,0 +1,680 @@
+[
+  {
+    "name": "ChatGPT",
+    "maker": "OpenAI",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "openai",
+      "gpt",
+      "gpt-4",
+      "gpt-5"
+    ],
+    "icon": "/images/ai-tools/chatgpt.svg"
+  },
+  {
+    "name": "Claude",
+    "maker": "Anthropic",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "anthropic",
+      "sonnet",
+      "opus"
+    ],
+    "icon": "/images/ai-tools/claude.svg"
+  },
+  {
+    "name": "Gemini",
+    "maker": "Google",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "google ai",
+      "bard",
+      "google ai studio"
+    ],
+    "icon": "/images/ai-tools/gemini.svg"
+  },
+  {
+    "name": "Microsoft Copilot",
+    "maker": "Microsoft",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "copilot",
+      "bing chat"
+    ],
+    "icon": "/images/ai-tools/microsoft-copilot.svg"
+  },
+  {
+    "name": "Meta AI (Llama)",
+    "maker": "Meta",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "llama",
+      "meta",
+      "facebook"
+    ],
+    "icon": "/images/ai-tools/meta-ai.svg"
+  },
+  {
+    "name": "Mistral AI",
+    "maker": "Mistral AI",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "le chat",
+      "mixtral",
+      "codestral"
+    ],
+    "icon": "/images/ai-tools/mistral.svg"
+  },
+  {
+    "name": "DeepSeek",
+    "maker": "DeepSeek",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "deepseek r1",
+      "deepseek v3"
+    ],
+    "icon": "/images/ai-tools/deepseek.svg"
+  },
+  {
+    "name": "Grok",
+    "maker": "xAI",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "xai",
+      "x ai"
+    ],
+    "icon": "/images/ai-tools/grok.svg"
+  },
+  {
+    "name": "Perplexity",
+    "maker": "Perplexity AI",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [],
+    "icon": "/images/ai-tools/perplexity.svg"
+  },
+  {
+    "name": "Qwen",
+    "maker": "Alibaba Cloud",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "alibaba",
+      "tongyi"
+    ],
+    "icon": "/images/ai-tools/qwen.svg"
+  },
+  {
+    "name": "Kimi",
+    "maker": "Moonshot AI",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "moonshot"
+    ],
+    "icon": "/images/ai-tools/kimi.svg"
+  },
+  {
+    "name": "GLM",
+    "maker": "Zhipu AI",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "zhipu",
+      "chatglm",
+      "z.ai"
+    ],
+    "icon": "/images/ai-tools/glm.svg"
+  },
+  {
+    "name": "MiniMax",
+    "maker": "MiniMax",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "hailuo"
+    ],
+    "icon": "/images/ai-tools/minimax.svg"
+  },
+  {
+    "name": "Doubao",
+    "maker": "ByteDance",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "bytedance"
+    ],
+    "icon": "/images/ai-tools/doubao.svg"
+  },
+  {
+    "name": "ERNIE",
+    "maker": "Baidu",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "baidu",
+      "wenxin"
+    ],
+    "icon": "/images/ai-tools/ernie.svg"
+  },
+  {
+    "name": "Ollama",
+    "maker": "Ollama",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "local llm"
+    ],
+    "icon": "/images/ai-tools/ollama.svg"
+  },
+  {
+    "name": "LM Studio",
+    "maker": "LM Studio",
+    "category": "Chat assistant & models",
+    "use": "both",
+    "aliases": [
+      "local llm"
+    ],
+    "icon": "/images/ai-tools/lm-studio.svg"
+  },
+  {
+    "name": "Amazon Bedrock",
+    "maker": "Amazon Web Services",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [
+      "aws",
+      "nova",
+      "amazon nova",
+      "titan"
+    ],
+    "icon": "/images/ai-tools/amazon-bedrock.svg"
+  },
+  {
+    "name": "Azure AI",
+    "maker": "Microsoft",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [
+      "azure openai",
+      "ai foundry"
+    ],
+    "icon": "/images/ai-tools/azure-ai.svg"
+  },
+  {
+    "name": "Vertex AI",
+    "maker": "Google Cloud",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [
+      "google cloud"
+    ],
+    "icon": "/images/ai-tools/vertex-ai.svg"
+  },
+  {
+    "name": "NVIDIA AI",
+    "maker": "NVIDIA",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [
+      "nim",
+      "nemotron",
+      "nvidia"
+    ],
+    "icon": "/images/ai-tools/nvidia-ai.svg"
+  },
+  {
+    "name": "IBM watsonx",
+    "maker": "IBM",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [
+      "watson",
+      "granite",
+      "ibm"
+    ],
+    "icon": "/images/ai-tools/ibm-watsonx.svg"
+  },
+  {
+    "name": "Hugging Face",
+    "maker": "Hugging Face",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [
+      "transformers",
+      "hf"
+    ],
+    "icon": "/images/ai-tools/hugging-face.svg"
+  },
+  {
+    "name": "Cohere",
+    "maker": "Cohere",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [
+      "command r"
+    ],
+    "icon": "/images/ai-tools/cohere.svg"
+  },
+  {
+    "name": "AI21 Labs",
+    "maker": "AI21 Labs",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [
+      "jamba"
+    ],
+    "icon": "/images/ai-tools/ai21.svg"
+  },
+  {
+    "name": "Groq",
+    "maker": "Groq",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/groq.svg"
+  },
+  {
+    "name": "Together AI",
+    "maker": "Together AI",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/together-ai.svg"
+  },
+  {
+    "name": "Fireworks AI",
+    "maker": "Fireworks AI",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/fireworks-ai.svg"
+  },
+  {
+    "name": "OpenRouter",
+    "maker": "OpenRouter",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/openrouter.svg"
+  },
+  {
+    "name": "Replicate",
+    "maker": "Replicate",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/replicate.svg"
+  },
+  {
+    "name": "Cerebras",
+    "maker": "Cerebras",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/cerebras.svg"
+  },
+  {
+    "name": "SambaNova",
+    "maker": "SambaNova",
+    "category": "Model API & hosting",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/sambanova.svg"
+  },
+  {
+    "name": "LangChain",
+    "maker": "LangChain",
+    "category": "AI framework",
+    "use": "project",
+    "aliases": [
+      "langgraph"
+    ],
+    "icon": "/images/ai-tools/langchain.svg"
+  },
+  {
+    "name": "LlamaIndex",
+    "maker": "LlamaIndex",
+    "category": "AI framework",
+    "use": "project",
+    "aliases": [
+      "llama index"
+    ],
+    "icon": "/images/ai-tools/llamaindex.svg"
+  },
+  {
+    "name": "ComfyUI",
+    "maker": "ComfyUI",
+    "category": "Image & video",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/comfyui.svg"
+  },
+  {
+    "name": "Stable Diffusion",
+    "maker": "Stability AI",
+    "category": "Image & video",
+    "use": "project",
+    "aliases": [
+      "stability ai",
+      "sdxl"
+    ],
+    "icon": "/images/ai-tools/stable-diffusion.svg"
+  },
+  {
+    "name": "Midjourney",
+    "maker": "Midjourney",
+    "category": "Image & video",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/midjourney.svg"
+  },
+  {
+    "name": "DALL·E",
+    "maker": "OpenAI",
+    "category": "Image & video",
+    "use": "project",
+    "aliases": [
+      "dalle",
+      "dall-e",
+      "openai"
+    ],
+    "icon": "/images/ai-tools/dall-e.svg"
+  },
+  {
+    "name": "FLUX",
+    "maker": "Black Forest Labs",
+    "category": "Image & video",
+    "use": "project",
+    "aliases": [
+      "black forest labs"
+    ],
+    "icon": "/images/ai-tools/flux.svg"
+  },
+  {
+    "name": "Ideogram",
+    "maker": "Ideogram",
+    "category": "Image & video",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/ideogram.svg"
+  },
+  {
+    "name": "Adobe Firefly",
+    "maker": "Adobe",
+    "category": "Image & video",
+    "use": "project",
+    "aliases": [
+      "firefly",
+      "adobe"
+    ],
+    "icon": "/images/ai-tools/adobe-firefly.svg"
+  },
+  {
+    "name": "Runway",
+    "maker": "Runway",
+    "category": "Image & video",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/runway.svg"
+  },
+  {
+    "name": "Sora",
+    "maker": "OpenAI",
+    "category": "Image & video",
+    "use": "project",
+    "aliases": [
+      "openai"
+    ],
+    "icon": "/images/ai-tools/sora.svg"
+  },
+  {
+    "name": "Kling AI",
+    "maker": "Kuaishou",
+    "category": "Image & video",
+    "use": "project",
+    "aliases": [
+      "kuaishou"
+    ],
+    "icon": "/images/ai-tools/kling.svg"
+  },
+  {
+    "name": "Luma AI",
+    "maker": "Luma AI",
+    "category": "Image & video",
+    "use": "project",
+    "aliases": [
+      "dream machine"
+    ],
+    "icon": "/images/ai-tools/luma.svg"
+  },
+  {
+    "name": "Pika",
+    "maker": "Pika",
+    "category": "Image & video",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/pika.svg"
+  },
+  {
+    "name": "ElevenLabs",
+    "maker": "ElevenLabs",
+    "category": "Audio & voice",
+    "use": "project",
+    "aliases": [
+      "eleven labs"
+    ],
+    "icon": "/images/ai-tools/elevenlabs.svg"
+  },
+  {
+    "name": "Suno",
+    "maker": "Suno",
+    "category": "Audio & voice",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/suno.svg"
+  },
+  {
+    "name": "Udio",
+    "maker": "Udio",
+    "category": "Audio & voice",
+    "use": "project",
+    "aliases": [],
+    "icon": "/images/ai-tools/udio.svg"
+  },
+  {
+    "name": "GitHub Copilot",
+    "maker": "GitHub",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "copilot",
+      "microsoft"
+    ],
+    "icon": "/images/ai-tools/github-copilot.svg"
+  },
+  {
+    "name": "Cursor",
+    "maker": "Anysphere",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [],
+    "icon": "/images/ai-tools/cursor.svg"
+  },
+  {
+    "name": "Claude Code",
+    "maker": "Anthropic",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "anthropic"
+    ],
+    "icon": "/images/ai-tools/claude-code.svg"
+  },
+  {
+    "name": "OpenAI Codex",
+    "maker": "OpenAI",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "codex",
+      "openai"
+    ],
+    "icon": "/images/ai-tools/openai-codex.svg"
+  },
+  {
+    "name": "Gemini CLI",
+    "maker": "Google",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "google"
+    ],
+    "icon": "/images/ai-tools/gemini-cli.svg"
+  },
+  {
+    "name": "Google Antigravity",
+    "maker": "Google",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "antigravity",
+      "google"
+    ],
+    "icon": "/images/ai-tools/antigravity.svg"
+  },
+  {
+    "name": "Windsurf",
+    "maker": "Windsurf",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "codeium"
+    ],
+    "icon": "/images/ai-tools/windsurf.svg"
+  },
+  {
+    "name": "Cline",
+    "maker": "Cline",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [],
+    "icon": "/images/ai-tools/cline.svg"
+  },
+  {
+    "name": "Roo Code",
+    "maker": "Roo Code",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "roocode",
+      "roo"
+    ],
+    "icon": "/images/ai-tools/roo-code.svg"
+  },
+  {
+    "name": "OpenCode",
+    "maker": "OpenCode",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [],
+    "icon": "/images/ai-tools/opencode.svg"
+  },
+  {
+    "name": "Kiro",
+    "maker": "Amazon Web Services",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "aws",
+      "amazon"
+    ],
+    "icon": "/images/ai-tools/kiro.svg"
+  },
+  {
+    "name": "Trae",
+    "maker": "ByteDance",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "bytedance"
+    ],
+    "icon": "/images/ai-tools/trae.svg"
+  },
+  {
+    "name": "Junie",
+    "maker": "JetBrains",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "jetbrains",
+      "jetbrains ai"
+    ],
+    "icon": "/images/ai-tools/junie.svg"
+  },
+  {
+    "name": "Devin",
+    "maker": "Cognition",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "cognition"
+    ],
+    "icon": "/images/ai-tools/devin.svg"
+  },
+  {
+    "name": "Replit AI",
+    "maker": "Replit",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "replit agent",
+      "replit"
+    ],
+    "icon": "/images/ai-tools/replit-ai.svg"
+  },
+  {
+    "name": "Lovable",
+    "maker": "Lovable",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [],
+    "icon": "/images/ai-tools/lovable.svg"
+  },
+  {
+    "name": "v0",
+    "maker": "Vercel",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "vercel"
+    ],
+    "icon": "/images/ai-tools/v0.svg"
+  },
+  {
+    "name": "CodeGeeX",
+    "maker": "Zhipu AI",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [
+      "zhipu"
+    ],
+    "icon": "/images/ai-tools/codegeex.svg"
+  },
+  {
+    "name": "Phind",
+    "maker": "Phind",
+    "category": "Coding assistant",
+    "use": "coding",
+    "aliases": [],
+    "icon": "/images/ai-tools/phind.svg"
+  }
+]

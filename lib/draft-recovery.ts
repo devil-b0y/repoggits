@@ -7,7 +7,8 @@ const recoveryData=z.object({
   ...Object.fromEntries(Object.entries(emptyProject).filter(([,v])=>typeof v==='string').map(([k])=>[k,z.string()])),
   type:z.enum(['Software','Hardware','Hybrid']),currency:z.enum(['INR','USD','EUR','GBP']),openSource:z.boolean(),
   features:strings,tags:strings,galleryIds:strings,
-  stack:z.object(Object.fromEntries(Object.keys(emptyProject.stack).map(k=>[k,z.string()]))),
+  // Defaulted so a recovery copy saved before a stack question existed still loads.
+  stack:z.object(Object.fromEntries(Object.keys(emptyProject.stack).map(k=>[k,z.string().default('')]))),
   team:z.array(z.object({name:z.string(),email:z.string(),rollNumber:z.string().optional(),contribution:z.string(),branch:z.string(),semester:z.string(),college:z.string(),photoId:z.string()})),
   services:z.array(z.object({name:z.string(),purpose:z.string(),url:z.string()})),
   hardwareCosts:z.array(z.object({name:z.string(),quantity:z.number(),unitCost:z.number()})),

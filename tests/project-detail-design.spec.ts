@@ -32,6 +32,16 @@ test('stars, likes and saving still work after visual changes',async({page})=>{
  await expect(page.getByRole('link',{name:'Live demo',exact:true})).toHaveAttribute('href','/samples/campusflow/index.html');
  await expect(page.getByRole('button',{name:'Download source',exact:true})).toBeEnabled();
 });
+test('AI answers appear in the stack with logos, and "No AI used" gets its own mark',async({page})=>{
+ await setup(page,data=>{Object.assign(data.project.version.data.stack,{aiTools:'ChatGPT, Hugging Face, CampusBot',aiCoding:'No AI used'});});
+ const row=(label:string)=>page.locator('.pd-stack-details > div').filter({has:page.locator('dt',{hasText:label})});
+ await row('AI in project').scrollIntoViewIfNeeded();
+ await expect(row('AI in project').locator('.pd-tech-token')).toHaveCount(3);
+ await expect(row('AI in project').locator('img[src="/images/ai-tools/chatgpt.svg"]')).toBeVisible();
+ await expect(row('AI in project').locator('img[src="/images/ai-tools/hugging-face.svg"]')).toBeVisible();
+ await expect(row('AI for coding')).toContainText('No AI used');
+ await expect(row('AI for coding').locator('img')).toHaveCount(0);
+});
 test('failed technology images have meaningful icon fallbacks',async({page})=>{
  await page.route('**/images/technologies/react.svg',r=>r.abort());await setup(page);
  await expect(page.locator('.pd-technologies .tech-badges .pd-tech-token').filter({hasText:/^React$/}).locator('.pd-logo-orbit svg')).toBeVisible();
