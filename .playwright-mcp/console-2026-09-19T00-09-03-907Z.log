@@ -1,2 +1,0 @@
-[     154ms] [WARNING] Error with Feature-Policy header: Some features are specified in both Feature-Policy and Permissions-Policy header: camera, geolocation, microphone. Values defined in Permissions-Policy header will be used. @ :0
-[     154ms] [ERROR]  @ https://www.rgpv.ac.in/Uni/frm_ViewScheme.aspx:0

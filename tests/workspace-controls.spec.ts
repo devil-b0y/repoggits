@@ -16,7 +16,7 @@ const fixtures:[string,VersionStatus,string][]=[
 // An hour apart and newest first, matching the order the workspace read returns them in.
 const projects:Project[]=fixtures.map(([title,status,summary],i)=>{
   const edited=new Date(Date.now()-i*3600_000).toISOString();
-  return {id:randomUUID(),ownerId:user.id,featured:false,archived:false,example:false,views:0,downloads:0,stars:0,likes:0,parentProjectId:null,parentVersionId:null,
+  return {id:randomUUID(),ownerId:user.id,featured:false,archived:false,example:false,views:0,downloads:0,stars:0,likes:0,parentProjectId:null,parentVersionId:null,modificationId:null,
     version:{id:randomUUID(),projectId:'',number:1,status,data:{...emptyProject,title,summary,teamName:'Controls team'},changelog:'',createdAt:edited,updatedAt:edited,requiredApprovals:1,approvals:0}};
 });
 const titles=(page:Page)=>page.locator('.workspace-project h3');
@@ -30,7 +30,7 @@ const notifications=[
 ];
 const saved:Project[]=([['Lumen study lamp','Bright Sparks','A desk lamp that follows the light in the room.'],
   ['Tide water monitor','River Watch','Sensors that warn before the bank floods.']] as const).map(([title,teamName,summary])=>({
-  id:randomUUID(),ownerId:randomUUID(),featured:false,archived:false,example:false,views:0,downloads:0,stars:0,likes:0,parentProjectId:null,parentVersionId:null,
+  id:randomUUID(),ownerId:randomUUID(),featured:false,archived:false,example:false,views:0,downloads:0,stars:0,likes:0,parentProjectId:null,parentVersionId:null,modificationId:null,
   version:{id:randomUUID(),projectId:'',number:1,status:'approved' as const,data:{...emptyProject,title,summary,teamName},changelog:'',createdAt:ago(0),updatedAt:ago(0),requiredApprovals:1,approvals:1},
 }));
 async function withSaved(page:Page) {

@@ -17,7 +17,7 @@ function servedHere(url:string) {
 export function projectView(row:Record<string,unknown>):Project {
   const version=versionView(row);
   if(row.example)version.data={...version.data,liveUrl:servedHere(version.data.liveUrl),videoUrl:servedHere(version.data.videoUrl)};
-  return {id:String(row.project_id),ownerId:String(row.owner_id),featured:!!row.featured,archived:!!row.archived,example:!!row.example,views:Number(row.views),downloads:Number(row.downloads),stars:Number(row.stars||0),likes:Number(row.likes||0),parentProjectId:row.parent_project_id?String(row.parent_project_id):null,parentVersionId:row.parent_version_id?String(row.parent_version_id):null,version};
+  return {id:String(row.project_id),ownerId:String(row.owner_id),featured:!!row.featured,archived:!!row.archived,example:!!row.example,views:Number(row.views),downloads:Number(row.downloads),stars:Number(row.stars||0),likes:Number(row.likes||0),parentProjectId:row.parent_project_id?String(row.parent_project_id):null,parentVersionId:row.parent_version_id?String(row.parent_version_id):null,modificationId:null,version};
 }
 export const projectSelect=`SELECT v.*,p.owner_id,p.featured,p.archived,p.example,p.views,p.downloads,p.parent_project_id,p.parent_version_id,
   (SELECT count(*) FROM r.reactions rx JOIN r.users ru ON ru.id=rx.user_id AND NOT ru.suspended WHERE rx.project_id=p.id AND rx.kind='star') AS stars,
@@ -174,9 +174,17 @@ export function publicProjects():Promise<Project[]> {
   return entry.projects;
 }
 async function loadPublicProjects() {
-  return (await db.query(`${projectSelect} WHERE v.status='approved' AND NOT p.archived AND v.number=(SELECT max(v2.number) FROM r.versions v2 WHERE v2.project_id=p.id AND v2.status='approved') ORDER BY stars DESC,likes DESC,v.created_at DESC,p.id LIMIT 500`)).map(row=>{
+  const projects=(await db.query(`${projectSelect} WHERE v.status='approved' AND NOT p.archived AND v.number=(SELECT max(v2.number) FROM r.versions v2 WHERE v2.project_id=p.id AND v2.status='approved') ORDER BY stars DESC,likes DESC,v.created_at DESC,p.id LIMIT 500`)).map(row=>{
     const project=projectView(row);
     project.version.data={...project.version.data,team:project.version.data.team.map(member=>({...member,email:'',rollNumber:''}))};
     return project;
   });
+  // Each original's published modification, paired from the list itself rather than a subquery per row. A
+  // modification only counts once it is public here, so the link an original offers always resolves. Where a
+  // project has several, this takes the first in the list's own order (stars, then likes, then newest) and the
+  // project page still lists them all.
+  const byParent=new Map<string,string>();
+  for(const project of projects)if(project.parentProjectId&&!byParent.has(project.parentProjectId))byParent.set(project.parentProjectId,project.id);
+  for(const project of projects)project.modificationId=byParent.get(project.id)??null;
+  return projects;
 }

@@ -2,7 +2,7 @@
 import { createContext, memo, useContext, useEffect, useMemo, useState, useCallback, type FormEvent, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ArrowUpRight, Layers, Menu, X, LogOut, Moon, Sun, Play, Star, Heart } from 'lucide-react';
+import { ArrowUpRight, Layers, Menu, X, LogOut, Moon, Sun, Play, Star, Heart, GitFork } from 'lucide-react';
 import type { User, Project } from '@/lib/schema';
 import { imageSrcSet, imageUrl } from '@/lib/images';
 import { openCookiePreferences } from './CookieConsent';
@@ -104,7 +104,7 @@ export function CodeFollowUp({purpose,email,needsPassword=false,label='Use a cod
 // Filtering and sorting re-render the whole list; a card whose project is unchanged is skipped.
 export const Card=memo(function Card({project}:{project:Project}) {
   const d=project.version.data;
-  return <article className="project-card"><Link className="project-preview" href={`/projects/${project.id}${d.videoUrl?'?play=1':''}`} aria-label={`View ${d.title}`}><ProjectCover project={project}/><span className="project-badge">{project.example?'SAMPLE PROJECT':project.featured?'STAFF PICK':d.type.toUpperCase()}</span>{d.videoUrl&&<span className="card-video-label"><Play size={14} fill="currentColor"/> Watch demo</span>}<span className="preview-arrow"><ArrowUpRight size={20}/></span></Link><div className="project-meta"><span>{d.department}</span><span>{d.year}</span></div><h3><Link href={`/projects/${project.id}`}>{d.title}</Link></h3><p className="card-summary">{d.summary}</p><div className="tags">{d.tags.slice(0,4).map(tag=><span key={tag}>{tag}</span>)}</div><div className="card-community"><span><Star size={15}/> {project.stars} stars</span><span><Heart size={15}/> {project.likes} likes</span>{project.parentProjectId&&<span>Modified build</span>}</div><div className="card-bottom"><span>{d.teamName}</span><span>{project.views} views · {project.downloads} downloads</span></div></article>;
+  return <article className="project-card"><Link className="project-preview" href={`/projects/${project.id}${d.videoUrl?'?play=1':''}`} aria-label={`View ${d.title}`}><ProjectCover project={project}/><span className="project-badge">{project.example?'SAMPLE PROJECT':project.featured?'STAFF PICK':d.type.toUpperCase()}</span>{d.videoUrl&&<span className="card-video-label"><Play size={14} fill="currentColor"/> Watch demo</span>}<span className="preview-arrow"><ArrowUpRight size={20}/></span></Link><div className="project-meta"><span>{d.department}</span><span>{d.year}</span></div><h3><Link href={`/projects/${project.id}`}>{d.title}</Link></h3><p className="card-summary">{d.summary}</p><div className="tags">{d.tags.slice(0,4).map(tag=><span key={tag}>{tag}</span>)}</div><div className="card-community"><span><Star size={15}/> {project.stars} stars</span><span><Heart size={15}/> {project.likes} likes</span>{project.parentProjectId&&<span>Modified build</span>}{project.parentProjectId?<Link className="icon-button version-link" href={`/projects/${project.parentProjectId}`} title="View original version" aria-label={`View the original version of ${d.title}`}><GitFork size={16}/></Link>:project.modificationId&&<Link className="icon-button version-link" href={`/projects/${project.modificationId}`} title="View modified version" aria-label={`View the modified version of ${d.title}`}><GitFork size={16}/></Link>}</div><div className="card-bottom"><span>{d.teamName}</span><span>{project.views} views · {project.downloads} downloads</span></div></article>;
 });
 // Cards fetch a cover scaled to the width `sizes` describes. The project gallery passes scaled={false}: its thumbnails
 // load the stored photo, and reusing that one download lets the large view appear the moment a thumbnail is chosen.
@@ -112,7 +112,10 @@ export function ProjectCover({project,scaled=true,sizes='(max-width: 700px) 92vw
   const d=project.version.data;
   return d.coverId?<img className="project-cover" src={imageUrl(d.coverId,scaled?960:undefined)} srcSet={scaled?imageSrcSet(d.coverId):undefined} sizes={scaled?sizes:undefined} alt={`${d.title} cover`} loading="lazy" decoding="async"/>:<div className={`project-art cover-${d.type.toLowerCase()}`} aria-hidden="true"><div className="art-grid"/><div className="cover-monogram">{d.type==='Hardware'?'< >':d.type==='Hybrid'?'{ + }':'{ / }'}</div><span className="art-marker">{d.type.toUpperCase()} / {d.teamName.toUpperCase()}</span></div>;
 }
-export function PageTitle({eyebrow,title,titleBadge,description,action}:{eyebrow:string;title:string;titleBadge?:ReactNode;description?:string;action?:ReactNode}) {return <div className="page-title"><div><div className="eyebrow">{eyebrow}</div><h1>{title}{titleBadge}</h1>{description&&<p>{description}</p>}</div>{action}</div>;}
+// A badge or version link sits inside the h1 for layout, but the heading must still be named after the page it
+// heads: without the label, "CampusFlow" is announced as "CampusFlow v2 · modified build View ...", and heading
+// navigation stops being useful. The adornments keep their own names and stay reachable.
+export function PageTitle({eyebrow,title,titleBadge,description,action}:{eyebrow:string;title:string;titleBadge?:ReactNode;description?:string;action?:ReactNode}) {return <div className="page-title"><div><div className="eyebrow">{eyebrow}</div><h1 aria-label={titleBadge?title:undefined}>{title}{titleBadge}</h1>{description&&<p>{description}</p>}</div>{action}</div>;}
 export function Logout(){const {refresh}=useSession();return <button className="text-button" onClick={async()=>{await send('auth/logout',{});await refresh();window.location.href='/';}}><LogOut size={16}/> Sign out</button>;}
 
 // Long lists render a page at a time, since every card costs layout work and often an image request.

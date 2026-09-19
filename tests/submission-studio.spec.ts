@@ -272,10 +272,10 @@ test('studio objects and introductions follow each step without resetting answer
 test('the step object is a flat 2D card that draws itself in, with no 3D tilt',async({page})=>{
  await mockSession(page);await page.goto('/submit');
  const cookies=page.getByRole('button',{name:'Reject non-essential',exact:true});if(await cookies.isVisible())await cookies.click();
- const stage=page.locator('.studio-object-stage'),card=page.locator('.studio-2d-card');
+ const stage=page.locator('.studio-object-stage'),card=page.locator('.studio-object-card');
  await expect(card).toBeVisible();
- // Nothing 3D: the old card was a preserve-3d child of a perspective stage that rotated with the pointer.
- await expect(page.locator('.studio-3d-card')).toHaveCount(0);
+ // Nothing 3D on the card itself: the old card was a preserve-3d child of a perspective stage that rotated
+ // with the pointer. Today's card only shows a dimensional-looking image inside a still-flat card.
  expect(await stage.evaluate(el=>getComputedStyle(el).perspective)).toBe('none');
  expect(await card.evaluate(el=>getComputedStyle(el).transformStyle)).toBe('flat');
  const before=await card.evaluate(el=>getComputedStyle(el).transform);
@@ -283,16 +283,19 @@ test('the step object is a flat 2D card that draws itself in, with no 3D tilt',a
  await page.mouse.move(box.x+box.width*.9,box.y+box.height*.1);await page.waitForTimeout(400);
  // Hovering only lifts the card in 2D (a translate), it never rotates: no rotateX/rotateY, so no matrix3d.
  expect(await card.evaluate(el=>getComputedStyle(el).transform)).not.toContain('matrix3d');
- // The hand-drawn border and the object inside are SVG shapes that finish drawn.
- await expect(card.locator('.studio-2d-card-border path')).toHaveAttribute('pathLength','1');
- await expect.poll(()=>card.locator('.studio-2d-card-icon rect').first().evaluate(el=>getComputedStyle(el).fillOpacity),{timeout:8000}).toBe('1');
- // Every step gets its own object, and moving between steps redraws it rather than reusing the previous card.
+ // The rendered object image finishes fully visible.
+ await expect.poll(()=>card.locator('.studio-object-card-image').evaluate(el=>getComputedStyle(el).opacity),{timeout:8000}).toBe('1');
+ // Every step gets its own object image, and moving between steps swaps it rather than reusing the previous one.
  const nav=page.getByRole('navigation',{name:'Project form sections'});
+ const seenSrcs=new Set<string>();
  for(let i=0;i<6;i++){
   await nav.getByRole('link').nth(i).click();
-  await expect(page.locator('.studio-2d-card .studio-2d-card-icon svg')).toBeVisible();
+  const image=page.locator('.studio-object-card .studio-object-card-image');
+  await expect(image).toBeVisible();
+  seenSrcs.add(await image.getAttribute('src')||'');
   await expect(page.locator('.studio-step-object')).toHaveAttribute('data-object',String(i+1));
  }
+ expect(seenSrcs.size).toBe(6);
  expect(before).not.toContain('matrix3d');
 });
 

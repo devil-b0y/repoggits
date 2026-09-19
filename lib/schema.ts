@@ -44,7 +44,9 @@ export type Role = typeof roles[number];
 export type VersionStatus = 'draft' | 'pending' | 'approved' | 'rejected' | 'changes_requested';
 export type User = { id:string; email:string; name:string; role:Role; verified:boolean; suspended:boolean; scopes:string[]; profile:Profile };
 export type Version = { id:string; projectId:string; number:number; status:VersionStatus; data:ProjectData; changelog:string; createdAt:string; updatedAt:string; requiredApprovals:number; approvals:number; feedback?:string };
-export type Project = { id:string; ownerId:string; featured:boolean; archived:boolean; views:number; downloads:number; stars:number; likes:number; parentProjectId:string|null; parentVersionId:string|null; example:boolean; version:Version };
+// modificationId is the reverse of parentProjectId: the published modification built on this project. Only the
+// public list resolves it, since it comes from the other projects in that list rather than from this one's row.
+export type Project = { id:string; ownerId:string; featured:boolean; archived:boolean; views:number; downloads:number; stars:number; likes:number; parentProjectId:string|null; parentVersionId:string|null; modificationId:string|null; example:boolean; version:Version };
 export const emptyProject: ProjectData = projectSchema.parse({ title:'Untitled project', department:'Computer Science', type:'Software', teamName:'My team' });
 
 export function projectCost(data: ProjectData) {

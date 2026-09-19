@@ -8,7 +8,9 @@ async function setup(page:Page,customize?:(data:typeof fixture)=>void){
  await page.route('**/api/auth/me',r=>r.fulfill({json:{user:{id:'viewer',name:'Viewer',role:'student',verified:true},emailVerificationRequired:false,uploadsAvailable:true}}));
  await page.route(`**/api/projects/${id}**`,async r=>{const url=new URL(r.request().url());if(url.pathname.endsWith('/reactions')){const body=r.request().postDataJSON();data[body.kind==='star'?'starred':'liked']=body.active;data.project[body.kind==='star'?'stars':'likes']+=body.active?1:-1;return r.fulfill({json:{active:body.active,stars:data.project.stars,likes:data.project.likes}});}if(url.pathname.endsWith('/bookmark')){data.saved=r.request().postDataJSON().saved;return r.fulfill({json:{ok:true}});}if(url.pathname.endsWith('/view'))return r.fulfill({json:{ok:true}});return r.fulfill({json:data});});
  await page.route('**/api/files/**',r=>r.fulfill({path:'public/images/workshop/campusflow.webp',contentType:'image/webp'}));
- await page.goto(`/projects/${id}`);await expect(page.getByRole('heading',{name:'CampusFlow',exact:true})).toBeVisible();await page.getByRole('button',{name:'Reject non-essential',exact:true}).click();
+ await page.goto(`/projects/${id}`);await expect(page.getByRole('heading',{name:'CampusFlow',exact:true})).toBeVisible();
+ // A test may call setup again with different data; the consent banner only shows until a choice is stored.
+ if(await page.evaluate(()=>!localStorage.getItem('repoggits-cookie-consent')))await page.getByRole('button',{name:'Reject non-essential',exact:true}).click();
 }
 test('project identity, circular logos and team details render without altering the demo',async({page})=>{
  await setup(page);await page.screenshot({path:'test-results/detail-top-dark.png'});
@@ -49,6 +51,50 @@ test('lineage banner is large, uses the display font and stays readable in dark 
  await banner.screenshot({path:'test-results/lineage-banner-dark.png'});
  await page.setViewportSize({width:360,height:900});await banner.scrollIntoViewIfNeeded();
  await expect(heading).toHaveCSS('font-size','19px');expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBeTruthy();
+});
+const modified='33333333-3333-4333-8333-333333333333',origin='22222222-2222-4222-8222-222222222222';
+const asModification=(data:typeof fixture)=>{
+ Object.assign(data.project,{parentProjectId:origin,parentVersionId:'original-version'});
+ Object.assign(data,{original:{id:origin,version_id:'original-version',title:'CampusFlow — your semester, a little more organised',number:1,team_name:'Campus Makers',changelog:'',created_at:'2026-08-01T12:00:00Z'}});
+};
+test('the version icon carries each project to its counterpart and stays away when there is none',async({page})=>{
+ // An original with a published modification offers the one control, pointing at that project's own page.
+ await setup(page,data=>{Object.assign(data,{modifications:[{id:modified,title:'CampusFlow Focus - priorities, deadlines & exports',team_name:'Focus Makers'}]});});
+ const forward=page.getByRole('link',{name:/^View CampusFlow Focus/});
+ await expect(forward).toHaveAttribute('href',`/projects/${modified}`);
+ await expect(forward).toHaveAttribute('title','View modified version');
+ await expect(page.getByRole('link',{name:/the original this build started from/})).toHaveCount(0);
+ // Same routing as the rest of the app: the header survives, and Back returns to where browsing left off.
+ await page.route(`**/api/projects/${modified}**`,r=>r.fulfill({json:structuredClone(fixture)}));
+ await forward.click();
+ await expect(page).toHaveURL(new RegExp(`/projects/${modified}$`));
+ await expect(page.locator('.platform .nav')).toBeVisible();
+ await page.goBack();
+ await expect(page).toHaveURL(new RegExp(`/projects/${id}$`));
+});
+test('a modified build points back at its original, and drops the control when that original is gone',async({page})=>{
+ await setup(page,asModification);
+ const back=page.getByRole('link',{name:/the original this build started from/});
+ await expect(back).toHaveAttribute('href',`/projects/${origin}?version=original-version`);
+ await expect(back).toHaveAttribute('title','View original version');
+ // Nothing to open, so nothing to click: no icon, no disabled control, no broken link.
+ await setup(page,data=>{asModification(data);data.original=null;});
+ await expect(page.locator('.pd-version-link')).toHaveCount(0);
+ await expect(page.locator('.lineage-banner')).toContainText('currently unavailable');
+});
+test('project cards carry the same version icon, and only when the counterpart exists',async({page})=>{
+ await setup(page,data=>{
+  const related=structuredClone(fixture.project);
+  Object.assign(related,{id:origin,modificationId:modified});
+  related.version.data.title='CampusFlow — your semester, a little more organised';
+  const plain=structuredClone(fixture.project);
+  Object.assign(plain,{id:'44444444-4444-4444-8444-444444444444'});
+  plain.version.data.title='A project on its own';
+  data.related=[related,plain] as typeof data.related;
+ });
+ const card=page.locator('.project-card').filter({hasText:'a little more organised'});
+ await expect(card.getByRole('link',{name:/^View the modified version of/})).toHaveAttribute('href',`/projects/${modified}`);
+ await expect(page.locator('.project-card').filter({hasText:'A project on its own'}).locator('.version-link')).toHaveCount(0);
 });
 for(const width of [360,768,1440])test(`project case study fits ${width}px in both themes`,async({page})=>{
  await page.setViewportSize({width,height:1000});await page.emulateMedia({reducedMotion:'reduce'});await setup(page);

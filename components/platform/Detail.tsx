@@ -33,7 +33,12 @@ function Content({id}:{id:string}){
  const react=(kind:'star'|'like')=>action(async()=>{const result=await send<{active:boolean;stars:number;likes:number}>(`projects/${id}/reactions`,{kind,active:kind==='star'?!data.starred:!data.liked});setData(current=>current?{...current,[kind==='star'?'starred':'liked']:result.active,project:{...current.project,stars:result.stars,likes:result.likes}}:current);});
  return <div className="page-wrap detail-page">
   <Link className="text-button" href="/projects"><ArrowLeft size={16}/> Back to the collective</Link>
-  <PageTitle eyebrow={`${d.type.toUpperCase()} / ${d.department.toUpperCase()}`} title={d.title} titleBadge={p.parentProjectId&&<span className="pd-version-badge"><GitFork size={13}/>v{p.version.number} · modified build</span>} description={d.summary}/>
+  <PageTitle eyebrow={`${d.type.toUpperCase()} / ${d.department.toUpperCase()}`} title={d.title} titleBadge={<>
+    {p.parentProjectId&&<span className="pd-version-badge"><GitFork size={13}/>v{p.version.number} · modified build</span>}
+    {/* One control per direction, and only when the project on the other end is actually there to open. */}
+    {p.parentProjectId&&data.original&&<Link className="icon-button version-link pd-version-link" href={`/projects/${data.original.id}?version=${data.original.version_id}`} title="View original version" aria-label={`View ${data.original.title}, the original this build started from`}><GitFork size={17}/></Link>}
+    {!p.parentProjectId&&data.modifications.length>0&&<Link className="icon-button version-link pd-version-link" href={`/projects/${data.modifications[0].id}`} title="View modified version" aria-label={`View ${data.modifications[0].title}, a modified version of this project`}><GitFork size={17}/></Link>}
+  </>} description={d.summary}/>
   <ProjectSummary project={p}/>
   {p.example&&<Notice>Sample project with a fictional team, AI-generated portraits, and illustrative costs. The live demo, screenshots, video, and source ZIP are working examples.</Notice>}
   {actionError&&<Notice error>{actionError}</Notice>}

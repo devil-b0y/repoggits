@@ -101,7 +101,7 @@ test('per-user lookups and photo permission checks are backed by indexes',async(
 
 test('the project notebook shows placeholders while it loads, then pages a long list',async({page})=>{
   await page.context().addCookies((await student.storageState()).cookies);
-  const projects:Project[]=Array.from({length:30},(_,i)=>({id:randomUUID(),ownerId:randomUUID(),featured:false,archived:false,example:false,views:0,downloads:0,stars:30-i,likes:0,parentProjectId:null,parentVersionId:null,
+  const projects:Project[]=Array.from({length:30},(_,i)=>({id:randomUUID(),ownerId:randomUUID(),featured:false,archived:false,example:false,views:0,downloads:0,stars:30-i,likes:0,parentProjectId:null,parentVersionId:null,modificationId:null,
     version:{id:randomUUID(),projectId:'',number:1,status:'approved',data:{...emptyProject,title:`Paged project ${i+1}`,summary:'A stand-in project for the paging check.',teamName:'Paging team',tags:['Paging']},changelog:'',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),requiredApprovals:1,approvals:1}}));
   let release!:()=>void;const held=new Promise<void>(resolve=>{release=()=>resolve();});
   await page.route('**/api/projects',async route=>{await held;await route.fulfill({json:{projects}});});

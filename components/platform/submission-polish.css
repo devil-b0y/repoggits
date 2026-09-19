@@ -5,11 +5,20 @@
 .platform .submission-studio p{text-wrap:pretty}
 .platform .submission-studio .studio-hero{grid-template-columns:1.2fr 1fr;gap:24px 48px;padding:42px 48px 0;background:var(--white);border:1px solid var(--line);border-radius:20px;color:var(--ink);margin-bottom:40px;box-shadow:0 12px 50px #223e7205}
 .platform .submission-studio .studio-hero:before{background:radial-gradient(ellipse at 85% 35%,#7e9ccb13,transparent 60%)}
+/* Dark theme only: the card is already the theme's own dark navy, so a moody circuit/brain image reads as
+   native there. Left-to-right + bottom scrims (both in --paper's own tone) keep the copy and the benefits
+   row legible while the art column on the right, already sitting on its own opaque card, shows the photo
+   fully. The existing radial glow above still paints on top of this, adding to the depth instead of fighting it. */
+.platform.dark .submission-studio .studio-hero{background-image:linear-gradient(to top,#172333e6 0%,#172333c2 12%,transparent 30%),linear-gradient(100deg,#172333f2 0%,#172333d6 24%,#172333ad 44%,#17233370 66%,#1723334d 100%),url('/images/studio-hero/circuit-brain-bg.webp');background-size:cover,cover,cover;background-position:center,center,center;background-repeat:no-repeat,no-repeat,no-repeat}
 .platform .submission-studio .studio-hero-copy>a:first-child{color:var(--muted);font-size:12px;margin-bottom:30px;min-height:30px;width:fit-content}
 .platform .submission-studio .studio-eyebrow{display:flex;align-items:center;flex-wrap:wrap;gap:9px;color:var(--blue);font-size:10px;letter-spacing:1.3px;font-weight:500}
 .platform .submission-studio .studio-eyebrow>span{font-size:8px;letter-spacing:.7px;padding:5px 7px;background:#ef976b18;color:var(--ink);border:1px solid #df9b7230;border-radius:4px}
-.platform .submission-studio .studio-hero h1{font-size:clamp(48px,5.2vw,72px);line-height:1.04;letter-spacing:-3px;font-weight:500;color:var(--ink);margin:24px 0}
-.platform .submission-studio .studio-hero h1 em{font-family:Georgia,serif;font-weight:400;color:var(--blue);letter-spacing:-2.6px}
+/* Extruded 3D heading: several stacked, near-transparent offset layers (rather than one blurred shadow)
+   read as physical depth behind the letters, capped with a soft ambient layer for grounding. */
+.platform .submission-studio .studio-hero h1{font-size:clamp(48px,5.2vw,72px);line-height:1.04;letter-spacing:-3px;font-weight:500;color:var(--ink);margin:24px 0;text-shadow:1px 1px 0 #1c37621f,2px 2px 0 #1c37621a,3px 3px 0 #1c376215,4px 4px 0 #1c376210,6px 7px 12px #1c37620d}
+.platform .submission-studio .studio-hero h1 em{font-family:Georgia,serif;font-weight:400;color:var(--blue);letter-spacing:-2.6px;text-shadow:1px 1px 0 #3059b52b,2px 2px 0 #3059b524,3px 3px 0 #3059b51d,4px 4px 0 #3059b516,7px 8px 16px #3059b51a}
+.platform.dark .submission-studio .studio-hero h1{text-shadow:1px 1px 0 #00000060,2px 2px 0 #00000050,3px 3px 0 #00000040,4px 4px 0 #00000030,6px 7px 14px #00000026}
+.platform.dark .submission-studio .studio-hero h1 em{text-shadow:1px 1px 0 #00000055,2px 2px 0 #00000045,3px 3px 0 #00000035,4px 4px 0 #00000026,0 0 26px #9ab9ff3d}
 .platform .submission-studio .studio-hero-copy>p{font-size:16px;line-height:1.75;max-width:415px;color:var(--muted)}
 .platform .submission-studio .studio-start{display:inline-flex;align-items:center;gap:24px;margin:26px 0 0;padding:14px 19px;border-radius:7px;color:#fff;background:#3059b5;font-size:13px;font-weight:500;min-height:48px;transition:background .2s,transform .2s}
 .platform .submission-studio .studio-start:hover{background:#244994;transform:translateY(-2px)}
@@ -101,6 +110,9 @@
  .platform .submission-studio .studio-start{margin-top:22px;font-size:13px;min-height:48px}
  .platform .submission-studio .studio-hero-note{font-size:11px;margin:16px 0 12px}
  .platform .submission-studio .studio-hero-art{display:none}
+ /* No art column left to show the photo through once it's hidden, and copy now runs the full width, so the
+    left-to-right scrim becomes a flat, uniformly darker wash instead — same image, same tone, just even coverage. */
+ .platform.dark .submission-studio .studio-hero{background-image:linear-gradient(#172333d9,#172333d9),url('/images/studio-hero/circuit-brain-bg.webp');background-size:cover,cover;background-position:center,center}
  .platform .submission-studio .studio-benefits{display:grid;grid-template-columns:1fr;gap:14px;padding:20px 0;margin-top:10px}
  .platform .submission-studio .studio-benefits>span{font-size:12px}
  .platform .submission-studio .studio-layout{grid-template-columns:1fr;gap:22px}
@@ -135,26 +147,28 @@
 .platform .submission-studio .studio-chapter-art{display:block;min-width:0;align-self:stretch;min-height:380px;position:relative}
 .studio-step-object{position:relative;height:100%;min-height:380px;width:100%;isolation:isolate}
 .studio-object-stage{position:absolute;inset:0 0 30px;min-width:0;display:flex;align-items:center;justify-content:center}
-/* Flat 2D card (see StudioStepObject.tsx): the border is a hand-drawn SVG path that draws itself on, so the card
-   itself carries no border/perspective/3D transform. Aspect ratio matches the border SVG's 250x290 viewBox. */
-.studio-2d-card{position:relative;width:min(74%,250px);aspect-ratio:250/290;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;border-radius:18px;background:var(--white);box-shadow:0 20px 45px #17243518,0 2px 8px #17243510;padding:24px;transition:box-shadow .3s ease-out}
-.studio-2d-card:hover{box-shadow:0 26px 52px var(--card-accent-shadow,#17243528),0 4px 14px #17243514}
-.studio-2d-card.accent-blue{--card-accent:#3059b5;--card-accent-shadow:#3059b53d}
-.studio-2d-card.accent-orange{--card-accent:#f27e51;--card-accent-shadow:#f27e513d}
-.studio-2d-card.accent-green{--card-accent:#164e45;--card-accent-shadow:#164e453d}
-.studio-2d-card.accent-dark{--card-accent:#172435;--card-accent-shadow:#17243530}
+/* Premium rendered object card (see StudioStepObject.tsx): a floating 3D-looking image on the same flat
+   white card as before — no perspective/tilt on the card itself, only the object drawn inside it reads as
+   dimensional. Aspect ratio kept from the previous 250x290 card so size/position in the hero don't shift. */
+.studio-object-card{position:relative;width:min(74%,250px);aspect-ratio:250/290;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;border-radius:18px;background:var(--white);box-shadow:0 20px 45px #17243518,0 2px 8px #17243510;padding:24px;transition:box-shadow .3s ease-out}
+.studio-object-card:hover{box-shadow:0 30px 60px var(--card-accent-shadow,#17243528),0 6px 18px #17243514}
+.studio-object-card.accent-blue{--card-accent:#3059b5;--card-accent-shadow:#3059b53d}
+.studio-object-card.accent-orange{--card-accent:#f27e51;--card-accent-shadow:#f27e513d}
+.studio-object-card.accent-green{--card-accent:#164e45;--card-accent-shadow:#164e453d}
+.studio-object-card.accent-dark{--card-accent:#172435;--card-accent-shadow:#17243530}
 /* The green and dark accents are near-black on the dark theme's navy card, so they lift to lighter tints there. */
-.platform.dark .studio-2d-card.accent-blue{--card-accent:#7fa2ff;--card-accent-shadow:#7fa2ff30}
-.platform.dark .studio-2d-card.accent-green{--card-accent:#4fb39f;--card-accent-shadow:#4fb39f30}
-.platform.dark .studio-2d-card.accent-dark{--card-accent:#c9d6ea;--card-accent-shadow:#c9d6ea22}
-.studio-2d-card-border{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
-.studio-2d-card-icon{position:relative;display:grid;place-items:center;width:104px;height:104px;border-radius:20px;background:color-mix(in srgb,var(--card-accent) 12%,var(--white));color:var(--card-accent)}
-.studio-2d-card-label{position:relative;font:600 11px/1.4 monospace;letter-spacing:1.5px;color:var(--card-accent);text-align:center}
-.studio-2d-card-lines{position:relative;display:grid;justify-items:center;gap:6px;width:100%}
-.studio-2d-card-lines i{display:block;height:5px;border-radius:999px;background:color-mix(in srgb,var(--card-accent) 40%,transparent)}
-.studio-2d-card-seal{position:absolute;top:-10px;right:-10px;width:22px;height:22px;border-radius:50%;background:#dca15b;box-shadow:0 4px 10px #dca15b55}
+.platform.dark .studio-object-card.accent-blue{--card-accent:#7fa2ff;--card-accent-shadow:#7fa2ff30}
+.platform.dark .studio-object-card.accent-green{--card-accent:#4fb39f;--card-accent-shadow:#4fb39f30}
+.platform.dark .studio-object-card.accent-dark{--card-accent:#c9d6ea;--card-accent-shadow:#c9d6ea22}
+.studio-object-card-glow{position:absolute;inset:8%;border-radius:50%;background:radial-gradient(closest-side,color-mix(in srgb,var(--card-accent) 22%,transparent),transparent 72%);filter:blur(4px);pointer-events:none}
+.studio-object-card-image{position:relative;width:132px;height:132px;object-fit:contain;filter:drop-shadow(0 16px 20px color-mix(in srgb,var(--card-accent) 38%,transparent));animation:studio-object-float 5.5s ease-in-out infinite}
+.studio-object-card-shadow{position:relative;width:60%;height:14px;border-radius:50%;background:radial-gradient(closest-side,#17243530,transparent 75%);margin-top:-14px}
+.platform.dark .studio-object-card-shadow{background:radial-gradient(closest-side,#00000060,transparent 75%)}
+.studio-object-card-label{position:relative;font:600 11px/1.4 monospace;letter-spacing:1.5px;color:var(--card-accent);text-align:center}
 .studio-object-caption{position:absolute;bottom:0;left:0;right:0;text-align:center;color:var(--muted);font:10px/1.6 monospace;letter-spacing:2px;text-transform:uppercase}
-@media(max-width:760px){.platform .submission-studio .studio-chapter-art{display:block;min-height:250px;grid-row:auto}.studio-step-object{min-height:250px;height:250px}.studio-2d-card{width:min(80%,210px);gap:10px;padding:18px}.studio-2d-card-icon{width:84px;height:84px}.studio-object-caption{font-size:9px}.submission-studio .studio-hero{min-width:0}.submission-studio .studio-hero-copy{min-width:0}}
+@keyframes studio-object-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+@media(prefers-reduced-motion:reduce){.studio-object-card-image{animation:none}}
+@media(max-width:760px){.platform .submission-studio .studio-chapter-art{display:block;min-height:250px;grid-row:auto}.studio-step-object{min-height:250px;height:250px}.studio-object-card{width:min(80%,210px);gap:10px;padding:18px}.studio-object-card-image{width:104px;height:104px}.studio-object-caption{font-size:9px}.submission-studio .studio-hero{min-width:0}.submission-studio .studio-hero-copy{min-width:0}}
 
 .platform .submission-studio .studio-chapter-art{padding-bottom:88px}
 .studio-tool-examples{position:absolute;bottom:0;left:0;right:0;display:flex;flex-direction:column;align-items:center;gap:10px;color:var(--muted)}

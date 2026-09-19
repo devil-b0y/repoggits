@@ -98,6 +98,8 @@
 .detail-page .history details p{font-size:12px;line-height:1.8;color:var(--muted)}
 .detail-page .history .status-tag{font-size:8px;margin-left:8px}
 .pd-version-badge{display:inline-flex;align-items:center;gap:7px;vertical-align:middle;margin-left:16px;font:600 13px 'DM Sans',sans-serif;letter-spacing:0;color:var(--orange);background:color-mix(in srgb,var(--orange) 14%,transparent);border:1px solid color-mix(in srgb,var(--orange) 40%,transparent);border-radius:999px;padding:6px 14px 6px 11px}
+/* Beside the title, so the jump to the other end of the lineage sits with the badge that announces it. */
+.detail-page .pd-version-link{vertical-align:middle;margin-left:8px;min-width:36px;min-height:36px;color:var(--orange)}
 /* The pinned original's release, listed under this build's own versions so the lineage reads as one history. */
 .detail-page .history .pd-inherited-version{position:relative;padding-left:16px;border-top:1px dashed var(--line)}
 .detail-page .history .pd-inherited-version::before{content:'';position:absolute;left:0;top:22px;bottom:19px;width:2px;border-radius:2px;background:var(--orange);opacity:.5}
@@ -107,7 +109,7 @@
 .detail-page .discussion .comment{padding:24px 0}
 .detail-page .discussion .comment-avatar{width:43px;height:43px;border:3px solid var(--white);outline:1px solid var(--pd-accent-line)}
 @media(max-width:760px){
- .detail-page>.page-title h1{font-size:38px;letter-spacing:-1.6px}.detail-page>.page-title p{font-size:14px}.pd-version-badge{margin-left:0;margin-top:10px;font-size:11px;padding:5px 12px 5px 9px}
+ .detail-page>.page-title h1{font-size:38px;letter-spacing:-1.6px}.detail-page>.page-title p{font-size:14px}.pd-version-badge{margin-left:0;margin-top:10px;font-size:11px;padding:5px 12px 5px 9px}.detail-page .pd-version-link{min-width:44px;min-height:44px}
  .detail-page .pd-section-heading{gap:12px}.detail-page .pd-section-heading h2{font-size:24px}.detail-page .pd-section-icon{width:42px;height:42px;border-radius:12px}
  .detail-page .key-features{padding:22px 18px}.detail-page .pd-facts>div{padding:17px}.detail-page .pd-facts>div>strong{font-size:18px}
  .detail-page .pd-logo-orbit{width:36px;height:36px;flex-basis:36px}.detail-page .pd-logo-orbit img{width:23px;height:23px}
