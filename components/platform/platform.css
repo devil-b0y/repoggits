@@ -25,8 +25,9 @@ footer .footer-cookie-settings:hover{color:var(--blue)}
 .platform.dark .workspace-page .workspace-project:hover,.platform.dark .workspace-page .saved-card:hover,.platform.dark .workspace-page .notification:hover,.platform.dark .workspace-page .resume-panel:hover{border-color:#4a5c74;background:#9ab9ff0a}
 .workspace-page .text-button{transition:color .2s ease}
 .workspace-page .text-button:hover{color:var(--blue)}
-/* The shared hover tint is a pale grey, which all but erases light text on a dark panel. */
-.platform.dark .workspace-page .filter-tabs button:not(.active):hover{background:#9ab9ff1f}
+/* The shared hover tint is a pale grey, which all but erases light text on a dark panel. Applies to every
+   page's tabs, not just the workspace's: the discovery filters on /projects sit on the same dark ground. */
+.platform.dark .filter-tabs button:not(.active):hover{background:#9ab9ff1f}
 /* Drawn inside the item: the shared 5px offset would put the ring outside this small menu. */
 .workspace-page .card-menu-list button:focus-visible{outline:2px solid var(--blue);outline-offset:-2px}
 @keyframes workspace-menu-open{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:none}}

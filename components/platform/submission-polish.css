@@ -109,7 +109,11 @@
  .platform .submission-studio .studio-hero-copy>p{font-size:16px;line-height:1.7}
  .platform .submission-studio .studio-start{margin-top:22px;font-size:13px;min-height:48px}
  .platform .submission-studio .studio-hero-note{font-size:11px;margin:16px 0 12px}
- .platform .submission-studio .studio-hero-art{display:none}
+ /* Pre-existing bug: the element also carries .studio-chapter-art, whose own unconditional
+    `display:block` (further down this file) has equal specificity and wins by source order,
+    so a plain `.studio-hero-art{display:none}` here was silently dead and the card never actually
+    hid on phones. Matching both classes adds the specificity needed to win regardless of order. */
+ .platform .submission-studio .studio-hero-art.studio-chapter-art{display:none}
  /* No art column left to show the photo through once it's hidden, and copy now runs the full width, so the
     left-to-right scrim becomes a flat, uniformly darker wash instead — same image, same tone, just even coverage. */
  .platform.dark .submission-studio .studio-hero{background-image:linear-gradient(#172333d9,#172333d9),url('/images/studio-hero/circuit-brain-bg.webp');background-size:cover,cover;background-position:center,center}

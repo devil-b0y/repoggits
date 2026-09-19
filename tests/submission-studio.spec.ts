@@ -265,7 +265,10 @@ test('studio objects and introductions follow each step without resetting answer
  await nav.getByRole('link').nth(2).click();
  await page.locator('.studio-hero').screenshot({path:'test-results/studio-step-board.png'});
  await page.setViewportSize({width:390,height:844});
- await expect(page.locator('.studio-step-object')).toBeVisible();
+ // The art column (and the step object inside it) is intentionally hidden below 760px — the mobile hero is
+ // copy-only. Checks visibility didn't just accidentally regress into something broken, not that it's shown.
+ await expect(page.locator('.studio-hero-art')).toBeHidden();
+ await expect(page.locator('.studio-hero h1')).toBeVisible();
  await page.locator('.studio-hero').screenshot({path:'test-results/studio-step-mobile.png'});
 });
 
