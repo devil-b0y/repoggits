@@ -45,9 +45,12 @@ export async function seedSample(options:{refresh?:boolean}={}){
       {name:'Ananya Verma',email:'ananya.campusflow@students.invalid',contribution:'Interface design, responsive layout, and documentation',branch:'Information Technology',semester:'6',college:'GGCT',photoId:fileId(7)},
     ],
     tags:['JavaScript','HTML','CSS','Student productivity','LocalStorage'],
-    stack:{frontend:'Semantic HTML, responsive CSS Grid and Flexbox',backend:'No backend — this prototype runs in the browser',database:'Browser localStorage (device-local, no cloud sync)',languages:'JavaScript, HTML, CSS',frameworks:'None — vanilla JavaScript',tools:'Playwright, Chrome DevTools'},
+    stack:{frontend:'Semantic HTML, responsive CSS Grid and Flexbox',backend:'No backend — this prototype runs in the browser',database:'Browser localStorage (device-local, no cloud sync)',languages:'JavaScript, HTML, CSS',frameworks:'None — vanilla JavaScript',tools:'Playwright, Chrome DevTools',aiTools:'No AI used',aiCoding:'GitHub Copilot, ChatGPT'},
     services:[{name:'Web Storage API',purpose:'Saves tasks locally in the browser across page reloads.',url:'https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API'},{name:'Static web hosting',purpose:'Can be deployed as a static web application.',url:''}],
-    startDate:'2026-08-01',endDate:'2026-08-22',purchaseDate:'',
+    startDate:'2026-08-01',endDate:'2026-08-22',purchaseDate:'2026-08-04',
+    // CampusFlow buys no parts; these illustrate how a team records where hardware came from, so the sample shows
+    // that part of a project page too.
+    purchaseMode:'online',purchaseSource:'Robu.in',purchaseUrl:'https://robu.in',purchaseLocation:'',
     coverId:fileId(1),galleryIds:[fileId(2),fileId(3),fileId(4),fileId(5)],sourceId:fileId(8),
     liveUrl:`${origin}/samples/campusflow/index.html`,videoUrl:`${origin}/samples/campusflow/demo.webm`,github:'',
     hardwareCosts:[],softwareCosts:[{name:'Optional domain — illustrative annual estimate',amount:650},{name:'Optional static hosting — illustrative first month',amount:150}],currency:'INR',openSource:false,

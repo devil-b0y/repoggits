@@ -1,0 +1,30 @@
+/* The settings page inherits the submission studio's plain .form-section card. These rules give it the panel
+   treatment the rest of the admin panel now uses: an icon per section, the step number as a quiet kicker, and
+   fields that breathe. Colours stay on the existing tokens. */
+.platform .admin-settings{max-width:940px}
+.platform .admin-settings .admin-settings-links{margin-bottom:22px;font-size:13px;line-height:1.7}
+.platform .admin-settings .form-section{position:relative;padding:30px 32px;border-radius:18px;margin-bottom:20px;overflow:visible}
+.platform .admin-settings .form-section-title{align-items:center;gap:16px;padding-bottom:20px;margin-bottom:24px;border-bottom:1px solid var(--line)}
+.platform .admin-settings .settings-icon{width:46px;height:46px;flex-shrink:0;display:grid;place-items:center;border:1px solid color-mix(in srgb,var(--blue) 22%,var(--line));border-radius:14px;background:color-mix(in srgb,var(--blue) 7%,var(--white));color:var(--blue)}
+.platform .admin-settings .settings-step{font:500 10px 'Space Grotesk',sans-serif;letter-spacing:1.6px;color:var(--muted);border:0;border-radius:0;width:auto;height:auto;align-self:flex-start;margin-top:3px}
+.platform .admin-settings .form-section-title h2{font-size:22px;letter-spacing:-.5px}
+.platform .admin-settings .form-section-title p{font-size:13px;line-height:1.65;margin-top:4px;max-width:62ch}
+.platform .admin-settings form label{margin-bottom:22px}
+.platform .admin-settings form label:last-child{margin-bottom:0}
+.platform .admin-settings textarea{line-height:1.7;resize:vertical;min-height:96px}
+.platform .admin-settings small{margin-top:2px;max-width:70ch}
+/* A helper line that sits between two fields (the branch picker's) needs the gap a label would have had. */
+.platform .admin-settings .form-section>small{display:block;margin:7px 0 22px;font-size:11px;line-height:1.6;color:var(--muted)}
+.platform .admin-settings .checkbox-label{padding:15px 17px;border:1px solid var(--line);border-radius:12px;background:var(--paper);margin-bottom:22px}
+.platform .admin-settings .form-row{gap:18px}
+/* The save control is the one thing you always come here to press, so it stays reachable instead of scrolling away. */
+.platform .admin-settings .editor-actions{position:sticky;bottom:0;z-index:6;display:flex;justify-content:flex-end;gap:16px;margin-top:8px;padding:16px 20px;border:1px solid var(--line);border-radius:16px;background:color-mix(in srgb,var(--white) 92%,transparent);backdrop-filter:blur(6px)}
+@supports not (backdrop-filter:blur(6px)){.platform .admin-settings .editor-actions{background:var(--white)}}
+@media(max-width:760px){
+ .platform .admin-settings .form-section{padding:22px 18px;border-radius:14px}
+ .platform .admin-settings .form-section-title{gap:12px;flex-wrap:wrap}
+ .platform .admin-settings .settings-icon{width:40px;height:40px;border-radius:12px}
+ .platform .admin-settings .form-section-title h2{font-size:20px}
+ .platform .admin-settings .editor-actions{padding:13px 15px}
+ .platform .admin-settings .editor-actions .button{flex:1;justify-content:center}
+}

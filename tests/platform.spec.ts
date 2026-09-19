@@ -601,7 +601,7 @@ test('staff cannot approve their own team and suspension revokes existing sessio
   expect((await (await outsider.get('/api/auth/me')).json()).user).toBeNull();
 });
 
-test('the front page is an overview only, and Explore projects opens the notebook in a new tab',async({page})=>{
+test('the front page is an overview only, and Explore projects opens the notebook in the same tab',async({page})=>{
   await page.goto('/');
   await expect(page.getByRole('heading',{level:1})).toContainText('Good ideas');
   // No project data, filters, or grid on the front page — the live notebook lives at /projects.
@@ -610,10 +610,11 @@ test('the front page is an overview only, and Explore projects opens the noteboo
   await expect(page.locator('.gallery-toolbar')).toHaveCount(0);
   const heroExplore=page.locator('.hero-actions').getByRole('link',{name:'Explore projects',exact:true});
   await expect(heroExplore).toHaveAttribute('href','/projects');
-  await expect(heroExplore).toHaveAttribute('target','_blank');
+  // Browsing the notebook continues the same visit; a second tab only made people lose their place.
+  await expect(heroExplore).not.toHaveAttribute('target','_blank');
   const navExplore=page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Explore projects',exact:true});
   await expect(navExplore).toHaveAttribute('href','/projects');
-  await expect(navExplore).toHaveAttribute('target','_blank');
+  await expect(navExplore).not.toHaveAttribute('target','_blank');
   // /projects requires an account: a signed-out visitor sees the sign-in gate, not the notebook.
   await page.goto('/projects');
   await expect(page.getByRole('heading',{name:'Make yourself at home.'})).toBeVisible();

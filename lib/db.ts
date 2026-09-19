@@ -33,6 +33,27 @@ export function connectionConfig(connection:string, prefix='DATABASE') {
   url.searchParams.delete('sslmode');url.searchParams.delete('channel_binding');
   return { connectionString:url.toString(), ssl };
 }
+// Measured against the configured Neon instance: a query on an open connection costs ~230ms, but *opening* one costs
+// ~3.5s — TLS, authentication, and waking a compute that has suspended itself. A page that asks for two things at once
+// therefore pays that setup on its second connection unless one is already open and idle, and every dev-server restart
+// starts from none. So a few are opened as soon as the pool exists and pinged periodically to stop them idling out
+// (both pg's own idle timeout and anything in between that drops a quiet socket).
+//
+// The ping also keeps the database's compute awake, which on a usage-billed plan is not free. DATABASE_POOL_WARM=0
+// turns the whole thing off and restores the previous open-on-demand behaviour.
+function keepWarm(target:Pool, count:number) {
+  if (!(count > 0)) return;
+  // migrate() is what the first real query would otherwise wait on: applySchema's DDL batch costs ~2s and runs once
+  // per process, so a fresh server would hand that bill to whoever clicked first. It is memoized, so later pings are free.
+  const ping = () => Promise.all([
+    migrate().catch(() => {}),
+    ...Array.from({length:count}, () => target.query('SELECT 1').catch(() => {})),
+  ]);
+  void ping();
+  const timer = setInterval(() => void ping(), Number(process.env.DATABASE_POOL_PING_MS) || 240000);
+  // Must never hold a script (db:setup, db:transfer, the test runner) open after its work is done.
+  timer.unref?.();
+}
 export function pool() {
   if (!process.env.DATABASE_URL) throw new Error('DATABASE_URL is not configured.');
   if (!globalDb.repoPool) {
@@ -43,6 +64,7 @@ export function pool() {
     const idleTimeoutMillis = Number(process.env.DATABASE_POOL_IDLE_MS) || 600000;
     globalDb.repoPool = new Pool({ ...connectionConfig(process.env.DATABASE_URL), max, idleTimeoutMillis, keepAlive:true, keepAliveInitialDelayMillis:30000, connectionTimeoutMillis:15000, statement_timeout:15000 });
     globalDb.repoPool.on('error', () => console.error('Database connection interrupted.'));
+    keepWarm(globalDb.repoPool, Math.min(Number(process.env.DATABASE_POOL_WARM ?? 3), max));
   }
   return globalDb.repoPool;
 }

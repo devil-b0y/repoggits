@@ -27,10 +27,19 @@ export const projectSchema = z.object({
   videoTrimEnd: z.number().min(0).default(0),
   services: z.array(z.object({name:text(100).min(1),purpose:text(300).default(''),url:optionalUrl})).max(30).default([]),
   startDate: date, endDate: date, purchaseDate: date, year: z.string().regex(/^20\d{2}$/).default(String(new Date().getFullYear())),
-  hardwareCosts: z.array(z.object({ name: text(100).min(1), quantity: z.number().int().min(1).max(10000), unitCost: z.number().min(0).max(10000000) })).max(100).default([]),
+  // Where the parts came from, so the next team can buy the same ones. '' means the team did not say; 'online' uses
+  // purchaseUrl (the shop's website), 'store' uses purchaseLocation (an address or a maps link). purchaseSource names
+  // the shop either way.
+  purchaseMode: z.enum(['','online','store']).default(''),
+  purchaseSource: text(120).default(''), purchaseUrl: optionalUrl, purchaseLocation: text(300).default(''),
+  // `model` is free text on purpose: a board released after this code was written must still be recordable.
+  hardwareCosts: z.array(z.object({ name: text(100).min(1), model: text(60).default(''), quantity: z.number().int().min(1).max(10000), unitCost: z.number().min(0).max(10000000) })).max(100).default([]),
   softwareCosts: z.array(z.object({ name: text(100).min(1), amount: z.number().min(0).max(10000000) })).max(100).default([]),
   currency: z.enum(['INR', 'USD', 'EUR', 'GBP']).default('INR'), openSource: z.boolean().default(true),
   coverId: z.string().uuid().or(z.literal('')).default(''), galleryIds: z.array(z.string().uuid()).max(8).default([]), sourceId: z.string().uuid().or(z.literal('')).default(''),
+  // The typeface the published project page is set in. A key from lib/project-fonts, not a family name, so an
+  // unknown or removed key falls back to the studio default instead of putting arbitrary CSS in a style attribute.
+  font: text(24).default('studio'),
 }).superRefine((data, ctx) => {
   if (data.startDate && data.endDate && data.endDate < data.startDate) ctx.addIssue({ code:'custom', path:['endDate'], message:'End date must follow the start date.' });
   if (data.type === 'Software' && data.hardwareCosts.length) ctx.addIssue({ code:'custom', path:['hardwareCosts'], message:'Software projects cannot include hardware costs.' });

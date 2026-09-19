@@ -1,3 +1,6 @@
+/** A price reads as 800, not 800.00. Paise and cents appear only when the amount actually has them. */
+export const money=(value:number)=>value.toLocaleString(undefined,{maximumFractionDigits:2});
+
 export function projectDuration(start:string,end:string) {
   if(!start||!end)return '';
   const days=Math.max(1,Math.round((Date.parse(end)-Date.parse(start))/86400000));

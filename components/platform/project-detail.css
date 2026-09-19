@@ -1,5 +1,10 @@
 /* Project case study. Deliberately does not target ProjectMedia or its heading. */
 .detail-page{--pd-soft:color-mix(in srgb,var(--blue) 6%,var(--white));--pd-accent-line:color-mix(in srgb,var(--blue) 22%,var(--line))}
+/* The typeface the team picked in the submission form. Headings and body both follow it, so a project page reads as
+   one piece of typography rather than a borrowed heading font; --pd-typeface is set on the element by Detail.tsx. */
+.detail-page,.detail-page h1,.detail-page h2,.detail-page h3,.detail-page .pd-summary-stats dd,.detail-page .pd-facts>div>strong{font-family:var(--pd-typeface,'DM Sans',sans-serif)}
+/* The small structural labels keep the site's own voice, so the page still belongs to Repoggits. */
+.detail-page .pd-kicker,.detail-page .eyebrow,.detail-page .status-tag,.detail-page .tech-badge{font-family:'DM Sans',sans-serif}
 .detail-page>.page-title{margin-top:30px;margin-bottom:26px}
 .detail-page>.page-title h1{font-size:clamp(36px,4.8vw,64px);max-width:1000px;letter-spacing:-.055em;line-height:1.08;text-wrap:balance}
 .detail-page>.page-title p{font-size:16px;max-width:740px;line-height:1.8}
@@ -13,10 +18,21 @@
 .detail-page .pd-kicker{font:500 9px/1.6 'DM Sans',sans-serif;letter-spacing:1.7px;color:var(--muted);text-transform:uppercase}
 .detail-page .pd-section-heading{display:flex;align-items:flex-start;gap:17px;margin-bottom:26px}
 .detail-page .pd-section-icon{width:48px;height:48px;display:grid;place-items:center;flex:0 0 auto;border:1px solid var(--pd-accent-line);border-radius:15px;background:var(--pd-soft);color:var(--blue)}
-.detail-page .pd-section-heading h2{margin:5px 0 0;font-size:27px;letter-spacing:-.8px;line-height:1.25}
+.detail-page .pd-section-heading h2{margin:5px 0 0;font-size:30px;letter-spacing:-.9px;line-height:1.2;font-weight:550}
 .detail-page .pd-section-heading p{font-size:13px;line-height:1.7;color:var(--muted);margin:9px 0 0}
 .detail-page .detail-section{padding:40px 0}
-.detail-page .pd-about>.preserve-lines{font-size:15px;line-height:1.95;padding-left:23px;border-left:2px solid var(--pd-accent-line);max-width:74ch}
+.detail-page .pd-about>.preserve-lines{font-size:17px;line-height:1.85;color:var(--ink);padding-left:23px;border-left:2px solid var(--pd-accent-line);max-width:74ch}
+.detail-page .pd-cost-item{display:grid;gap:3px}
+.detail-page .pd-cost-item small{font-size:11px;color:var(--muted);padding-left:54px}
+.detail-page table .pd-tech-token{font-size:13px}
+.detail-page .pd-purchase{margin-top:22px;padding:20px;border:1px solid var(--pd-accent-line);border-radius:16px;background:var(--pd-soft)}
+.detail-page .pd-purchase-body{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:12px}
+.detail-page .pd-purchase-body>div{flex:1;min-width:160px;display:grid;gap:3px}
+.detail-page .pd-purchase-body strong{font-size:17px;font-weight:550}
+.detail-page .pd-purchase-body span{font-size:12px;color:var(--muted)}
+.detail-page .pd-purchase-address{overflow-wrap:anywhere}
+.detail-page .pd-shop-mark{width:44px;height:44px;flex-shrink:0;display:grid;place-items:center;border-radius:12px;background:var(--white);border:1px solid var(--pd-accent-line);color:var(--blue);overflow:hidden}
+.detail-page .pd-shop-mark img{width:24px;height:24px;object-fit:contain;display:block}
 .detail-page .pd-facts{gap:14px;margin-top:22px;margin-bottom:30px}
 .detail-page .pd-facts>div{position:relative;padding:22px;border:1px solid var(--pd-accent-line);border-radius:16px;background:var(--white);gap:10px;overflow:hidden}
 .detail-page .pd-facts>div>svg{color:var(--blue);width:22px;height:22px;margin-bottom:4px}
@@ -31,7 +47,7 @@
 .detail-page .pd-language-grid .pd-tech-token{padding:7px 17px 7px 7px;border:1px solid var(--line);border-radius:40px;background:var(--paper);font-size:13px;font-weight:500}
 .detail-page .key-features{margin-top:12px;padding:30px;border:1px solid var(--pd-accent-line);border-radius:20px;background:var(--pd-soft)}
 .detail-page .key-features-list{gap:16px 25px;margin:0;padding:0;list-style:none}
-.detail-page .key-features-list li{display:flex;align-items:flex-start;gap:12px;font-size:13px;line-height:1.75;padding:0;border:0;background:transparent}
+.detail-page .key-features-list li{display:flex;align-items:flex-start;gap:12px;font-size:16px;line-height:1.7;color:var(--ink);padding:0;border:0;background:transparent}
 .detail-page .pd-feature-check{display:grid;place-items:center;flex:0 0 29px;width:29px;height:29px;border-radius:50%;background:var(--white);color:var(--blue);border:1px solid var(--pd-accent-line)}
 .detail-page .pd-team-banner{display:flex;align-items:center;gap:15px;padding:20px 22px;background:var(--pd-soft);border:1px solid var(--pd-accent-line);border-radius:18px;margin:0 0 18px}
 .detail-page .pd-team-emblem{width:54px;height:54px;display:grid;place-items:center;background:var(--blue);color:var(--paper);border-radius:16px;flex:0 0 auto}

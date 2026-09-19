@@ -1,0 +1,102 @@
+.platform .cost-fields{display:grid;gap:20px}
+.platform .cost-currency{max-width:260px;margin:0}
+.platform .cost-panel{border:1px solid var(--line);border-radius:12px;padding:22px;background:var(--paper)}
+.platform .cost-panel-head{display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.platform .cost-panel-icon{width:42px;height:42px;flex-shrink:0;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;background:var(--white);color:var(--blue)}
+.platform .cost-panel-head>div{flex:1;min-width:170px}
+.platform .cost-panel-head h3{margin:0;font-size:19px}
+.platform .cost-panel-head p{margin:5px 0 0;font-size:12px;line-height:1.6;color:var(--muted)}
+.platform .cost-panel-total{font:500 17px 'Space Grotesk',sans-serif;color:var(--blue);white-space:nowrap;align-self:center}
+.platform .cost-row{display:grid;grid-template-columns:minmax(210px,2.6fr) minmax(0,1.2fr) 84px 104px auto 44px;align-items:end;gap:12px;padding:16px 0;border-top:1px solid var(--line)}
+.platform .cost-fields .cost-model{margin:0;min-width:0}
+.platform .cost-model>label{display:block;margin-bottom:8px;font-size:13px;font-weight:500}
+.platform .cost-model-control{position:relative;display:flex;align-items:center;border:1px solid #bfc7cc;border-radius:5px;background:var(--white)}
+.platform .cost-model-control:focus-within{outline:2px solid var(--blue);outline-offset:2px}
+.platform .cost-fields .cost-model-control input{flex:1;min-width:0;border:0;background:transparent;padding:12px 4px 12px 13px;outline:0}
+.platform .cost-model-control>button{flex-shrink:0;width:38px;height:44px;display:grid;place-items:center;color:var(--blue)}
+.platform .cost-model-menu{position:absolute;z-index:14;top:calc(100% + 6px);left:0;min-width:100%;width:max-content;max-width:260px;max-height:260px;overflow:auto;padding:6px;border:1px solid var(--line);border-radius:10px;background:var(--white);box-shadow:0 15px 40px #08192e30;scrollbar-width:thin;overscroll-behavior:contain}
+.platform .cost-model-menu button{display:flex;align-items:center;width:100%;min-height:40px;padding:8px 11px;border-radius:6px;font-size:13px;text-align:left;color:var(--ink);white-space:nowrap}
+.platform .cost-model-menu button:hover{background:#3059b513}
+.platform .cost-model-menu button[aria-selected=true]{color:var(--blue);font-weight:550;background:color-mix(in srgb,var(--blue) 9%,transparent)}
+/* The software table has no model column, so its rows keep the original shape. */
+.platform .cost-panel:last-of-type .cost-row{grid-template-columns:minmax(0,2.4fr) 130px 44px}
+.platform .cost-row:first-of-type{border-top:0;padding-top:4px}
+.platform .cost-picker{min-width:0}
+.platform .cost-picker>label{display:block;margin-bottom:8px;font-size:13px;font-weight:500}
+.platform .cost-picker-control{position:relative;display:flex;align-items:center;gap:10px;padding-left:10px;border:1px solid #bfc7cc;border-radius:5px;background:var(--white)}
+.platform .cost-picker-control:focus-within{outline:2px solid var(--blue);outline-offset:2px}
+.platform .cost-picker-mark{flex-shrink:0;display:grid;place-items:center}
+.platform .cost-picker-mark .pd-logo-orbit{width:30px;height:30px;flex:0 0 30px;box-shadow:none}
+.platform .cost-picker-mark .pd-logo-orbit img{width:18px;height:18px}
+.platform .cost-fields .cost-picker-control input{flex:1;min-width:0;border:0;background:transparent;padding:12px 0;outline:0}
+.platform .cost-picker-control>button{flex-shrink:0;width:42px;height:44px;display:grid;place-items:center;color:var(--blue)}
+.platform .cost-picker-menu{position:absolute;z-index:14;top:calc(100% + 6px);left:0;right:0;max-height:300px;overflow:auto;padding:6px;border:1px solid var(--line);border-radius:10px;background:var(--white);box-shadow:0 15px 40px #08192e30;scrollbar-width:thin;overscroll-behavior:contain}
+.platform .cost-picker-group{margin:10px 0 4px;padding:0 8px;font:500 10px 'Space Grotesk',sans-serif;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
+.platform .cost-picker-menu button{display:flex;align-items:center;gap:11px;width:100%;padding:8px;border-radius:6px;font-size:13px;text-align:left;min-height:46px}
+.platform .cost-picker-menu button:hover{background:#3059b513}
+.platform .cost-picker-menu button[aria-pressed=true]{color:var(--blue)}
+.platform .cost-picker-menu button>span{flex:1;min-width:0;overflow-wrap:anywhere}
+/* The model hint belongs under its part, not trailing off the end of the name. */
+.platform .cost-picker-menu button small{display:block;margin-top:3px;font-size:10px;line-height:1.5;color:var(--muted)}
+/* The part column narrowed when the model field joined the row; the menu keeps a readable width of its own. */
+.platform .cost-picker-menu{min-width:320px}
+.platform .cost-picker-menu button svg:last-child{color:var(--blue)}
+.platform .cost-picker-menu .pd-logo-orbit{width:30px;height:30px;flex:0 0 30px;box-shadow:none}
+.platform .cost-picker-custom{border-top:1px solid var(--line);margin-top:6px;border-radius:0 0 6px 6px}
+.platform .cost-fields .cost-number{margin:0;min-width:0}
+.platform .cost-row-total{display:grid;gap:7px;min-width:105px;padding-bottom:12px}
+.platform .cost-row-total>span{font-size:11px;color:var(--muted)}
+.platform .cost-row-total output{font:500 15px 'Space Grotesk',sans-serif;white-space:nowrap}
+.platform .cost-remove{width:44px;height:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:8px;color:var(--muted);margin-bottom:2px}
+.platform .cost-remove:hover{color:#963c20;border-color:#e6bca8}
+.platform .cost-empty{font-size:12px;color:var(--muted);padding:6px 0 2px}
+.platform .buy-source{margin-top:20px;padding-top:20px;border-top:1px solid var(--line)}
+.platform .buy-source-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:13px}
+.platform .buy-source-head>span{display:flex;align-items:center;gap:9px;font-size:14px;font-weight:500}
+.platform .buy-source-head svg{color:var(--blue)}
+.platform .buy-source-head small{font-size:11px;color:var(--muted)}
+.platform .buy-modes{display:flex;gap:10px;flex-wrap:wrap}
+.platform .buy-modes button{display:flex;align-items:center;gap:9px;min-height:46px;padding:0 17px;border:1px solid var(--line);border-radius:999px;background:var(--white);font-size:13px;color:var(--ink)}
+.platform .buy-modes button svg{color:var(--blue)}
+.platform .buy-modes button[aria-pressed=true]{border-color:var(--blue);background:color-mix(in srgb,var(--blue) 10%,var(--white));color:var(--blue);font-weight:550}
+.platform .buy-fields{display:grid;gap:14px;margin-top:16px}
+.platform .buy-shop{position:relative}
+.platform .buy-shop>label{display:block;margin-bottom:8px;font-size:13px;font-weight:500}
+.platform .buy-shop-control{position:relative;display:flex;align-items:center;gap:10px;padding-left:10px;border:1px solid #bfc7cc;border-radius:5px;background:var(--white)}
+.platform .buy-shop-control:focus-within{outline:2px solid var(--blue);outline-offset:2px}
+.platform .cost-fields .buy-shop-control input{flex:1;min-width:0;border:0;background:transparent;padding:12px 0;outline:0}
+.platform .buy-shop-control>button{flex-shrink:0;width:42px;height:44px;display:grid;place-items:center;color:var(--blue)}
+.platform .buy-shop-menu{position:absolute;z-index:14;top:calc(100% + 6px);left:0;right:0;max-height:300px;overflow:auto;padding:6px;border:1px solid var(--line);border-radius:10px;background:var(--white);box-shadow:0 15px 40px #08192e30;scrollbar-width:thin;overscroll-behavior:contain}
+.platform .buy-shop-menu button{display:flex;align-items:center;gap:11px;width:100%;padding:8px;border-radius:6px;font-size:13px;text-align:left;min-height:50px}
+.platform .buy-shop-menu button:hover{background:#3059b513}
+.platform .buy-shop-menu button[aria-pressed=true]{color:var(--blue)}
+.platform .buy-shop-menu button>span{display:grid;gap:2px;min-width:0}
+.platform .buy-shop-menu small{font-size:10px;color:var(--muted)}
+.platform .buy-shop-menu svg{color:var(--blue);flex-shrink:0}
+.platform .buy-shop-custom{border-top:1px solid var(--line);margin-top:6px}
+.platform .cost-fields .buy-link{margin:0}
+.platform .shop-mark{width:30px;height:30px;flex-shrink:0;display:inline-grid;place-items:center;border-radius:7px;background:var(--paper);border:1px solid var(--line);color:var(--blue);overflow:hidden}
+.platform .shop-mark img{width:20px;height:20px;object-fit:contain;display:block}
+.platform .buy-preview{display:flex;align-items:center;gap:10px;margin:0;font-size:12px;color:var(--muted);flex-wrap:wrap}
+.platform .buy-preview strong{color:var(--ink);font-weight:550}
+.platform .buy-preview svg{color:var(--blue)}
+.platform .cost-not-applicable{display:flex;align-items:flex-start;gap:11px;margin:0;padding:15px 17px;border:1px dashed var(--line);border-radius:10px;font-size:12px;line-height:1.7;color:var(--muted)}
+.platform .cost-not-applicable svg{flex-shrink:0;margin-top:2px;color:var(--blue)}
+.platform .cost-not-applicable strong{color:var(--ink);font-weight:550}
+.platform .cost-add{margin-top:6px}
+.platform .cost-fields .cost-date{max-width:260px;margin:18px 0 0}
+.platform .cost-fields .cost-total{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin:0;padding:20px 22px;border:1px solid var(--line);border-radius:12px;background:var(--white)}
+.platform .cost-fields .cost-total>span{display:flex;align-items:center;gap:11px;font:500 16px 'Space Grotesk',sans-serif}
+.platform .cost-fields .cost-total svg{color:var(--blue)}
+.platform .cost-fields .cost-total output{font:500 26px 'Space Grotesk',sans-serif;letter-spacing:-.8px;color:var(--blue)}
+@media(max-width:760px){
+ .platform .cost-panel{padding:18px}
+ .platform .cost-row,.platform .cost-panel:last-of-type .cost-row{grid-template-columns:1fr 1fr;gap:12px;padding:18px 0}
+ .platform .cost-fields .cost-model{grid-column:1/-1}
+ .platform .cost-row:first-of-type{padding-top:6px}
+ .platform .cost-picker{grid-column:1/-1}
+ .platform .cost-row-total{grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;padding-bottom:0}
+ .platform .cost-remove{grid-column:1/-1;width:100%}
+ .platform .cost-fields .cost-total output{font-size:22px}
+ .platform .cost-currency,.platform .cost-fields .cost-date{max-width:none}
+}

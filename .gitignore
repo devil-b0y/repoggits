@@ -10,3 +10,8 @@ test-results/
 backups/
 # Server-side database registry and sealed passwords: never in a commit.
 .data/
+# Generated session reports and the screenshots they are built from. Written on demand, never part of the repo —
+# note this is deliberately not *.pdf, because docs/Repoggits-Overview.pdf is a tracked document.
+Repoggits-session-report.pdf
+docs/Repoggits-Session-Report-*.pdf
+report-shots/

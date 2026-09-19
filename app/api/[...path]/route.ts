@@ -26,12 +26,20 @@ type Context={params:Promise<{path:string[]}>};
 const uuid=(value:string)=>z.uuid().parse(value);
 async function adminData(user:User,exportAll=false) {
   requireCondition(user.role!=='student',403,'Administrator access required.');
-  const rows=(await db.query(`${projectSelect} ORDER BY v.updated_at DESC${exportAll?'':' LIMIT 1000'}`)).filter(row=>canReview(user,row.data));
+  // Against a database in another region every wait costs a full round trip, so only the one query that truly depends
+  // on another waits for it: a reviewer's audit read is scoped to the projects they may see, while a superadmin's is
+  // not, and the account list never was. Same rows as before, asked for at the same time.
+  const superadmin=user.role==='superadmin';
+  const [allRows,superAudits,users]=await Promise.all([
+    db.query(`${projectSelect} ORDER BY v.updated_at DESC${exportAll?'':' LIMIT 1000'}`),
+    superadmin?db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id ORDER BY a.created_at DESC LIMIT 100'):Promise.resolve(null),
+    superadmin?db.query('SELECT id,email,name,role,scopes,verified,suspended FROM r.users WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 500').then(rows=>rows.map(row=>({...row,email:openText(row.email,'users.email')}))):Promise.resolve([]),
+  ]);
+  const rows=allRows.filter(row=>canReview(user,row.data));
   const projects=rows.map(projectView);
   const queue=projects.filter(p=>p.version.status==='pending'&&!p.archived);
   const targets=rows.flatMap(r=>[r.id,r.project_id]);
-  const audits=user.role==='superadmin'?await db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id ORDER BY a.created_at DESC LIMIT 100'):await db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id WHERE target_id=ANY($1::text[]) ORDER BY a.created_at DESC LIMIT 100',[targets]);
-  const users=user.role==='superadmin'?(await db.query('SELECT id,email,name,role,scopes,verified,suspended FROM r.users WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 500')).map(row=>({...row,email:openText(row.email,'users.email')})):[];
+  const audits=superAudits??await db.query('SELECT a.*,u.name AS actor FROM r.audit a LEFT JOIN r.users u ON u.id=a.actor_id WHERE target_id=ANY($1::text[]) ORDER BY a.created_at DESC LIMIT 100',[targets]);
   return {queue,projects,audit:audits,users};
 }
 async function handler(request:NextRequest,context:Context) {

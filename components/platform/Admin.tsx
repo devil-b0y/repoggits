@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Download, ArrowUpRight, Check, X, MessageSquare } from 'lucide-react';
 import type { Project } from '@/lib/schema';
-import { Shell, Gate, PageTitle, Notice, Loading, useData, useSession, send } from './shared';
+import { Shell, Gate, PageTitle, Notice, Loading, primeData, useData, useSession, send } from './shared';
 import { firstAdminHref } from './admin/nav';
 import './admin/admin-system.css';
 import ReviewCard from './ReviewCard';
@@ -22,4 +22,4 @@ function Content(){
  {toast&&<div role="status" className="toast"><Check size={19} aria-hidden="true"/>{toast}<button type="button" aria-label="Dismiss notification" onClick={()=>setToast('')}><X size={16} aria-hidden="true"/></button></div>}
  </div>;
 }
-export default function Admin(){return <Shell><Gate admin><Content/></Gate></Shell>;}
+export default function Admin(){primeData('admin');return <Shell><Gate admin><Content/></Gate></Shell>;}

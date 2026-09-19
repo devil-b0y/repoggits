@@ -1,11 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, ArrowUpRight, Bookmark, Download, Star, Heart, GitFork, CalendarDays, Clock3, Code2, HardDrive, Database, Cloud, Smartphone, ShieldCheck, Bot, Palette, GraduationCap, Gamepad2, Cpu, Tag, CheckCircle2, MessageCircle, Users, Layers, Eye, BookOpen, Wallet, Rocket, GitBranch, Globe } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Bookmark, Download, Star, Heart, GitFork, CalendarDays, Clock3, Code2, HardDrive, Database, Cloud, Smartphone, ShieldCheck, Bot, Palette, GraduationCap, Gamepad2, Cpu, Tag, CheckCircle2, MessageCircle, Users, Layers, Eye, BookOpen, Wallet, Rocket, GitBranch, Globe, Store, MapPin } from 'lucide-react';
 import { Shell, Gate, Notice, Card, PageTitle, DetailSkeleton, useData, useSession, send, api } from './shared';
-import { projectCost, type Project } from '@/lib/schema';
+import { projectCost, type Project, type ProjectData } from '@/lib/schema';
+import { shopHost } from './CostFields';
 import { imageUrl } from '@/lib/images';
-import { projectDuration } from '@/lib/project-display';
+import { money, projectDuration } from '@/lib/project-display';
+import { fontStack } from '@/lib/project-fonts';
 import ProjectMedia from './ProjectMedia';
 import Discussion, { type Comment } from './Discussion';
 import {TechnologyMark,TechnologyToken,DetailHeading,StackDetails,TeamProfile,ProjectSummary} from './ProjectIdentity';
@@ -18,6 +20,29 @@ export const findLanguageLogo=(name:string)=>languageCatalogue.find(item=>item.n
 const tagIconRules:[RegExp,typeof Tag][]=[[/local\s*storage|session\s*storage|indexeddb|browser cache/i,HardDrive],[/database|sql|firebase|mongo|postgres|supabase/i,Database],[/cloud|hosting|server|deploy|aws|azure|vercel|netlify/i,Cloud],[/mobile|ios|android/i,Smartphone],[/security|auth|encryption/i,ShieldCheck],[/ai|ml|machine learning|neural|gpt/i,Bot],[/design|ui|ux/i,Palette],[/productivity|student|education|school|study/i,GraduationCap],[/game|gaming/i,Gamepad2],[/iot|sensor|hardware|embedded/i,Cpu]];
 export const tagIconFor=(tag:string)=>tagIconRules.find(([pattern])=>pattern.test(tag))?.[1]??Tag;
 function TechBadge({tag}:{tag:string}){return <TechnologyToken name={tag} icon={tagIconFor(tag)}/>;}
+// Where the parts came from. The shop's logo is its own favicon, requested from the shop, so no logo service is told
+// who is reading this page; a shop that serves none keeps the generic mark.
+function ShopFavicon({url}:{url:string}){
+  const host=shopHost(url),[failed,setFailed]=useState(false);
+  return <span className="pd-shop-mark" aria-hidden="true">{host&&!failed?<img src={`https://${host}/favicon.ico`} alt="" width={22} height={22} loading="lazy" onError={()=>setFailed(true)}/>:<Store size={18}/>}</span>;
+}
+function PurchasePlace({data}:{data:ProjectData}){
+  const online=data.purchaseMode==='online';
+  const mapped=/^https?:\/\//i.test(data.purchaseLocation.trim());
+  return <div className="pd-purchase">
+    <span className="pd-kicker">WHERE THE PARTS CAME FROM</span>
+    <div className="pd-purchase-body">
+      {online?<ShopFavicon url={data.purchaseUrl||data.purchaseSource}/>:<span className="pd-shop-mark" aria-hidden="true"><Store size={18}/></span>}
+      <div>
+        <strong>{data.purchaseSource||(online?shopHost(data.purchaseUrl):'A local shop')}</strong>
+        <span>{online?'Bought online':'Bought in person'}{data.purchaseDate&&` · ${data.purchaseDate}`}</span>
+        {!online&&data.purchaseLocation&&!mapped&&<span className="pd-purchase-address">{data.purchaseLocation}</span>}
+      </div>
+      {online&&data.purchaseUrl&&<a className="button outline" href={data.purchaseUrl} target="_blank" rel="noopener noreferrer nofollow">Visit shop <ArrowUpRight size={16}/></a>}
+      {!online&&mapped&&<a className="button outline" href={data.purchaseLocation.trim()} target="_blank" rel="noopener noreferrer nofollow"><MapPin size={16}/> Open in Maps</a>}
+    </div>
+  </div>;
+}
 
 function Content({id}:{id:string}){
  const [version,setVersion]=useState(''),[actionError,setActionError]=useState(''),[busy,setBusy]=useState(false);
@@ -31,7 +56,7 @@ function Content({id}:{id:string}){
  const hardware=d.hardwareCosts.reduce((sum,row)=>sum+Math.round(row.unitCost*100)*row.quantity,0)/100;
  const software=d.softwareCosts.reduce((sum,row)=>sum+Math.round(row.amount*100),0)/100;
  const react=(kind:'star'|'like')=>action(async()=>{const result=await send<{active:boolean;stars:number;likes:number}>(`projects/${id}/reactions`,{kind,active:kind==='star'?!data.starred:!data.liked});setData(current=>current?{...current,[kind==='star'?'starred':'liked']:result.active,project:{...current.project,stars:result.stars,likes:result.likes}}:current);});
- return <div className="page-wrap detail-page">
+ return <div className="page-wrap detail-page" style={{['--pd-typeface' as string]:fontStack(d.font)}}>
   <Link className="text-button" href="/projects"><ArrowLeft size={16}/> Back to the collective</Link>
   <PageTitle eyebrow={`${d.type.toUpperCase()} / ${d.department.toUpperCase()}`} title={d.title} titleBadge={<>
     {p.parentProjectId&&<span className="pd-version-badge"><GitFork size={13}/>v{p.version.number} · modified build</span>}
@@ -65,9 +90,10 @@ function Content({id}:{id:string}){
     <section className="detail-section pd-team-section" id="project-team"><DetailHeading title="Project team" kicker="03 / THE COLLECTIVE" icon={Users}>The people turning {d.teamName}'s ideas into reality.</DetailHeading><div className="pd-team-banner"><span className="pd-team-emblem"><Users size={28} strokeWidth={1.5}/></span><div><span className="pd-kicker">BUILT TOGETHER</span><h3>{d.teamName}</h3></div><span className="pd-team-count">{d.team.length} {d.team.length===1?'contributor':'contributors'}</span></div><div className="team-grid">{d.team.map((member,i)=><TeamProfile member={member} index={i} key={`${member.name}-${i}`}/>)}</div>{!d.team.length&&<p>Team details have not been added yet.</p>}</section>
     <section className="detail-section"><DetailHeading title="Storage & deployment" kicker="04 / THE INFRASTRUCTURE" icon={Cloud}>The services that help this project run.</DetailHeading>{d.services.length?<div className="service-grid">{d.services.map((service,i)=><article className="service-card" key={i}><div className="pd-service-heading"><TechnologyMark name={service.name} icon={Cloud}/><h3>{service.name}</h3></div><p>{service.purpose||'Supporting service'}</p>{service.url&&<a href={service.url} className="inline-link" target="_blank" rel="noopener noreferrer">Visit service <ArrowUpRight size={14}/></a>}</article>)}</div>:<p>No external services listed.</p>}</section>
     <section className="detail-section"><DetailHeading title="The build, by the numbers" kicker="05 / THE INVESTMENT" icon={Wallet}/>
-      <div className="cost-summary"><div><span className="pd-cost-icon"><Cpu size={24}/></span><span>Hardware cost</span><strong>{d.currency} {hardware.toFixed(2)}</strong></div><div><span className="pd-cost-icon"><Cloud size={24}/></span><span>Software & services cost</span><strong>{d.currency} {software.toFixed(2)}</strong></div></div>
-      {d.hardwareCosts.length+d.softwareCosts.length>0?<div className="table-scroll"><table><thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Unit cost</th><th>Total ({d.currency})</th></tr></thead><tbody>{d.hardwareCosts.map((row,i)=><tr key={`h${i}`}><td>{row.name}</td><td>Hardware</td><td>{row.quantity}</td><td>{row.unitCost.toFixed(2)}</td><td>{(row.quantity*row.unitCost).toFixed(2)}</td></tr>)}{d.softwareCosts.map((row,i)=><tr key={`s${i}`}><td>{row.name}</td><td>Software / service</td><td>1</td><td>{row.amount.toFixed(2)}</td><td>{row.amount.toFixed(2)}</td></tr>)}</tbody></table></div>:<p>{d.openSource?'Built with free / open-source software.':'No costs listed.'}</p>}
-      <div className="cost-total">Total project cost <strong>{d.currency} {projectCost(d).toFixed(2)}</strong></div>
+      <div className="cost-summary"><div><span className="pd-cost-icon"><Cpu size={24}/></span><span>Hardware cost</span><strong>{d.currency} {money(hardware)}</strong></div><div><span className="pd-cost-icon"><Cloud size={24}/></span><span>Software & services cost</span><strong>{d.currency} {money(software)}</strong></div></div>
+      {d.hardwareCosts.length+d.softwareCosts.length>0?<div className="table-scroll"><table><thead><tr><th>Item</th><th>Category</th><th>Quantity</th><th>Unit cost</th><th>Total ({d.currency})</th></tr></thead><tbody>{d.hardwareCosts.map((row,i)=><tr key={`h${i}`}><td><span className="pd-cost-item"><TechnologyToken name={row.name} icon={Cpu}/>{row.model&&<small>{row.model}</small>}</span></td><td>Hardware</td><td>{row.quantity}</td><td>{money(row.unitCost)}</td><td>{money(row.quantity*row.unitCost)}</td></tr>)}{d.softwareCosts.map((row,i)=><tr key={`s${i}`}><td><span className="pd-cost-item"><TechnologyToken name={row.name} icon={Cloud}/></span></td><td>Software / service</td><td>1</td><td>{money(row.amount)}</td><td>{money(row.amount)}</td></tr>)}</tbody></table></div>:<p>{d.openSource?'Built with free / open-source software.':'No costs listed.'}</p>}
+      {d.purchaseMode&&(d.purchaseSource||d.purchaseUrl||d.purchaseLocation)&&<PurchasePlace data={d}/>}
+      <div className="cost-total">Total project cost <strong>{d.currency} {money(projectCost(d))}</strong></div>
     </section>
     <section className="detail-section"><DetailHeading title="Modified builds" kicker="06 / WHAT COMES NEXT" icon={GitFork}/><p>See how other teams have extended this project. Every published modification credits its original.</p>{data.modifications.length?<div className="modification-list">{data.modifications.map(m=><Link key={m.id} href={`/projects/${m.id}`}><GitFork size={20}/><span><strong>{m.title}</strong><small>By {m.team_name}</small></span><ArrowUpRight size={18}/></Link>)}</div>:<p>No approved modifications yet.</p>}{published&&<button className="button outline" disabled={busy} onClick={()=>void action(async()=>{const result=await send<{id:string;versionId:string}>(`projects/${id}/modify`,{versionId:p.version.id});window.location.assign(`/submit?project=${result.id}&version=${result.versionId}`);})}><GitFork size={17}/> Create a modified version</button>}</section>
     <Discussion projectId={id} comments={data.comments} onComment={comment=>setData(current=>current?{...current,comments:[...current.comments,comment]}:current)} published={published}/>
