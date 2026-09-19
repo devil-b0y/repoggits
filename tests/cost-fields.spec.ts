@@ -69,6 +69,28 @@ test('where the parts were bought asks for a website online and a place in perso
  await expect(page.locator('.buy-preview')).toContainText('Open in Maps');
 });
 
+test('model suggestions are a styled menu, and a model not on the list is still kept',async({page})=>{
+ await mockSession(page);await page.goto('/submit');
+ await page.getByLabel('Project type').click();
+ await page.getByRole('option',{name:'Hybrid'}).click();
+ await openCosts(page);
+ await page.getByRole('button',{name:'Add part'}).click();
+ await page.getByRole('button',{name:'Choose from the part name catalogue'}).click();
+ await page.getByRole('button',{name:'Arduino Uno',exact:true}).click();
+ const model=page.getByLabel('Model or part number for part 1');
+ // Our own listbox, not the browser's <datalist> popup, so it can match the page.
+ await expect(page.locator('.cost-row datalist')).toHaveCount(0);
+ await model.focus();
+ const menu=page.getByRole('listbox',{name:'Suggested models'});
+ await expect(menu.getByRole('option')).toHaveText(['R3','R3 (A000066)','R4 Minima','R4 WiFi','SMD R3']);
+ await model.fill('R4');
+ await expect(menu.getByRole('option')).toHaveText(['R4 Minima','R4 WiFi']);
+ await menu.getByRole('option',{name:'R4 WiFi'}).click();
+ await expect(model).toHaveValue('R4 WiFi');
+ await model.fill('R5 engineering sample');
+ await expect(model).toHaveValue('R5 engineering sample');
+});
+
 test('a catalogue name keeps its logo and a custom name is still typeable',async({page})=>{
  await mockSession(page);await page.goto('/submit');
  await openCosts(page);

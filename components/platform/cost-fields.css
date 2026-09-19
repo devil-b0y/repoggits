@@ -8,6 +8,12 @@
 .platform .cost-panel-head p{margin:5px 0 0;font-size:12px;line-height:1.6;color:var(--muted)}
 .platform .cost-panel-total{font:500 17px 'Space Grotesk',sans-serif;color:var(--blue);white-space:nowrap;align-self:center}
 .platform .cost-row{display:grid;grid-template-columns:minmax(210px,2.6fr) minmax(0,1.2fr) 84px 104px auto 44px;align-items:end;gap:12px;padding:16px 0;border-top:1px solid var(--line)}
+/* These controls draw one frame around an icon, an input and a chevron. The studio's own input rule
+   (.submission-studio input:not(...):not(...), specificity 0,4,1) outranks a plain descendant selector and paints a
+   second background, border and radius on the inner input — a box inside the box. The :not() pair is repeated here
+   so this reset wins on specificity rather than on file order. */
+.platform .submission-studio .cost-fields :is(.cost-picker-control,.cost-model-control,.buy-shop-control) input:not([type=checkbox]):not([type=file]),
+.platform .submission-studio .cost-fields :is(.cost-picker-control,.cost-model-control,.buy-shop-control) input:not([type=checkbox]):not([type=file]):focus{background:transparent;border:0;border-radius:0;box-shadow:none;outline:0;min-height:44px;margin:0}
 .platform .cost-fields .cost-model{margin:0;min-width:0}
 .platform .cost-model>label{display:block;margin-bottom:8px;font-size:13px;font-weight:500}
 .platform .cost-model-control{position:relative;display:flex;align-items:center;border:1px solid #bfc7cc;border-radius:5px;background:var(--white)}
