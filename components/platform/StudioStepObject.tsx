@@ -6,13 +6,17 @@ import {motion,useReducedMotion} from 'framer-motion';
 // Reveal Card"-style, 21st.dev id 7217) with real dimensional imagery for a more premium/technology feel,
 // while keeping the card's size, position, accent colors and reveal timing untouched. Still a flat 2D
 // card (no perspective/tilt) — only the object rendered inside it now looks three-dimensional.
+// The "-v2" suffix isn't a version number for its own sake: an earlier cutout of these images shipped with a
+// white matte still visible behind the object, was fixed in place under the original filenames, and browsers
+// that had already cached those URLs kept showing the old bitmap through a normal reload. New filenames force
+// every cache to fetch the corrected (transparent-background) image.
 const STEPS:{src:string;label:string;name:string;accent:'blue'|'orange'|'green'|'dark'}[]=[
- {src:'/images/studio-objects/notebook.webp',label:'IDEA NOTEBOOK',name:'Project notebook',accent:'blue'},
- {src:'/images/studio-objects/chat-bubble.webp',label:'TEAM ROSTER',name:'Team identity badges',accent:'orange'},
- {src:'/images/studio-objects/cube.webp',label:'DEV BOARD',name:'Development board',accent:'green'},
- {src:'/images/studio-objects/camera.webp',label:'LIVE DEMO',name:'Demo camera',accent:'dark'},
- {src:'/images/studio-objects/chart.webp',label:'COST BREAKDOWN',name:'Project calculator',accent:'dark'},
- {src:'/images/studio-objects/folder.webp',label:'READY FOR REVIEW',name:'Review folder',accent:'blue'},
+ {src:'/images/studio-objects/notebook-v2.webp',label:'IDEA NOTEBOOK',name:'Project notebook',accent:'blue'},
+ {src:'/images/studio-objects/chat-bubble-v2.webp',label:'TEAM ROSTER',name:'Team identity badges',accent:'orange'},
+ {src:'/images/studio-objects/cube-v2.webp',label:'DEV BOARD',name:'Development board',accent:'green'},
+ {src:'/images/studio-objects/camera-v2.webp',label:'LIVE DEMO',name:'Demo camera',accent:'dark'},
+ {src:'/images/studio-objects/chart-v2.webp',label:'COST BREAKDOWN',name:'Project calculator',accent:'dark'},
+ {src:'/images/studio-objects/folder-v2.webp',label:'READY FOR REVIEW',name:'Review folder',accent:'blue'},
 ];
 
 export default function StudioStepObject({step}:{step:number}){
